@@ -26,7 +26,6 @@
 * [Discord](https://discordapp.com/developers)
 * [Discord.Net Team](https://github.com/RogueException/Discord.Net)
 * [SpeedrunComSharp](https://github.com/LiveSplit/SpeedrunComSharp)
-* [TwitchLib](https://github.com/swiftyspiffy/TwitchLib)
 * [Dropbox.NET](https://github.com/dropbox/dropbox-sdk-dotnet)
 * [Raspberry Pi Foundation](https://www.raspberrypi.org)
 * [.NET Foundation](https://dotnetfoundation.org)
