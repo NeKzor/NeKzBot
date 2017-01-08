@@ -22,7 +22,7 @@ namespace NeKzBot
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
-					await e.Channel.SendMessage($"Bot is running for {Utils.AsBold(Program.GetUptime())}");
+					await e.Channel.SendMessage($"Bot is running for **{Program.GetUptime()}**");
 				});
 
 				g.CreateCommand("location")
@@ -34,22 +34,22 @@ namespace NeKzBot
 				});
 
 				g.CreateCommand("info")
-				.Alias("status", "?")
+				.Alias("status")
 				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} info` shows some information about the bot.")
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
 					await e.Channel.SendMessage(
-						$"**AppName - **{NBot.dClient.Config.AppName}"
-						+ $"\n**AppVersion - **{NBot.dClient.Config.AppVersion}"
-						+ $"\n**AppUrl - **{NBot.dClient.Config.AppUrl}"
-						+ $"\n**Current Game - ** {NBot.dClient.CurrentGame.Name}"
-						+ $"\n**Client State - ** {NBot.dClient.State}"
-						+ $"\n**Client Status - ** {NBot.dClient.Status.Value}"
-						+ $"\n**Regions - ** {NBot.dClient.Regions.Count()}"
-						+ $"\n**Servers - ** {NBot.dClient.Servers.Count()}"
-						+ $"\n**Services - ** {NBot.dClient.Services.Count()}"
-						+ $"\n**SessionID - ** {NBot.dClient.SessionId}"
+						$"**AppName - **{dClient.Config.AppName}"
+						+ $"\n**AppVersion - **{dClient.Config.AppVersion}"
+						+ $"\n**AppUrl - **{dClient.Config.AppUrl}"
+						+ $"\n**Current Game - ** {dClient.CurrentGame.Name}"
+						+ $"\n**Client State - ** {dClient.State}"
+						+ $"\n**Client Status - ** {dClient.Status.Value}"
+						+ $"\n**Regions - ** {dClient.Regions.Count()}"
+						+ $"\n**Servers - ** {dClient.Servers.Count()}"
+						+ $"\n**Services - ** {dClient.Services.Count()}"
+						+ $"\n**SessionID - ** {dClient.SessionId}"
 					);
 				});
 
@@ -149,14 +149,14 @@ namespace NeKzBot
 				.Do(async (e) =>
 				{
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						NBot.dClient.SetGame(Data.randomGames[Utils.RNG(0, Data.randomGames.Count())]);
+						dClient.SetGame(Data.randomGames[Utils.RNG(0, Data.randomGames.Count())]);
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
 
 				g.CreateCommand("setgame")
 				.Alias("play", "sg")
-				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} setgame <name>` sets a new playing status for the bot writes his updates.\n**-** Current game is: *{NBot.dClient.CurrentGame}*.")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} setgame <name>` sets a new playing status for the bot writes his updates.\n**-** Current game is: *{dClient.CurrentGame}*.")
 				.Parameter("p", ParameterType.Required)
 				.Do(async (e) =>
 				{
@@ -165,9 +165,9 @@ namespace NeKzBot
 					{
 						if (e.Args[0] != string.Empty)
 						{
-							if (e.Args[0] != NBot.dClient.CurrentGame.Name)
+							if (e.Args[0] != dClient.CurrentGame.Name)
 							{
-								NBot.dClient.SetGame(e.Args[0]);
+								dClient.SetGame(e.Args[0]);
 								await e.Channel.SendMessage("Bot is now playing **{e.Args[0]}**.");
 							}
 							else
@@ -225,10 +225,10 @@ namespace NeKzBot
 								await e.Channel.SendMessage("This command doesn't allow to be changed.");
 						}
 						else
-							await e.Channel.SendMessage($"Invalid command parameter.\nTry one of these: {Utils.ListToList(CmdManager.rwCommands, "`")}");
+							await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {Utils.ListToList(CmdManager.rwCommands, "`")}");
 					}
 					else
-						await e.Channel.SendMessage("You are not allowed to do that.\nOnly the master/server admin is allowed to change data.");
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to change data.");
 				});
 
 				g.CreateCommand("delete")
@@ -252,10 +252,10 @@ namespace NeKzBot
 								await e.Channel.SendMessage("This command doesn't allow to be changed.");
 						}
 						else
-							await e.Channel.SendMessage($"Invalid command parameter.\nTry one of these: {Utils.ListToList(CmdManager.rwCommands, "`")}");
+							await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {Utils.ListToList(CmdManager.rwCommands, "`")}");
 					}
 					else
-						await e.Channel.SendMessage("You are not allowed to do that.\nOnly the master/server admin is allowed to change data.");
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to change data.");
 				});
 				#endregion
 			});
@@ -276,7 +276,7 @@ namespace NeKzBot
 					{
 						await e.Channel.SendMessage("WHY? :anguished: ");
 						await System.Threading.Tasks.Task.Delay(500);
-						await NBot.dClient.Disconnect();
+						await dClient.Disconnect();
 					}
 					else
 						await e.Channel.SendMessage("You are not allowed to do that.");

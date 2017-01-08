@@ -18,8 +18,8 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-					await e.Channel.SendMessage(Data.msgAll);
+				if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))	// Thanks for the 2k character limit, Discord
+					await e.Channel.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.gameMsg + Data.srcomMsg + Data.rpiMsg + Data.dropboxMsg + Data.botMsg + Data.msgEnd);
 				else
 					await e.User.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.gameMsg + Data.botMsg + Data.msgEnd);
 			});
@@ -89,6 +89,27 @@ namespace NeKzBot
 			{
 				await e.Channel.SendIsTyping();
 				await e.Channel.SendMessage(Data.rpiMsg);
+			});
+
+			cmd.CreateCommand("speedrun")
+			.Alias("speedruncom", "srcom", "srcom?")
+			.Description($"**-** `{Settings.Default.PrefixCmd}speedrun` shows you a list of speedruncom commands.")
+			.Do(async e =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage(Data.srcomMsg);
+			});
+
+			cmd.CreateCommand("dropbox")
+			.Alias("dropbox", "db?")
+			.Description($"**-** `{Settings.Default.PrefixCmd}dropbox` shows you a list of Dropbox commands.")
+			.Do(async e =>
+			{
+				await e.Channel.SendIsTyping();
+				if (e.User.Id == Settings.Default.MaseterAdminID)
+					await e.Channel.SendMessage(Data.dropboxMsg + Data.masterAdminDropboxMsg);
+				else
+					await e.Channel.SendMessage(Data.dropboxMsg);
 			});
 		}
 	}

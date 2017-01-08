@@ -11,7 +11,7 @@ namespace NeKzBot
 		{
 			Logging.CON("Initializing audio", System.ConsoleColor.DarkYellow);
 
-			NBot.dClient.UsingAudio(x =>
+			dClient.UsingAudio(x =>
 			{
 				x.Mode = AudioMode.Outgoing;
 			});
@@ -19,7 +19,7 @@ namespace NeKzBot
 
 		public static async Task PlayWithFFmpeg(ulong serverID, Discord.Channel vChannel, string filePath)
 		{
-			Logging.CON("Trying to play FFmpeg");
+			Logging.CON("Trying to play FFmpeg", System.ConsoleColor.DarkGreen);
 			if (isplaying)
 				return;
 			isplaying = true;
@@ -28,7 +28,7 @@ namespace NeKzBot
 			Process process = null;
 			try
 			{
-				aClient = NBot.dClient.GetServer(serverID).GetAudioClient();
+				aClient = dClient.GetServer(serverID).GetAudioClient();
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
@@ -50,7 +50,8 @@ namespace NeKzBot
 			}
 			catch
 			{
-				NBot.dClient.Log.Info($"VC {vChannel.Name}", "FFmpeg ERROR", null);
+				//dClient.Log.Info($"VC {vChannel.Name}", "FFmpeg ERROR", null);
+				Logging.CON("FFmpeg error");
 			}
 			finally
 			{
@@ -61,7 +62,7 @@ namespace NeKzBot
 			}
 		}
 
-		#region UNUSED CODE FOR WINDOWS SYSTEMS
+		#region UNUSED CODE FOR WINDOWS SYSETEMS
 		//public static async Task PlayWithNAudio(ulong serverID, Discord.Channel vChannel, string filePath)
 		//{
 		//	Logging.CON("Trying to play naudio");
@@ -72,8 +73,8 @@ namespace NeKzBot
 		//	IAudioClient aClient;
 		//	try
 		//	{
-		//		aClient = NBot.dClient.GetServer(serverID).GetAudioClient();
-		//		var OutFormat = new WaveFormat(48000, 16, NBot.dClient.GetService<AudioService>().Config.Channels);
+		//		aClient = dClient.GetServer(serverID).GetAudioClient();
+		//		var OutFormat = new WaveFormat(48000, 16, dClient.GetService<AudioService>().Config.Channels);
 		//		using (var MP3Reader = new AudioFileReader(Properties.Settings.Default.ApplicationPath + Properties.Settings.Default.AudioPath + filePath))
 		//		using (var resampler = new MediaFoundationResampler(MP3Reader, OutFormat))
 		//		{
@@ -94,7 +95,8 @@ namespace NeKzBot
 		//	}
 		//	catch
 		//	{
-		//		NBot.dClient.Log.Info($"VC {vChannel.Name}", "NAudio ERROR", null);
+		//		//dClient.Log.Info($"VC {vChannel.Name}", "NAudio ERROR", null);
+		//		//Logging.CON("NAudio error");
 		//	}
 		//	isplaying = false;
 		//	shouldstop = false;

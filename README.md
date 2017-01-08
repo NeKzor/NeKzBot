@@ -1,14 +1,15 @@
-# NeKzBot
+﻿# NeKzBot
 [![NeKz Server](https://discordapp.com/api/guilds/208570520805965826/embed.png?style=banner2)](https://discord.gg/rEazbJn)
 
 ## Features
 * Streaming audio in voice channel
 * Initializing data from files
-* Data caching system
+* Advanced caching system
+* Data fetching system
 * Changing data with commands
 * Giveaway mini game
 * Basic system information feedback
-* Data fetching from
+* Fetching data from
   * [board.iverb.me](http://board.iverb.me)
   * [speedrun.com](http://www.speedrun.com)
 * Auto notifications for

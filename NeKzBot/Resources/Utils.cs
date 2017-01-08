@@ -9,7 +9,9 @@ namespace NeKzBot
 	{
 		public static int index = 0;
 		public static string group = string.Empty;
-		private static Random rand;
+		private static Random rand = new Random(DateTime.Now.Millisecond);
+		private static int temp = -1;
+		private static readonly object obj = new object();
 
 		public const char seperator = '|';
 		private const int maxarraycount = 128;
@@ -182,13 +184,9 @@ namespace NeKzBot
 					act.Invoke();
 		}
 
-		// Text formatting
-		public static string AsBold(string s) => $"**{s}**";
-		public static string AsItalitc(string s) => $"*{s}*";
-		public static string AsCommand(string s) => $"`{s}`";
-
 		// Checking names (name = Name -> true)
-		public static bool StringMatch(string s, string c) => (s.ToLower() != c.ToLower()) ? true : false;
+		public static bool StringMatch(string s, string c) =>
+			s.ToLower() == c.ToLower();
 
 		// Parse after par1 (!cmd par1 par2)
 		public static string GetRest(string[] s, int from, int to = 0, string sep = "", bool firstreplace = false)
@@ -219,11 +217,17 @@ namespace NeKzBot
 				return false;
 			if (!new System.Text.RegularExpressions.Regex(pattern).IsMatch(s))
 				return false;
-			return s.Length > maxlength ? false : true;
+			return !(s.Length > maxlength);
 		}
 
+		public static bool ValidateString(string s, string pattern) =>
+			s == string.Empty ?
+				false : (!new System.Text.RegularExpressions.Regex(pattern).IsMatch(s));
+
 		// Small information when caching data
-		public static string StringInBytes(string s) => (s.Length * sizeof(char)).ToString();
+		public static string StringInBytes(string s) =>
+			//(s.Length * sizeof(char)).ToString();
+			System.Text.Encoding.ASCII.GetByteCount(s).ToString();
 
 		public static string StringInBytes(params string[] s)
 		{
@@ -233,18 +237,33 @@ namespace NeKzBot
 			return size.ToString();
 		}
 
-		// Generates random integers
+		// Generate random integers
 		public static int RNG(int to)
 		{
-			rand = new Random();
-			return rand.Next(0, to);
+			int numb;
+			lock (obj)
+			{
+				do
+					numb = rand.Next(0, to);
+				while (numb == temp || numb % 7 == 0);
+			}
+			return temp = numb;
 		}
 
 		public static int RNG(int from, int to)
 		{
-			rand = new Random();
-			return rand.Next(from, to);
+			int numb;
+			lock (obj)
+			{
+				do
+					numb = rand.Next(from, to);
+				while (numb == temp || numb % 7 == 0);
+			}
+			return temp = numb;
 		}
+
+		public static string RNGString(params string[] s) =>
+			s[RNG(0, s.Count())];
 
 		// Fun formatting with regional indicator symbols
 		public static string RIS(string s)
@@ -265,9 +284,7 @@ namespace NeKzBot
 		// Read, write data
 		public static object ReadFromFile(string filepath)
 		{
-			var file = Properties.Settings.Default.ApplicationPath + Properties.Settings.Default.DataPath + filepath;
-			if (System.Diagnostics.Debugger.IsAttached)
-				file = AppDomain.CurrentDomain.BaseDirectory + Properties.Settings.Default.DataPath + filepath;
+			var file = GetPath() + Properties.Settings.Default.DataPath + filepath;
 
 			if (!FileFound(file))
 				return null;
@@ -277,27 +294,25 @@ namespace NeKzBot
 
 			try
 			{
-				var fs = new FileStream(file, FileMode.Open);
-				var sr = new StreamReader(fs);
-
-				while (!sr.EndOfStream)
-					input = sr.ReadToEnd().Replace("\r", string.Empty).Split('\n');
-
-				if (input[0].Contains(seperator))
-					array = new string[input.Count(), input[0].Split(seperator).Count()];
-				else
+				using (var fs = new FileStream(file, FileMode.Open))
+				using (var sr = new StreamReader(fs))
 				{
-					sr.Close();
-					fs.Close();
-					return ReadFromFileS(filepath);
+					while (!sr.EndOfStream)
+						input = sr.ReadToEnd().Replace("\r", string.Empty).Split('\n');
+
+					if (input[0].Contains(seperator))
+						array = new string[input.Count(), input[0].Split(seperator).Count()];
+					else
+					{
+						fs.Dispose();
+						sr.Dispose();
+						return ReadFromFileS(filepath);
+					}
+
+					for (int i = 0; i < input.Count(); i++)
+						for (int j = 0; j < input[i].Split(seperator).Count(); j++)
+							array[i, j] = input[i].Split(seperator)[j];
 				}
-
-				for (int i = 0; i < input.Count(); i++)
-					for (int j = 0; j < input[i].Split(seperator).Count(); j++)
-						array[i, j] = input[i].Split(seperator)[j];
-
-				sr.Close();
-				fs.Close();
 			}
 			catch
 			{
@@ -308,9 +323,7 @@ namespace NeKzBot
 
 		public static string[] ReadFromFileS(string filepath)
 		{
-			var file = Properties.Settings.Default.ApplicationPath + Properties.Settings.Default.DataPath + filepath;
-			if (System.Diagnostics.Debugger.IsAttached)
-				file = AppDomain.CurrentDomain.BaseDirectory + Properties.Settings.Default.DataPath + filepath;
+			var file = GetPath() + Properties.Settings.Default.DataPath + filepath;
 
 			if (!FileFound(file))
 				return null;
@@ -319,14 +332,10 @@ namespace NeKzBot
 
 			try
 			{
-				var fs = new FileStream(file, FileMode.Open);
-				var sr = new StreamReader(fs);
-
-				while (!sr.EndOfStream)
-					input = sr.ReadToEnd().Replace("\r", string.Empty).Split('\n');
-
-				sr.Close();
-				fs.Close();
+				using (var fs = new FileStream(file, FileMode.Open))
+				using (var sr = new StreamReader(fs))
+					while (!sr.EndOfStream)
+						input = sr.ReadToEnd().Replace("\r", string.Empty).Split('\n');
 			}
 			catch
 			{
@@ -352,6 +361,8 @@ namespace NeKzBot
 			for (int i = 0; i < CmdManager.dataCommands.GetLength(0); i++)
 			{
 				obj = CmdManager.dataCommands[i, 3];
+				if (obj == null)
+					return "**Error - ** Data is missing.";
 				if (obj.GetType() == typeof(string[,]))
 				{
 					if (SearchArray((string[,])CmdManager.dataCommands[i, 3], 0, line[0], out index))
@@ -388,22 +399,21 @@ namespace NeKzBot
 			// Write new data
 			try
 			{
-				var fs = new FileStream(file, FileMode.Create);
-				var sw = new StreamWriter(fs);
-
-				for (int i = 0; i < ls.Count(); i += line.Length)
+				using (var fs = new FileStream(file, FileMode.Create))
+				using (var sw = new StreamWriter(fs))
 				{
-					for (int j = 0; j < line.Length; j++)
+					for (int i = 0; i < ls.Count(); i += line.Length)
 					{
-						sw.Write(ls[i + j]);
-						if (j + 1 != line.Length)
-							sw.Write(seperator);
+						for (int j = 0; j < line.Length; j++)
+						{
+							sw.Write(ls[i + j]);
+							if (j + 1 != line.Length)
+								sw.Write(seperator);
+						}
+						if (i + line.Length != ls.Count())
+							sw.Write("\n");
 					}
-					if (i + line.Length != ls.Count())
-						sw.Write("\n");
 				}
-				sw.Close();
-				fs.Close();
 			}
 			catch
 			{
@@ -461,22 +471,21 @@ namespace NeKzBot
 
 			try
 			{
-				var fs = new FileStream(file, FileMode.Create);
-				var sw = new StreamWriter(fs);
-
-				for (int i = 0; i < ls.Count(); i += dimensions)
+				using (var fs = new FileStream(file, FileMode.Create))
+				using (var sw = new StreamWriter(fs))
 				{
-					for (int j = 0; j < dimensions; j++)
+					for (int i = 0; i < ls.Count(); i += dimensions)
 					{
-						sw.Write(ls[i + j]);
-						if (j + 1 != dimensions)
-							sw.Write(seperator);
+						for (int j = 0; j < dimensions; j++)
+						{
+							sw.Write(ls[i + j]);
+							if (j + 1 != dimensions)
+								sw.Write(seperator);
+						}
+						if (i + dimensions != ls.Count())
+							sw.Write("\n");
 					}
-					if (i + dimensions != ls.Count())
-						sw.Write("\n");
 				}
-				sw.Close();
-				fs.Close();
 			}
 			catch
 			{
@@ -506,10 +515,29 @@ namespace NeKzBot
 		}
 
 		// Others
-		public static bool FileFound(string f) => File.Exists(f) ? true : false;
+		public static bool FileFound(string f) =>
+			File.Exists(f);
 
-		public static string UpperString(string s, bool b = true) => b ? s.ToUpper() : s;
+		public static string UpperString(string s, bool b = true) =>
+			!b ?
+			s : s.ToUpper();
 
-		public static string GetRestAfter(string s, char l) => s.Split(l).Last();
+		public static string GetRestAfter(string s, char l) =>
+			s.Split(l).Last();
+
+		public static bool ValidFileName(string path) =>
+			string.IsNullOrEmpty(path) ||
+			path?.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0;
+
+		public static bool ValidPathName(string path) =>
+			string.IsNullOrEmpty(path) ||
+			path?.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
+
+		public static string GetLocalTime() =>
+			DateTime.Now.ToString("HH:mm:ss");
+
+		public static string GetPath() =>
+			System.Diagnostics.Debugger.IsAttached ?
+			AppDomain.CurrentDomain.BaseDirectory : Properties.Settings.Default.ApplicationPath;
 	}
 }

@@ -3,19 +3,18 @@ using Discord.Audio;
 
 namespace NeKzBot
 {
-	public class VoiceChannel
+	public class VoiceChannel : NBot
 	{
-		public static bool
-			vcconnected = false,    // Only play when in VC
-			isplaying = false,      // Prevent double playing
-			shouldstop = false;     // Stop music, needed when playing long audio tracks
+		public static bool vcconnected = false;		// Only play when in VC
+		public static bool isplaying = false;		// Prevent double playing
+		public static bool shouldstop = false;		// Stop music, needed when playing long audio tracks
 
 		public static async Task ConnectVC(Discord.Channel vChannel)
 		{
-			Logging.CON("Trying to join vc", System.ConsoleColor.DarkCyan);
+			Logging.CON("Trying to join vc", System.ConsoleColor.DarkGreen);
 			if (!vcconnected)
 			{
-				await NBot.dClient.GetService<AudioService>().Join(vChannel);
+				await dClient.GetService<AudioService>().Join(vChannel);
 				vcconnected = true;
 			}
 		}
@@ -25,7 +24,7 @@ namespace NeKzBot
 			Logging.CON("Trying to leave vc", System.ConsoleColor.DarkCyan);
 			if (vcconnected)
 			{
-				await NBot.dClient.GetServer(serverID).GetAudioClient().Disconnect();
+				await dClient.GetServer(serverID).GetAudioClient().Disconnect();
 				vcconnected = false;
 			}
 		}

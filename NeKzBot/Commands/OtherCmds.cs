@@ -10,13 +10,13 @@ namespace NeKzBot
 		{
 			Logging.CON("Loading other commands", System.ConsoleColor.DarkYellow);
 
-			GetRandomCheat(Data.cheatCmd);			// !cheat
+			GetRandomCheat(Data.cheatCmd);          // !cheat
 			GetRandomExploit(Data.exploitCmd);      // !exploit
 			GetRandomFact("funfact");               // !funfact, !fact
 			GetScript("script");                    // !script <name>
 			GetElevatorTiming("dialogue");          // !dialogue
 			GetSegmentedRun(Data.srunCmd);          // !segmented <name>
-			GetServerInfo("rpi");					// !rpi
+			GetServerInfo("rpi");                   // !rpi
 			GetCredits(Data.creditCmd);				// !credits
 			OtherCommands();
 
@@ -47,7 +47,7 @@ namespace NeKzBot
 			{
 				await e.Channel.SendIsTyping();
 				int rand = Utils.RNG(Data.p2Exploits.GetLength(0));
-				await e.Channel.SendMessage($"{Utils.AsBold(Data.p2Exploits[rand, 0])}\n{Data.p2Exploits[rand, 1]}");
+				await e.Channel.SendMessage($"**{Data.p2Exploits[rand, 0]}**\n{Data.p2Exploits[rand, 1]}");
 			});
 		}
 
@@ -55,11 +55,11 @@ namespace NeKzBot
 		{
 			cmd.CreateCommand(c)
 			.Alias("fact")
-			.Description($"**-** `{Settings.Default.PrefixCmd + c} gives you a random text about random a topic.")
+			.Description($"**-** `{Settings.Default.PrefixCmd + c} gives you a random text about a random topic.")
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage(Utils.AsItalitc(Data.quoteNames[Utils.RNG(Data.quoteNames.GetLength(0)), 1]));
+				await e.Channel.SendMessage($"*{Data.quoteNames[Utils.RNG(Data.quoteNames.GetLength(0)), 1]}*");
 			});
 		}
 		#endregion
@@ -77,7 +77,7 @@ namespace NeKzBot
 				if (Utils.SearchArray(Data.scriptFiles, 0, e.Args[0], out index))
 					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/scripts/{Data.scriptFiles[index, 1]}");
 				else
-					await e.Channel.SendMessage($"Unknown script.\n**-** Try one of these {Utils.ArrayToList(Data.scriptFiles, 0, "`")}");
+					await e.Channel.SendMessage($"Unknown script. Try one of these:\n{Utils.ArrayToList(Data.scriptFiles, 0, "`")}");
 			});
 		}
 
@@ -98,7 +98,7 @@ namespace NeKzBot
 				else if (Utils.SearchArray(Data.portal2Maps, 5, e.Args[0], out index))
 					await e.Channel.SendMessage(Data.portal2Maps[index, 4]);
 				else
-					await e.Channel.SendMessage("Unknown map name.");
+					await e.Channel.SendMessage($"Unknown map name. Try `{Settings.Default.PrefixCmd + c}` with one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");
 			});
 		}
 
@@ -112,13 +112,13 @@ namespace NeKzBot
 				await e.Channel.SendIsTyping();
 				int index, rand = Utils.RNG(Data.projectNames.GetLength(0));
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage($"{Utils.AsBold(Data.projectNames[rand, 1])}\n{Data.projectNames[rand, 2]}");
+					await e.Channel.SendMessage($"**{Data.projectNames[rand, 1]}**\n{Data.projectNames[rand, 2]}");
 				else if (Utils.SearchArray(Data.projectNames, 0, e.Args[0], out index))
-					await e.Channel.SendMessage($"{Utils.AsBold(Data.projectNames[index, 1])}\n{Data.projectNames[index, 2]}");
+					await e.Channel.SendMessage($"**{Data.projectNames[index, 1]}**\n{Data.projectNames[index, 2]}");
 				else if (Utils.SearchArray(Data.projectNames, 1, e.Args[0], out index))
-					await e.Channel.SendMessage($"{Utils.AsBold(Data.projectNames[index, 1])}\n{Data.projectNames[index, 2]}");
+					await e.Channel.SendMessage($"**{Data.projectNames[index, 1]}**\n{Data.projectNames[index, 2]}");
 				else
-					await e.Channel.SendMessage($"Unknown run.\n**-** Try: {Utils.ArrayToList(Data.projectNames, 0, "`")}");
+					await e.Channel.SendMessage($"Unknown run. Try of one these:\n{Utils.ArrayToList(Data.projectNames, 0, "`")}");
 			});
 		}
 		#endregion
@@ -136,15 +136,6 @@ namespace NeKzBot
 				await e.Channel.SendMessage("Hi! :smile:");
 			});
 
-			// Small user information
-			cmd.CreateCommand("when")
-			.Description($"**-** `{Settings.Default.PrefixCmd}when` shows you when you joined the server.")
-			.Do(async e =>
-			{
-				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage($"{e.User.Name} joined this server on **{e.User.JoinedAt.ToString()}**.");
-			});
-
 			// Convert text to symbols
 			cmd.CreateCommand("ris")
 			.Description($"**-** `{Settings.Default.PrefixCmd}ris <text>` returns your message in regional indicator symbols.")
@@ -153,12 +144,12 @@ namespace NeKzBot
 			{
 				await e.Channel.SendIsTyping();
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage("Invalid parameter.");
+					await e.Channel.SendMessage($"Invalid parameter. Try `{Settings.Default.PrefixCmd}ris <text>`");
 				else
 					await e.Channel.SendMessage(Utils.RIS(e.Args[0]));
 			});
 
-			// Meme
+			// Memes
 			cmd.CreateCommand("routecredit")
 			.Description($"**-** `{Settings.Default.PrefixCmd}routecredit` gives somebody route credit for no reason.")
 			.Do(async e =>
@@ -173,7 +164,93 @@ namespace NeKzBot
 					rand = e.Server.Users.ToList()[Utils.RNG(e.Server.UserCount)];
 				while (rand.IsBot);
 
-				await e.Channel.SendMessage("**{rand.Name}**");
+				await e.Channel.SendMessage($"**{rand.Name}**");
+			});
+
+			cmd.CreateCommand("??")
+			.Alias("?bot", "q", "?q")
+			.Description($"**-** `{Settings.Default.PrefixCmd}?? <question>` responses to a question.")
+			.Parameter("p", ParameterType.Unparsed)
+			.Do(async (e) =>
+			{
+				await e.Channel.SendIsTyping();
+				var question = e.Args[0];
+				if (string.IsNullOrEmpty(question))
+					await e.Channel.SendMessage($"Invalid parameter. Try `{Settings.Default.PrefixCmd}?? <question>`");
+				else if (question[question.Length - 1] == '?')
+					await e.Channel.SendMessage(Utils.RNGString("**Yes.**", "**No.**", "**Maybe.**", "**NO.**", "**YEEE!**", ":ok_hand:", ":thumbsup:", ":thumbsdown:"));
+				else
+					await e.Channel.SendMessage(Utils.RNGString("Is this a question?", "This isn't a question.", "Please..."));
+			});
+
+			// Small user information
+			cmd.CreateCommand("when")
+			.Description($"**-** `{Settings.Default.PrefixCmd}when` shows you when you joined the server.")
+			.Do(async e =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage($"{e.User.Name} joined this server on **{e.User.JoinedAt.ToString()}**.");
+			});
+
+			cmd.CreateCommand("idinfo")
+			.Description($"**-** `{Settings.Default.PrefixCmd}idinfo` returns some user ID stats")
+			.Do(async e =>
+			{
+				var users = e.Server.Users.ToArray();
+				var lowestid = users[0];
+				var highestid = users[0];
+				foreach (var item in users)
+				{
+					lowestid = lowestid.Discriminator > item.Discriminator ? item : lowestid;
+					highestid = highestid.Discriminator < item.Discriminator ? item : highestid;
+				}
+				await e.Channel.SendMessage($"Lowest ID **-** {lowestid.Name}#{lowestid.Discriminator}\nHighest ID **-** {highestid.Name}#{highestid.Discriminator}");
+			});
+
+			// Get invite link
+			cmd.CreateCommand("invite")
+			.Do(async (e) =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage($"https://discord.gg/{Settings.Default.ServerInviteID}");
+			});
+
+			// Dropbox stuff
+			cmd.CreateCommand("cloud")
+			.Description($"**-** `{Settings.Default.PrefixCmd}cloud` returns the link for the public demo folder\n**-** Just attach your demo and it'll automatically upload it to Dropbox.")
+			.Alias("folder")
+			.Do(async (e) =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage($"https://www.dropbox.com/sh{Settings.Default.DropboxFolderLink}?dl=0");
+			});
+
+			cmd.CreateCommand("dbfolder")
+			.Description($"**-** `{Settings.Default.PrefixCmd}dbfolder` returns the list of files you've stored on Dropbox.")
+			.Alias("myfolder")
+			.Do(async (e) =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage(await DropboxCom.ListFiles($"{Settings.Default.DropboxFolderName}/{e.User.Id.ToString()}"));
+			});
+
+			cmd.CreateCommand("dbdelete")
+			.Description($"**-** `{Settings.Default.PrefixCmd}dbdelete <file>` deletes the file from your own Dropbox folder.**-** For master server-admin only `{Settings.Default.PrefixCmd}dbdelete <folder> <file>`")
+			.Alias("myfolder")
+			.Parameter("p", ParameterType.Unparsed)
+			.Do(async (e) =>
+			{
+				await e.Channel.SendIsTyping();
+				if (e.Args[0].Contains('|') && e.Channel.Id == Settings.Default.MaseterAdminID)
+				{
+					var values = e.Args[0].Split('|');
+					if (values.Count() == 2)
+						await e.Channel.SendMessage(await DropboxCom.DeleteFile($"{Settings.Default.DropboxFolderName}/{values[0]}", values[1]));
+					else
+						await e.Channel.SendMessage("Invalid parameters.");
+				}
+				else
+					await e.Channel.SendMessage(await DropboxCom.DeleteFile($"{Settings.Default.DropboxFolderName}/{e.User.Id.ToString()}", e.Args[0]));
 			});
 		}
 
@@ -204,7 +281,7 @@ namespace NeKzBot
 					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/pics/{Data.memeCommands[i, 2]}"); // File only
 				else
 				{
-					await e.Channel.SendMessage(Utils.AsBold(Data.memeCommands[i, 3])); // File and text
+					await e.Channel.SendMessage($"**{Data.memeCommands[i, 3]}**"); // File and text
 					await System.Threading.Tasks.Task.Delay(333);
 					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/pics/{Data.memeCommands[i, 2]}");
 				}
@@ -218,7 +295,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage($"{Utils.AsBold(Data.toolCommands[i, 3])}\n{Data.toolCommands[i, 2]}");
+				await e.Channel.SendMessage($"**{Data.toolCommands[i, 3]}**\n{Data.toolCommands[i, 2]}");
 			});
 		}
 
@@ -229,7 +306,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage($"{Data.linkCommands[i, 1]}\n{Data.linkCommands[i, 2]}");
+				await e.Channel.SendMessage($"{Data.linkCommands[i, 3]}\n{Data.linkCommands[i, 2]}");
 			});
 		}
 
@@ -242,7 +319,7 @@ namespace NeKzBot
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
-					await e.Channel.SendMessage(Utils.AsItalitc(Data.quoteNames[i, 1]));
+					await e.Channel.SendMessage($"*{Data.quoteNames[i, 1]}*");
 				});
 			});
 		}
@@ -284,7 +361,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					var t = Utils.GetCommandOutput("vcgencmd", "measure_temp");
-					await e.Channel.SendMessage($"SoC Temperature = {Utils.AsBold(t.Substring(5, t.Length - 5).Replace("'", "°"))}");
+					await e.Channel.SendMessage($"SoC Temperature = **{t.Substring(5, t.Length - 5).Replace("'", "°")}**");
 				});
 
 				g.CreateCommand("os")

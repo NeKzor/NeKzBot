@@ -70,13 +70,37 @@
       <HintPath>..\packages\Discord.Net.Modules.0.9.6\lib\net45\Discord.Net.Modules.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Dropbox.Api, Version=0.1.6165.22196, Culture=neutral, PublicKeyToken=310f0e82fbb45d01, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dropbox.Api.4.1\lib\net45\Dropbox.Api.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NAudio, Version=1.7.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NAudio.1.7.3\lib\net35\NAudio.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Concurrent, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Concurrent.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SpeedrunComSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Forked\SpeedrunComSharp-1\SpeedrunComSharp\bin\Debug\SpeedrunComSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,18 +110,31 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebSocket4Net.0.14.1\lib\net45\WebSocket4Net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\SpeedrunCmds.cs" />
+    <Compile Include="Modules\Games\Giveaway.cs" />
     <Compile Include="Modules\Audio.cs" />
     <Compile Include="Modules\CmdManager.cs" />
     <Compile Include="Commands\BotCmds.cs" />
     <Compile Include="Commands\HelpCmds.cs" />
     <Compile Include="Commands\LeaderboardCmds.cs" />
     <Compile Include="Commands\VoiceChannelCmds.cs" />
+    <Compile Include="Modules\Message\AutoDownloader.cs" />
     <Compile Include="Modules\Leaderboard\AutoUpdater.cs" />
-    <Compile Include="Modules\Leaderboard\Caching.cs" />
+    <Compile Include="Modules\Leaderboard\Cache.cs" />
+    <Compile Include="Modules\Speedrun\AutoNotification.cs" />
+    <Compile Include="Modules\Speedrun\SpeedrunCom.cs" />
+    <Compile Include="Modules\Twitch\TwitchTv.cs" />
+    <Compile Include="Modules\Message\DropboxCom.cs" />
+    <Compile Include="Server\Caching.cs" />
     <Compile Include="Server\Commands.cs" />
     <Compile Include="Modules\Leaderboard\Leaderboard.cs" />
+    <Compile Include="Server\Fetching.cs" />
     <Compile Include="Server\Logging.cs" />
     <Compile Include="Commands\OtherCmds.cs" />
     <Compile Include="NBot.cs" />
@@ -111,10 +148,13 @@
     </Compile>
     <Compile Include="Resources\Utils.cs" />
     <Compile Include="Server\VoiceChannel.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -132,7 +172,9 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Resources\cache\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

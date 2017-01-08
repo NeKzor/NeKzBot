@@ -29,13 +29,13 @@ namespace NeKzBot
 			{
 				await e.Channel.SendIsTyping();
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1"));
 				else if (e.Args[0] == "yt")
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&yt=1"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&yt=1"));
 				else if (e.Args[0] == "demo")
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&demo=1"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&demo=1"));
 				else
-					await e.Channel.SendMessage("Unknow parameter.");
+					await e.Channel.SendMessage($"Unknow parameter. Try `{Settings.Default.PrefixCmd + c} yt` or `{Settings.Default.PrefixCmd + c} demo`");
 			});
 		}
 
@@ -49,13 +49,13 @@ namespace NeKzBot
 			{
 				await e.Channel.SendIsTyping();
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog"));
 				else if (e.Args[0] == "yt")
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?yt=1"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?yt=1"));
 				else if (e.Args[0] == "demo")
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?demo=1"));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?demo=1"));
 				else
-					await e.Channel.SendMessage("Unknow parameter.");
+					await e.Channel.SendMessage($"Unknow parameter. Try `{Settings.Default.PrefixCmd + c} yt` or `{Settings.Default.PrefixCmd + c} demo`");
 			});
 		}
 
@@ -69,15 +69,15 @@ namespace NeKzBot
 				await e.Channel.SendIsTyping();
 				int index;
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[Utils.RNG(Data.portal2Maps.GetLength(0)), 0]));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[Utils.RNG(Data.portal2Maps.GetLength(0)), 0]));
 				else if (Utils.SearchArray(Data.portal2Maps, 2, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
 				else if (Utils.SearchArray(Data.portal2Maps, 3, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
 				else if (Utils.SearchArray(Data.portal2Maps, 5, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
+					await e.Channel.SendMessage(await Leaderboard.GetLatestEntry("http://board.iverb.me/changelog?wr=1&chamber=" + Data.portal2Maps[index, 0]));
 				else
-					await e.Channel.SendMessage($"Couldn't find that map.\nTry one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");    // List all maps lmao
+					await e.Channel.SendMessage($"Couldn't find that map. Try `{Settings.Default.PrefixCmd + c}` with one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");    // List all maps lmao
 			});
 		}
 
@@ -92,15 +92,15 @@ namespace NeKzBot
 				await e.Channel.SendIsTyping();
 				int index;
 				if (e.Args[0] == string.Empty)
-					await e.Channel.SendMessage(Leaderboard.GetUserStats("http://board.iverb.me/profile/" + e.User.Name));
+					await e.Channel.SendMessage(await Leaderboard.GetUserStats("http://board.iverb.me/profile/" + e.User.Name));
 				else if (Utils.SearchArray(Data.portal2Maps, 2, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
+					await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
 				else if (Utils.SearchArray(Data.portal2Maps, 3, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
+					await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
 				else if (Utils.SearchArray(Data.portal2Maps, 5, e.Args[0], out index))
-					await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
+					await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.User.Name, index));
 				else
-					await e.Channel.SendMessage($"Couldn't find that map.\nTry one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");
+					await e.Channel.SendMessage($"Couldn't find that map. Try `{Settings.Default.PrefixCmd + c} <mapname>` with one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");
 			});
 		}
 
@@ -117,19 +117,19 @@ namespace NeKzBot
 				{
 					if (e.Args.Count() > 1)
 						if (Utils.SearchArray(Data.portal2Maps, 2, Utils.GetRest(e.Args, 1, e.Args.Count()), out index))
-							await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
+							await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
 						else if (Utils.SearchArray(Data.portal2Maps, 3, Utils.GetRest(e.Args, 1, e.Args.Count()), out index))
-							await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
+							await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
 						else if (Utils.SearchArray(Data.portal2Maps, 5, Utils.GetRest(e.Args, 1, e.Args.Count()), out index))
-							await e.Channel.SendMessage(Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
+							await e.Channel.SendMessage(await Leaderboard.GetUserRank("http://board.iverb.me/profile/" + e.Args[0], index));
 						else
-							await e.Channel.SendMessage("Couldn't find that map.\nTry one of these:\n" + Utils.ArrayToList(Data.portal2Maps, 5));
+							await e.Channel.SendMessage($"Couldn't find that map. Try `{Settings.Default.PrefixCmd + c} <mapname>` with one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");
 					else
-						await e.Channel.SendMessage(Leaderboard.GetUserStats("http://board.iverb.me/profile/" + e.Args[0]));
+						await e.Channel.SendMessage(await Leaderboard.GetUserStats("http://board.iverb.me/profile/" + e.Args[0]));
 				}
 				catch
 				{
-					await e.Channel.SendMessage($"Invalid parameter. Try `{Settings.Default.PrefixCmd}help {c}`");
+					await e.Channel.SendMessage($"Invalid parameter. Try `{Settings.Default.PrefixCmd + c} <playername>` or `{Settings.Default.PrefixCmd}help {c}` for more information.");
 				}
 			});
 		}
@@ -145,7 +145,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.GetRefreshTime());
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.GetRefreshTime());
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -159,7 +159,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.SetResfreshTime(e.Args[0]));
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.SetResfreshTime(e.Args[0]));
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -172,7 +172,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.SetUpdateChannel(e.Args[0]));
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.SetUpdateChannel(e.Args[0]));
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -185,7 +185,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.SetAutoUpdateState(e.Args[0]));
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.SetAutoUpdateState(e.Args[0]));
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -198,7 +198,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.SetNewBoardParameter(e.Args[0]));
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.SetNewBoardParameter(e.Args[0]));
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -212,7 +212,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.ToggleUpdate());
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.ToggleUpdate());
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -224,7 +224,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.RefreshNow());
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.RefreshNow());
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -236,7 +236,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(AutoUpdater.CleanEntryCache());
+						await e.Channel.SendMessage(Leaderboard.AutoUpdater.CleanEntryCache());
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -250,7 +250,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(Caching.GetCleanCacheTime());
+						await e.Channel.SendMessage(Leaderboard.Cache.GetCleanCacheTime());
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -263,7 +263,7 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage(Caching.SetCleanCacheTime(e.Args[0]));
+						await e.Channel.SendMessage(Leaderboard.Cache.SetCleanCacheTime(e.Args[0]));
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});

@@ -12,7 +12,15 @@ namespace NeKzBot
 
 		public NBot()
 		{
-			Logging.CON("Creating new client", ConsoleColor.DarkYellow);
+			Create();
+			Init();
+			Load();
+			Connect();
+		}
+
+		private void Create()
+		{
+			Logging.CON("Creating new client", ConsoleColor.White);
 
 			dClient = new DiscordClient(x =>
 			{
@@ -22,23 +30,47 @@ namespace NeKzBot
 				x.AppVersion = Settings.Default.AppVersion;
 				x.AppUrl = Settings.Default.AppUrl;
 			});
+		}
 
+		private void Init()
+		{
 			try
 			{
 				Audio.Init();
-				Data.Init();
 				Logging.Init();
 				Commands.Init();
+				Data.Init();
+				Caching.Init();
 				CmdManager.Init();
+				Leaderboard.Cache.Init();
+				Leaderboard.AutoUpdater.Init();
+				SpeedrunCom.Init();
+				DropboxCom.Init();
+			}
+			catch (Exception ex)
+			{
+				Logging.CON($"Initialization failed:\n{ex.ToString()}");
+				Console.ReadKey();
+				Environment.Exit(0);
+			}
+		}
+
+		private void Load()
+		{
+			try
+			{
 				CmdManager.LoadModules();
 			}
 			catch (Exception ex)
 			{
-				Logging.CON($"Could not load something:\n{ex.ToString()}");
+				Logging.CON($"Module error:\n{ex.ToString()}");
 				Console.ReadKey();
 				Environment.Exit(0);
 			}
+		}
 
+		private static void Connect()
+		{
 			try
 			{
 				dClient.ExecuteAndWait(async () =>
@@ -47,14 +79,17 @@ namespace NeKzBot
 					dClient.SetGame(Data.randomGames[Utils.RNG(0, Data.randomGames.Count())]);
 
 					// Module tasks
-					await Task.Factory.StartNew(async () =>
-					{
+					Task.WaitAll(
 						// Leaderboard
-						await AutoUpdater.AutoUpdate();
-						await Caching.ResetDataCache();
+						Leaderboard.Cache.Reset(),
+						Leaderboard.AutoUpdater.Start(),
 						// Game
-						//await GiveawayGame.TimeReset();
-					});
+						GiveawayGame.Reset(),
+						// SpeedrunCom
+						SpeedrunCom.AutoNotification.Start(),
+						// TwitchTv
+						TwitchTv.Start()
+					);
 				});
 			}
 			catch (Exception ex)
