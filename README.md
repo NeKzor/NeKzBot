@@ -1,4 +1,4 @@
-﻿# NeKzBot
+# NeKzBot
 [![NeKz Server](https://discordapp.com/api/guilds/208570520805965826/embed.png?style=banner2)](https://discord.gg/rEazbJn)
 
 ## Features
@@ -12,12 +12,15 @@
 * Fetching data from
   * [board.iverb.me](http://board.iverb.me)
   * [speedrun.com](http://www.speedrun.com)
+  * [steamcommunity.com](http://steamcommunity.com/workshop)
 * Auto notifications for
   * board.iverb.me
   * speedrun.com
   * [twitch.tv](https://www.twitch.tv)
 * Automatic file uploader to [Dropbox](https://www.dropbox.com)
 * Works fine on Linux + [Mono](http://www.mono-project.com)
+
+## [Current Progress](https://github.com/NeKzor/NeKzBot/projects?sort=name)
 
 ## Server
 * [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
