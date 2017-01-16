@@ -1,18 +1,28 @@
-﻿using System.Linq;
+﻿using System.Net;
+using System.Linq;
 using SpeedrunComSharp;
+using System.Threading.Tasks;
 
 namespace NeKzBot
 {
 	public partial class SpeedrunCom
 	{
 		private static SpeedrunComClient srcClient;
-
-		private const int maxnfcount = 5;
+		private static WebHeaderCollection srcHeaders;
+		private const int maxnfcount = 10;
+		private const int maxnffetchcount = 100;
 
 		public static void Init()
 		{
 			Logging.CON("Initializing speedruncom client", System.ConsoleColor.DarkYellow);
-			srcClient = new SpeedrunComClient($"{Properties.Settings.Default.AppName}/{Properties.Settings.Default.AppVersion}", Properties.Settings.Default.SpeedruncomToken, 5);
+			srcClient = new SpeedrunComClient($"{Server.Settings.Default.AppName}/{Server.Settings.Default.AppVersion}", Server.Credentials.Default.SpeedruncomToken, 5);
+			
+			// Make custom header
+			srcHeaders = new WebHeaderCollection();
+			srcHeaders["Host"] = "www.speedrun.com";
+			srcHeaders["Accept"] = "application/json";
+			srcHeaders["X-API-Key"] = Server.Credentials.Default.SpeedruncomToken;
+			srcHeaders["User-Agent"] = $"{Server.Settings.Default.AppName}/{Server.Settings.Default.AppVersion}";
 
 			if (!srcClient.IsAccessTokenValid)
 				Logging.CON("invalid token");
@@ -32,8 +42,8 @@ namespace NeKzBot
 			catch
 			{
 				return "**Failed** to find the world record\n"
-				+ $"**-** Game might have a level leaderboard instead. Try `{Properties.Settings.Default.PrefixCmd}{Properties.Settings.Default.PrefixCmd}il <game>`\n"
-				+ "**-** Game doesn't have a world record yet.";
+					+ $"**-** Game might have a level leaderboard instead. Try `{Server.Settings.Default.PrefixCmd}{Server.Settings.Default.PrefixCmd}il <game>`\n"
+					+ "**-** Game doesn't have a world record yet.";
 			}
 
 			try
@@ -45,7 +55,9 @@ namespace NeKzBot
 				var time = wr.Times.Primary.Value;
 				// Player stats
 				var player = wr.Player.Name;
-				var country = $":flag_{wr.Player.User.Location.Country.Code.ToLower()}:";   // Thanks for not making this null, when user doesn't have set a location
+				var country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+				if (country != string.Empty)
+					country = $" :flag_{country}:";
 				// Proof
 				var video = wr.Videos.Links.First().OriginalString;
 				// Stats
@@ -53,12 +65,12 @@ namespace NeKzBot
 				var date = wr.Date.Value.Date.ToString("dd.MM.yyyy");
 				var sdate = wr.DateSubmitted.Value.Date.ToString("dd.MM.yyyy");
 				// Verfied status
-				var status = "";
+				var status = string.Empty;
 				if (wr.Status.Type == RunStatusType.Verified && game.Ruleset.RequiresVerification)
 					status = $"Verfied by {wr.Status.Examiner.Name} on {wr.Status.VerifyDate.Value.Date.ToString("dd.MM.yyyy")}";
 				var comment = string.IsNullOrEmpty(wr.Comment) ? "" : $"\n*{wr.Comment}*";
 				return $"**[World Record - *{name}*]**\n"
-					+ $"{category} in **{FormatTime(time)}** by {player} {country}\n"
+					+ $"{category} in **{FormatTime(time)}** by {player}{country}\n"
 					+ $"{video}\n"
 					+ $"Played on {platform} on {date}\n"
 					+ $"Submitted on {sdate}\n"
@@ -84,11 +96,13 @@ namespace NeKzBot
 					pbs = player.PersonalBests.ToArray();
 				else
 					return "Player doesn't have any personal records.";
-
-				var output = $"**[Personal Records - *{player.Name}* :flag_{ player.Location.Country.Code.ToLower()}:]**\n";	// RIP
+				var country = player.Location?.Country?.Code?.ToLower() ?? string.Empty;
+				if (country != string.Empty)
+					country = $" :flag_{country}:";
+				var output = $"**[Personal Records - *{player.Name}*{country}]**\n";
 				foreach (var item in pbs)
 				{
-					var game = "";
+					var game = string.Empty;
 					if (item.Category.Type == CategoryType.PerGame)
 						game = $"**{item.Game.Name}** {item.Category.Name}";
 					else
@@ -105,12 +119,12 @@ namespace NeKzBot
 
 		public static string GetGameWorldRecords(string gName)
 		{
-			var game = srcClient.Games.SearchGame(gName);
-			if (game == null)
-				return "Unknown game.";
-
 			try
 			{
+				var game = srcClient.Games.SearchGame(gName);
+				if (game == null)
+					return "Unknown game.";
+
 				var all = game.Categories.ToArray();
 				var name = game.Name;
 				var output = $"**[World Records - *{name}*]**\n";
@@ -125,11 +139,13 @@ namespace NeKzBot
 					var time = wr.Times.Primary.Value;
 					// Player stats
 					var player = wr.Player.Name;
-					var country = $":flag_{wr.Player.User.Location.Country.Code.ToLower()}:";   // Still RIP
+					var country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+					if (country != string.Empty)
+						country = $" :flag_{country}:";
 					// Stats
 					var platform = wr.Platform.Name;
 					var date = wr.Date.Value.Date.ToString("dd.MM.yyyy");
-					output += $"{category} in **{FormatTime(time)}** by {player} {country} (Played on {platform} on {date})\n";
+					output += $"{category} in **{FormatTime(time)}** by {player}{country} (Played on {platform} on {date})\n";
 				}
 				return output.Substring(0, output.Length - 1);
 			}
@@ -141,16 +157,22 @@ namespace NeKzBot
 
 		public static string GetPlayerInfo(string pName)
 		{
-			User player = null;
-			if (srcClient.Users.GetUsers(pName).Any())
-				player = srcClient.Users.GetUsers(pName).First();
-			else
-				return "Unknown name.";
-
 			try
 			{
+				User player = null;
+				if (srcClient.Users.GetUsers(pName).Any())
+					player = srcClient.Users.GetUsers(pName).First();
+				else
+					return "Unknown name.";
+
 				var id = player.ID;
 				var name = player.Name;
+				var countrycode = player.Location?.Country?.Code?.ToLower() ?? string.Empty;
+				var country = string.Empty;
+				country = countrycode != string.Empty ? $" :flag_{countrycode}:" : string.Empty; ;
+				countrycode = countrycode != string.Empty ? $"**Country Code -** {countrycode}\n" : string.Empty;
+				var region = player.Location?.Region?.Code?.ToLower() ?? string.Empty;
+				region = region != string.Empty ? $"**Region Code -** {region}\n" : string.Empty;
 				var mods = player.ModeratedGames.Count().ToString();
 				var pbs = player.PersonalBests.Count().ToString();
 				var role = player.Role.ToString();
@@ -160,8 +182,10 @@ namespace NeKzBot
 				var twitch = player.TwitchProfile != null ? "\n**Twitch -**" + player.TwitchProfile.OriginalString : string.Empty;
 				var twitter = player.TwitterProfile != null ? "\n**Twitch -**" + player.TwitterProfile.OriginalString : string.Empty;
 				var web = "\n" + player.WebLink.OriginalString;
-				return $"**[Player Info - *{name}*]**\n"
+				return $"**[Player Info - *{name}*{country}]**\n"
 					+ $"**ID -** {id}\n"
+					+ $"{countrycode}"
+					+ $"{region}"
 					+ $"**Moderator -** {mods}\n"
 					+ $"**Personal Records -** {pbs}\n"
 					+ $"**Role -** {role}\n"
@@ -180,21 +204,21 @@ namespace NeKzBot
 
 		public static string GetGameInfo(string gName)
 		{
-			var game = srcClient.Games.SearchGame(gName);
-			if (game == null)
-				return "Unknown game.";
-
 			try
 			{
+				var game = srcClient.Games.SearchGame(gName);
+				if (game == null)
+					return "Unknown game.";
+
 				// Title
 				var name = game.Name;
 				// Info
 				var id = game.ID;
 				var abbr = game.Abbreviation;
 				var rdate = game.YearOfRelease.ToString();
-				var cdate = "";
+				var cdate = string.Empty;
 				if (game.CreationDate != null)
-					cdate = game.CreationDate.Value.ToString();
+					cdate = $"**Creation Date -** {game.CreationDate.Value.ToString()}\n";
 				var mods = game.Moderators.Count.ToString();
 				var isrom = game.IsRomHack.ToString();
 				// Rules
@@ -207,7 +231,7 @@ namespace NeKzBot
 				return $"**[Game Info - *{name}*]**\n"
 					+ $"**ID -** {id}\n"
 					+ $"**Abbreviation -** {abbr}\n"
-					+ $"**Creation Date -** {cdate}\n"
+					+ cdate
 					+ $"**Release Date -** {rdate}\n"
 					+ $"**Moderator Count -** {mods}\n"
 					+ $"**Is Romhack? -** {isrom}\n"
@@ -225,46 +249,65 @@ namespace NeKzBot
 
 		public static string GetModerators(string gName)
 		{
-			var output = "";
-			var game = srcClient.Games.SearchGame(gName);
-			if (game == null)
-				return "Unknown game.";
-			foreach (var item in game.Moderators.ToArray())
-				output += item.Name + "\n";
-			return output.Substring(0, output.Length - 1);
+			try
+			{
+				var output = string.Empty;
+				var game = srcClient.Games.SearchGame(gName);
+				if (game == null)
+					return "Unknown game.";
+				foreach (var item in game.Moderators.ToArray())
+				{
+					var country = item.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+					if (country != string.Empty)
+						country = $" :flag_{country}:";
+					output += item.Name + country + "\n";
+				}
+				return output.Substring(0, output.Length - 1);
+			}
+			catch
+			{
+				return "**Error**";
+			}
 		}
 
 		public static string PlayerHasWorldRecord(string pName)
 		{
-			User player = null;
-			if (srcClient.Users.GetUsers(pName).Any())
-				player = srcClient.Users.GetUsers(pName).First();
-			else
-				return "Unknown name.";
-
-			Record[] pbs;
-			if (player.PersonalBests.Any())
-				pbs = player.PersonalBests.ToArray();
-			else
-				return "Player doesn't have any personal records.";
-
-			foreach (var item in pbs)
+			try
 			{
-				if (item.Rank != 1)
-					continue;
-				return "Yes.";
+				User player = null;
+				if (srcClient.Users.GetUsers(pName).Any())
+					player = srcClient.Users.GetUsers(pName).First();
+				else
+					return "Unknown name.";
+
+				Record[] pbs;
+				if (player.PersonalBests.Any())
+					pbs = player.PersonalBests.ToArray();
+				else
+					return "Player doesn't have any personal records.";
+
+				foreach (var item in pbs)
+				{
+					if (item.Rank != 1)
+						continue;
+					return "Yes.";
+				}
+				return "No.";
 			}
-			return "No.";
+			catch
+			{
+				return "**Error**";
+			}
 		}
 
 		public static string GetTopTen(string gName)
 		{
-			var game = srcClient.Games.SearchGame(gName);
-			if (game == null)
-				return "Unknown game.";
-
 			try
 			{
+				var game = srcClient.Games.SearchGame(gName);
+				if (game == null)
+					return "Unknown game.";
+
 				var output = $"**[Top 10 - *{game.Name}*]**\n";
 				var category = game.FullGameCategories.First(x => x.Type == CategoryType.PerGame && x.Runs.Any());
 				var runs = category.Runs.Where(x => x.Status.Type == RunStatusType.Verified).OrderBy(x => x.Times.Primary.Value.TotalMilliseconds).ToArray();
@@ -279,7 +322,10 @@ namespace NeKzBot
 							if (IsTied(runs[i].Times.Primary.Value, runs[i - 1].Times.Primary.Value))
 								rank--;
 						names.Add(runs[i].Player.Name);
-						output += $"{TopTenFormat(rank.ToString(), false)} **{runs[i].Player.Name}** in {FormatTime(runs[i].Times.Primary.Value)}\n";
+						var country = runs[i].Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+						if (country != string.Empty)
+							country = $" :flag_{country}:";
+						output += $"{TopTenFormat(rank.ToString(), false)} **{runs[i].Player.Name}**{country} in {FormatTime(runs[i].Times.Primary.Value)}\n";
 					}
 					else
 						rankcount++;
@@ -292,94 +338,113 @@ namespace NeKzBot
 			}
 		}
 
-		public static string GetLastNotification(string scount = null, string type = null, bool update = false)
+		public static async Task<string> GetLastNotification(string scount = null, string nftype = null)
 		{
-			// Check parameter <count>
-			if (scount == null)
-				scount = maxnfcount.ToString();
-			else if (scount.ToLower() == "x")
-				scount = maxnfcount.ToString();
-			else if (!new System.Text.RegularExpressions.Regex("^[1-9]").IsMatch(scount))
-				return "Invalid notifcation count. Use numbers 1-9 only.";
-
-			if (type == null)
-				type = "any";
-
-			// Check parameter <type>
-			NotificationType nftype;
-			switch (type.ToLower())
-			{
-				case "game":
-					nftype = NotificationType.Game;
-					break;
-				case "guide":
-					nftype = NotificationType.Guide;
-					break;
-				case "post":
-					nftype = NotificationType.Post;
-					break;
-				case "run":
-					nftype = NotificationType.Run;
-					break;
-				case "any":
-					nftype = (NotificationType)4;
-					break;
-				default:
-					return "Unkown notification type. Try `game`, `guide`, `post`, `run` or `any`.";
-			}
-
 			try
 			{
+				// Check parameter <count>
+				if (scount == null)
+					scount = maxnfcount.ToString();
+				else if (scount.ToLower() == "x")
+					scount = maxnfcount.ToString();
+				else if (!new System.Text.RegularExpressions.Regex("^[1-9]").IsMatch(scount))
+					return "Invalid notifcation count. Use numbers 1-9 only.";
+				if (nftype == null)
+					nftype = "any";
+
+				// Web request
+				var json = await Fetching.GetString($"http://www.speedrun.com/api/v1/notifications?max={maxnffetchcount}", srcHeaders);
+
+				// Read
+				if (string.IsNullOrEmpty(json))
+					return null;
+
+				// Read json string
+				dynamic api = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+				if (string.IsNullOrEmpty(api?.ToString()))
+					return null;
+
+				// Parse data
+				var title = $"**[Latest Notifications (Type: {nftype})]**\n";
+				var output = title;
 				var count = System.Convert.ToInt16(scount);
-				var nfs = new System.Collections.Generic.List<Notification>();
-				
-				for (int j = 0; j < maxnfcount; j++)
-					nfs.Add(srcClient.Notifications.GetNotifications(null, NotificationsOrdering.NewestToOldest).ElementAt(j));
-
-				// Auto notification updater has a different format
-				if (update)
+				for (int i = 0; i < count; i++)
 				{
-					var text = nfs[0].Text;
-					var player = text.Substring(0, text.IndexOf(" "));
-					var msg = text.Substring(player.Length, text.Length - player.Length);
-					if (msg.Contains("The new WR is") && nfs[0].Type == NotificationType.Run)
-						player = "@here " + player;
-					return $"**[{nfs[0].TimeCreated}]**"
-						+ $"\n{player}{msg}\n{nfs[0].WebLink}";
+					var item = api.data[i];
+					//var id = item.id.ToString();
+					var created = item.created.ToString();
+					var status = item.status.ToString();
+					var text = item.text.ToString();
+					var type = item.item.rel.ToString();
+					//var url = item.item.uri.ToString();
+
+					// Filter
+					if (nftype == "any")
+						output += $"{FormatMessage(status)} | {created} | {text}\n";
+					else if (nftype == type)
+						output += $"{FormatMessage(status)} | {created} | {text}\n";
+					else
+						count++;
 				}
+				output = output.Replace("_", "\\_");
+				if (output.Length > 2000)
+					return output.Substring(0, 2000);
 				else
-				{
-					var title = $"**[Latest Notifications (Type: {type})]**\n";
-					var output = title;
-
-					for (int i = 0, c = 0; i < maxnfcount; i++)
-					{
-						if (nfs[i].Type == nftype || nftype == (NotificationType)4)
-						{
-							c++;
-							if (c <= count)
-								output += $"{FormatMessage(nfs[i].Status.ToString())} | {nfs[i].TimeCreated} | {nfs[i].Text}\n";
-							else
-								break;
-						}
-					}
-					return output == title ? "Couldn't find any notifications." : output.Substring(0, output.Length - 1);
-				}
+					return output.Substring(0, output.Length - 1);
 			}
-			catch
+			catch (System.Exception ex)
 			{
+				Logging.CON(ex.ToString());
 				return "**Error**";
+			}
+		}
+
+		public static async Task<string> GetNotificationUpdate()
+		{
+			try
+			{
+				var json = await Fetching.GetString("http://www.speedrun.com/api/v1/notifications", srcHeaders);
+				
+				// Read
+				if (string.IsNullOrEmpty(json))
+					return null;
+
+				// Read json string
+				dynamic api = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+				if (string.IsNullOrEmpty(api?.ToString()))
+					return null;
+
+				// Parse data
+				foreach (var item in api.data)
+				{
+					var created = item.created.ToString();
+					var text = item.text.ToString();
+					var type = item.item.rel.ToString();
+					var url = item.item.uri.ToString();
+
+					// Filter out stuff
+					if ((text.Contains("posted a new thread") && type == "post") || type == "resource")
+						return $"**[{created}]**\n{text}\n{url}";
+					if (text.Contains("beat the WR") && type == "run")
+						return $"**[{created}]**\n@here {text}\n{url}";
+				}
+				return string.Empty;
+			}
+			catch (System.Exception ex)
+			{
+				Logging.CON(ex.ToString());
+				return null;
 			}
 		}
 
 		public static string GetGameRules(string gName, bool il = false)
 		{
-			var game = srcClient.Games.SearchGame(gName);
-			if (game == null)
-				return "Unknown game.";
-
 			try
 			{
+				var game = srcClient.Games.SearchGame(gName);
+				if (game == null)
+					return "Unknown game.";
+
 				var categories = game.Categories.ToArray();
 				var rules = string.Empty;
 				foreach (var item in categories)
@@ -398,11 +463,12 @@ namespace NeKzBot
 					if (rules != string.Empty)
 						break;
 				}
-				return rules == string.Empty ? "No rules have been defined." : $"*{rules}*";
+				return rules == string.Empty ?
+					"No rules have been defined." : $"*{rules}*";
 			}
 			catch
 			{
-				return $"**Error.** Try `{Properties.Settings.Default.PrefixCmd}{Properties.Settings.Default.PrefixCmd}ilrules <game>` if you haven't already.";
+				return $"**Error.** Try `{Server.Settings.Default.PrefixCmd}{Server.Settings.Default.PrefixCmd}ilrules <game>` if you haven't already.";
 			}
 		}
 
@@ -413,7 +479,7 @@ namespace NeKzBot
 			var m = time.Minutes.ToString();
 			var s = time.Seconds.ToString();
 			var ms = time.Milliseconds.ToString();
-			var output = "";
+			var output = string.Empty;
 			output += (h == "0") ? "" : h + ":";
 			output += (m == "0" && output == string.Empty) ? "" : m + ":";
 			output += (s.Length == 1) ? (output == string.Empty) ? s : "0" + s : s;
@@ -442,9 +508,12 @@ namespace NeKzBot
 			return $"**{rank}th**";
 		}
 
-		private static string FormatMessage(string msg) => msg == "Unread" ? "New" : "Old";
+		private static string FormatMessage(string msg) =>
+			msg == "Unread" ?
+			"New" : "Old";
 
 		// Others
-		private static bool IsTied(System.TimeSpan t1, System.TimeSpan t2) => t1.TotalMilliseconds == t2.TotalMilliseconds;
+		private static bool IsTied(System.TimeSpan t1, System.TimeSpan t2) =>
+			t1.TotalMilliseconds == t2.TotalMilliseconds;
 	}
 }

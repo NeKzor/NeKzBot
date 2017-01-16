@@ -1,4 +1,4 @@
-﻿using NeKzBot.Properties;
+﻿using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -156,11 +156,11 @@ namespace NeKzBot
 				var values = e.Args[0].Split(' ');
 				var pcount = values.GetLength(0);
 				if (values[0] == string.Empty)
-					await e.Channel.SendMessage(SpeedrunCom.GetLastNotification());
+					await e.Channel.SendMessage(await SpeedrunCom.GetLastNotification());
 				else if (pcount == 1)
-					await e.Channel.SendMessage(SpeedrunCom.GetLastNotification(values[0]));
+					await e.Channel.SendMessage(await SpeedrunCom.GetLastNotification(values[0]));
 				else if (pcount == 2)
-					await e.Channel.SendMessage(SpeedrunCom.GetLastNotification(values[0], values[1]));
+					await e.Channel.SendMessage(await SpeedrunCom.GetLastNotification(values[0], values[1]));
 				else
 					await e.Channel.SendMessage($"Invalid parameter count. Try `{Settings.Default.PrefixCmd + c} <count> <type>`");
 			});

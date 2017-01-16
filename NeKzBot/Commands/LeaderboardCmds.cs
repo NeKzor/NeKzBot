@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Discord.Commands;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -9,11 +9,11 @@ namespace NeKzBot
 		public static void Load()
 		{
 			Logging.CON("Loading leaderboard commands", System.ConsoleColor.DarkYellow);
-			WorldRecordUpdate("latestwr");          // !lastestwr <mapname>
-			GetCurrentWorldRecord("wr");            // !wr <yt, demo>
-			GetOwnRank("rank", "me", "pb");         // !rank, !me <mapname>
-			GetUserRank("player");                  // !player <name> <mapname>
-			LeaderboardUpdate("latestentry");       // !latestentry, !entry
+			WorldRecordUpdate("latestwr");			// !lastestwr <mapname>
+			GetCurrentWorldRecord("wr");			// !wr <yt, demo>
+			GetOwnRank("rank", "me", "pb");			// !rank, !me <mapname>
+			GetUserRank("player");					// !player <name> <mapname>
+			LeaderboardUpdate("latestentry");		// !latestentry, !entry
 
 			// Special roles only !lb <cmd>
 			LeaderboardCommands(Settings.Default.LeaderboardCmd);

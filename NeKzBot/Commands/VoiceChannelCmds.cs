@@ -1,4 +1,4 @@
-﻿using NeKzBot.Properties;
+﻿using NeKzBot.Server;
 
 namespace NeKzBot
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -20,7 +20,7 @@ namespace NeKzBot
 		public static void Load()
 		{
 			Logging.CON("Loading giveaway game", ConsoleColor.DarkYellow);
-			string c = "giveaway";
+			var c = "giveaway";
 			cacheKey = "gg";
 			GetGiveaway(c);
 			GetGiveawayCommands(c);
@@ -40,7 +40,7 @@ namespace NeKzBot
 						if (IsSolved())
 						{
 							await e.Channel.SendMessage("Ayy, congrats :grinning:");
-							await e.User.SendMessage($"Your prize: {Settings.Default.GiveawayPrize}");
+							await e.User.SendMessage($"Your prize: {Credentials.Default.GiveawayPrizeKey}");
 							if (!Reset().IsCompleted)
 								cancelResetSource.Cancel();
 							Logging.CON("giveaway solved", ConsoleColor.DarkCyan);
@@ -265,7 +265,7 @@ namespace NeKzBot
 				});
 				return "Done.";
 			}
-			return "Can't reset.";
+			return "Cannot reset.";
 		}
 		#endregion
 
@@ -341,7 +341,7 @@ namespace NeKzBot
 
 		private static string NextResetStatus()
 		{
-			int h = (int)((double)Settings.Default.GiveawayResetTime / (double)3600000) - nextReset.Elapsed.Hours;
+			var h = (int)((double)Settings.Default.GiveawayResetTime / (double)3600000) - nextReset.Elapsed.Hours;
 			if (h < 1)
 				return "Will reset soon.";
 			if (h == 1)

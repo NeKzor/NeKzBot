@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -16,7 +15,7 @@ namespace NeKzBot
 				Logging.CON("TwitchTv auto started", ConsoleColor.DarkMagenta);
 
 				// Find channel to send to
-				var dChannel = GetChannelByName();
+				var dChannel = Utils.GetChannel(Settings.Default.TwitchChannelName);
 
 				// Reserve cache memory
 				var cachekey = "twitchtv";
@@ -34,8 +33,8 @@ namespace NeKzBot
 						await Task.Delay(500);
 
 						// Twitch API link
-						string url = $"https://api.twitch.tv/kraken/streams/{channel}?client_id={Settings.Default.TwitchClientToken}";
-						var json = "";
+						string url = $"https://api.twitch.tv/kraken/streams/{channel}?client_id={Credentials.Default.TwitchToken}";
+						var json = string.Empty;
 
 						try
 						{
@@ -44,7 +43,7 @@ namespace NeKzBot
 						}
 						catch (Exception ex)
 						{
-							Logging.CHA($"Fetching error\n{ex.ToString()}");
+							Logging.CON($"Fetching error\n{ex.ToString()}");
 							continue;
 						}
 
@@ -99,16 +98,8 @@ namespace NeKzBot
 			}
 			catch (Exception ex)
 			{
-				Logging.CHA($"TwitchTv error\n{ex.ToString()}");
+				Logging.CON($"TwitchTv error\n{ex.ToString()}");
 			}
-		}
-
-		// Get default twitch channel name
-		private static Discord.Channel GetChannelByName(string serverName = null, string channelName = null)
-		{
-			serverName = serverName ?? Settings.Default.ServerName;
-			channelName = channelName ?? Settings.Default.TwitchChannelName;
-			return NBot.dClient?.FindServers(serverName)?.First().FindChannels(channelName, Discord.ChannelType.Text, true)?.First() ?? null;
 		}
 	}
 }

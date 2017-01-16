@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using Discord;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -26,28 +25,22 @@ namespace NeKzBot
 
 			dClient.MessageReceived += async(s, e) =>
 			{
-				if (!e.Message.IsAuthor)
-				{
+				if (!e.Message.IsAuthor && e.Server.Id == Credentials.Default.DiscordMainServerID)
 					await AutoDownloader.Check(e);
-					dClient.Log.Info($"USER : {e.User.ToString()}", e.Message.Text, null);
-				}
-				else
-					dClient.Log.Info($"BOT : {e.User.ToString()}", e.Message.Text, null);
 			};
 
 			dClient.UserJoined += async (s, e) =>
 			{
-				var chan = GetChannelByName(e.Server.Name, "welcome");
-				await chan.SendMessage($"**{e.User.Name}** joined the server. Hi {e.User.Mention}! {Utils.RNGString(":smile:", ":ok_hand:")}");
+				await Utils.GetChannel(e.Server.DefaultChannel.Name)?.SendMessage($"**{e.User.Name}** joined the server. Hi {e.User.Mention}! {Utils.RNGString(":smile:", ":ok_hand:")}");
 			};
 
 			dClient.UserUpdated += async (s, e) =>
 			{
-				var channel = GetChannelByName();
+				var channel = Utils.GetChannel(Settings.Default.LogChannelName, e.Server);
 				if (e.Before.Status == UserStatus.Offline && e.After.Status != UserStatus.Offline)
-					await channel.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **online**.");
+					await channel?.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **online**.");
 				else if (e.After.Status == UserStatus.Offline && e.Before.Status != UserStatus.Offline)
-					await channel.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **offline**.");
+					await channel?.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **offline**.");
 			};
 		}
 
@@ -66,7 +59,10 @@ namespace NeKzBot
 		public static void CHA(string s, ConsoleColor c = ConsoleColor.Red, bool toupper = true)
 		{
 			CON(s, c, toupper);
-			GetChannelByName()?.SendMessage(s);
+			if (s.Length < 2000)
+				Utils.GetChannel(Settings.Default.LogChannelName)?.SendMessage(s);
+			else
+				Utils.GetChannel(Settings.Default.LogChannelName)?.SendMessage(s.Substring(0, 2000));
 		}
 
 		// Write to trace
@@ -76,17 +72,9 @@ namespace NeKzBot
 			System.Diagnostics.Trace.WriteLine(s);
 		}
 
-		// Get default logging channel
-		private static Channel GetChannelByName(string serverName = null, string channelName = null)
-		{
-			serverName = serverName ?? Settings.Default.ServerName;
-			channelName = channelName ?? Settings.Default.LogChannelName;
-			return dClient?.FindServers(serverName)?.First().FindChannels(channelName, ChannelType.Text, true)?.First();
-		}
-
 		// Show nothing after a random time 
 		private static string FormatTime(double time) =>
-			time < 5184000 ?
-				string.Format("{0:N2}s : ", time) : string.Empty;
+			time > 100000 ?
+			string.Empty : string.Format("{0:N2}s : ", time);
 	}
 }

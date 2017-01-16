@@ -201,13 +201,15 @@ namespace NeKzBot
 				if (from + 1 != to)
 					output += sep;
 			}
-			return firstreplace ? ReplaceFirst(output, sep, seperator.ToString()) : output;
+			return !firstreplace ?
+				output : ReplaceFirst(output, sep, seperator.ToString()); 
 		}
 
 		public static string ReplaceFirst(string text, string search, string replace)
 		{
 			var pos = text.IndexOf(search);
-			return pos < 0 ? text : text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+			return pos < 0 ?
+				text : text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
 		}
 
 		// Check with regex pattern
@@ -222,12 +224,11 @@ namespace NeKzBot
 
 		public static bool ValidateString(string s, string pattern) =>
 			s == string.Empty ?
-				false : (!new System.Text.RegularExpressions.Regex(pattern).IsMatch(s));
+			false : (!new System.Text.RegularExpressions.Regex(pattern).IsMatch(s));
 
 		// Small information when caching data
 		public static string StringInBytes(string s) =>
-			//(s.Length * sizeof(char)).ToString();
-			System.Text.Encoding.ASCII.GetByteCount(s).ToString();
+			System.Text.Encoding.UTF8.GetByteCount(s).ToString();
 
 		public static string StringInBytes(params string[] s)
 		{
@@ -284,7 +285,7 @@ namespace NeKzBot
 		// Read, write data
 		public static object ReadFromFile(string filepath)
 		{
-			var file = GetPath() + Properties.Settings.Default.DataPath + filepath;
+			var file = GetPath() + Server.Settings.Default.DataPath + filepath;
 
 			if (!FileFound(file))
 				return null;
@@ -323,7 +324,7 @@ namespace NeKzBot
 
 		public static string[] ReadFromFileS(string filepath)
 		{
-			var file = GetPath() + Properties.Settings.Default.DataPath + filepath;
+			var file = GetPath() + Server.Settings.Default.DataPath + filepath;
 
 			if (!FileFound(file))
 				return null;
@@ -347,7 +348,7 @@ namespace NeKzBot
 		public static string AddData(string filepath, string value, out bool success)
 		{
 			success = false;
-			var file = AppDomain.CurrentDomain.BaseDirectory + Properties.Settings.Default.DataPath + filepath;
+			var file = AppDomain.CurrentDomain.BaseDirectory + Server.Settings.Default.DataPath + filepath;
 			if (!FileFound(file))
 				return "**Error -** File not found.";
 
@@ -425,7 +426,7 @@ namespace NeKzBot
 
 		public static string DeleteData(string filepath, string value)
 		{
-			var file = AppDomain.CurrentDomain.BaseDirectory + Properties.Settings.Default.DataPath + filepath;
+			var file = AppDomain.CurrentDomain.BaseDirectory + Server.Settings.Default.DataPath + filepath;
 			if (!FileFound(file))
 				return "**Error -** File not found.";
 
@@ -435,8 +436,9 @@ namespace NeKzBot
 					return "**Error -** Failed to parse values.";
 
 			// Check if command does actually exit
+			var index = 0;
+			var dimensions = 1;
 			var found = false;
-			int index = 0, dimensions = 1;
 			object obj = null;
 			List<string> ls = null;
 			for (int i = 0; i < CmdManager.dataCommands.GetLength(0); i++)
@@ -491,7 +493,7 @@ namespace NeKzBot
 			{
 				return "**Error -** Failed to write new data.";
 			}
-			return "Command deleted. Changes take effect on next server restart.";
+			return string.Empty;
 		}
 
 		// System process
@@ -514,6 +516,15 @@ namespace NeKzBot
 			}
 		}
 
+		// Find channel of server
+		public static Discord.Channel GetChannel(string channelName, Discord.Server mainServer = null)
+		{
+			if (mainServer != null)
+				if (mainServer.Id != Server.Credentials.Default.DiscordMainServerID)
+					return null;
+			return NBot.dClient?.Servers.First(x => x.Id == Server.Credentials.Default.DiscordMainServerID)?.FindChannels(channelName, Discord.ChannelType.Text, true)?.First();
+		}
+
 		// Others
 		public static bool FileFound(string f) =>
 			File.Exists(f);
@@ -526,18 +537,19 @@ namespace NeKzBot
 			s.Split(l).Last();
 
 		public static bool ValidFileName(string path) =>
-			string.IsNullOrEmpty(path) ||
-			path?.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0;
+			string.IsNullOrEmpty(path) || path?.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0;
 
 		public static bool ValidPathName(string path) =>
-			string.IsNullOrEmpty(path) ||
-			path?.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
+			string.IsNullOrEmpty(path) || path?.IndexOfAny(Path.GetInvalidPathChars()) >= 0;
 
 		public static string GetLocalTime() =>
 			DateTime.Now.ToString("HH:mm:ss");
 
 		public static string GetPath() =>
 			System.Diagnostics.Debugger.IsAttached ?
-			AppDomain.CurrentDomain.BaseDirectory : Properties.Settings.Default.ApplicationPath;
+		    AppDomain.CurrentDomain.BaseDirectory : Server.Settings.Default.ApplicationPath;
+
+        public static bool IsTaskAlive(System.Threading.Tasks.Task t) =>
+            t.IsCanceled || t.IsCompleted || t.IsFaulted;
 	}
 }

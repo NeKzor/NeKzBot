@@ -18,7 +18,7 @@ namespace NeKzBot
 				{ "cc", true, Data.fileNameConsoleCommands, Data.consoleCommands, new Action(() => OtherCmds.GetRandomCheat(Data.cheatCmd)), new Action(() => Data.InitConsoleCommands()) },
 				{ "credits", true, Data.fileNameSpecialThanks, Data.specialThanks, new Action(() => OtherCmds.GetCredits(Data.creditCmd)), new Action(() => Data.InitSpecialThanks()) },
 				{ "exploits", true, Data.fileNameP2Exploits, Data.p2Exploits, new Action(() => OtherCmds.GetRandomExploit(Data.exploitCmd)), new Action(() => Data.InitP2Exploits()) },
-				{ "killbota", true, Data.fileNameKillBotAliases, Data.killBotAliases, new Action(() => BotCmds.CreateKillBotCommands(Properties.Settings.Default.BotCmd, Data.killCmd)), new Action(() => Data.InitkillBotAliases()) },
+				{ "killbota", true, Data.fileNameKillBotAliases, Data.killBotAliases, new Action(() => BotCmds.CreateKillBotCommands(Server.Settings.Default.BotCmd, Data.killCmd)), new Action(() => Data.InitkillBotAliases()) },
 				{ "links", true, Data.fileNameLinkCommands, Data.linkCommands, new Action(() => Utils.CommandCreator(() => OtherCmds.Links(Utils.index), 0, Data.linkCommands)), new Action(() => Data.InitLinkCommands()) },
 				{ "memes", true, Data.fileNameMemeCommands, Data.memeCommands, new Action(() => Utils.CommandCreator(() => OtherCmds.Memes(Utils.index), 0, Data.memeCommands)), new Action(() => Data.InitMemeCommands()) },
 				{ "playingstatus", true, Data.fileNameRandomGames, Data.randomGames, null, new Action(() => Data.InitRandomGames()) },
@@ -41,13 +41,32 @@ namespace NeKzBot
 		{
 			Logging.CON("Loading modules", ConsoleColor.DarkYellow);
 
-			BotCmds.Load();                         // !bot <command>
-			LeaderboardCmds.Load();                 // !rank, !player, !latestwr
-			VoiceChannelCmds.Load();                // !<meme>, !yanni, !p2
-			HelpCmds.Load();                        // !fun, !games, !lb, !sounds, !bot?
+			BotCmds.Load();							// !bot <command>
+			LeaderboardCmds.Load();					// !rank, !player, !latestwr
+			VoiceChannelCmds.Load();				// !<meme>, !yanni, !p2
+			HelpCmds.Load();						// !fun, !games, !lb, !sounds, !bot?
 			OtherCmds.Load();						// !cheat, !exploit etc.
-			GiveawayGame.Load();                    // !giveaway
+			GiveawayGame.Load();					// !giveaway
 			SpeedrunCmds.Load();
+		}
+
+		public static bool Reload(int index)
+		{
+			try
+			{
+				// Reload new data
+				((Action)dataCommands[index, 5]).Invoke();
+				// Reload command
+				((Action)dataCommands[index, 4])?.Invoke();
+				// Reload manager
+				Init();
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Logging.CON($"CmdManager reload error\n{ex.ToString()}");
+				return false;
+			}
 		}
 	}
 }

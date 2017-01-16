@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -19,7 +18,7 @@ namespace NeKzBot
 					Logging.CON("AutoNotification started", ConsoleColor.DarkRed);
 
 					// Find channel to send to
-					var channel = GetChannelByName();
+					var channel = Utils.GetChannel(Settings.Default.NotificationChannelName);
 
 					// Reserve cache memory
 					var cachekey = "autonf";
@@ -33,17 +32,21 @@ namespace NeKzBot
 						var cache = Caching.CFile.GetFile(cachekey);
 
 						// Download data
-						var notification = GetLastNotification(update: true);
+						var notification = await GetNotificationUpdate();
 
-						// Only update if new
-						if (notification != cache)
+						// Ignore data we don't want and errors
+						if (!string.IsNullOrEmpty(notification))
 						{
-							// Save cache
-							Logging.CON($"CACHING NEW DATA {Utils.StringInBytes(notification)} bytes");
-							Caching.CFile.Save(cachekey, notification);
+							// Only update if new
+							if (notification != cache)
+							{
+								// Save cache
+								Logging.CON($"CACHING NEW DATA {Utils.StringInBytes(notification)} bytes");
+								Caching.CFile.Save(cachekey, notification);
 
-							// Send update
-							await channel.SendMessage(notification);
+								// Send update
+								await channel?.SendMessage(notification);
+							}
 						}
 						await Task.Delay(60000);   // Check every minutes (max speed request is 100 per min tho)
 					}
@@ -52,14 +55,6 @@ namespace NeKzBot
 				{
 					Logging.CON("AutoNotification error");
 				}
-			}
-
-			// Get default notfications update channel
-			private static Discord.Channel GetChannelByName(string serverName = null, string channelName = null)
-			{
-				serverName = serverName ?? Settings.Default.ServerName;
-				channelName = channelName ?? Settings.Default.NotificationChannelName;
-				return NBot.dClient?.FindServers(serverName)?.First().FindChannels(channelName, Discord.ChannelType.Text, true)?.First() ?? null;
 			}
 		}
 	}

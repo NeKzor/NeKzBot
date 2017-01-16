@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -34,7 +33,7 @@ namespace NeKzBot
 					Logging.CON("Lb autoupdater started", ConsoleColor.DarkBlue);
 
 					// Find channel to send to
-					var channel = GetChannelByName();
+					var channel = Utils.GetChannel(Settings.Default.UpdateChannelName);
 
 					// Reserve cache memory
 					Caching.CFile.AddKey(cacheKey);
@@ -50,22 +49,22 @@ namespace NeKzBot
 						var entryUpdate = await GetLatestEntry("http://board.iverb.me/changelog" + Settings.Default.BoardParameter, true);
 
 						// Method returns null when an error occurs, ignore it
-						if (entryUpdate == null)
-							continue;
-
-						// Only update if new
-						if (entryUpdate != cache)
+						if (entryUpdate != null)
 						{
-							// Save cache
-							Logging.CON($"CACHING NEW ENTRY {Utils.StringInBytes(entryUpdate)} bytes");
-							Caching.CFile.Save(cacheKey, entryUpdate);
+							// Only update if new
+							if (entryUpdate != cache)
+							{
+								// Save cache
+								Logging.CON($"CACHING NEW ENTRY {Utils.StringInBytes(entryUpdate)} bytes");
+								Caching.CFile.Save(cacheKey, entryUpdate);
 
-							// Check if channel name has changed
-							if (channel.Name != Settings.Default.UpdateChannelName)
-								channel = GetChannelByName();
+								// Check if channel name has changed
+								if (channel.Name != Settings.Default.UpdateChannelName)
+									channel = Utils.GetChannel(Settings.Default.UpdateChannelName);
 
-							// Send update
-							await channel?.SendMessage(entryUpdate);
+								// Send update
+								await channel?.SendMessage(entryUpdate);
+							}
 						}
 						// Wait then refresh
 						refreshWatch?.Restart();
@@ -88,10 +87,7 @@ namespace NeKzBot
 				Logging.CON("Lb autoupdater requested change", ConsoleColor.DarkBlue);
 				if (cancelUpdateSource.IsCancellationRequested || Start().IsCompleted)
 				{
-					Task.Factory.StartNew(async () =>
-					{
-						await Start();
-					});
+					Task.Factory.StartNew(async () => { await Start(); });
 					return "Auto update started.";
 				}
 				cancelUpdateSource.Cancel();
@@ -105,10 +101,7 @@ namespace NeKzBot
 				if (!cancelUpdateSource.IsCancellationRequested && !Start().IsCompleted)
 				{
 					cancelUpdateSource.Cancel();
-					Task.Factory.StartNew(async () =>
-					{
-						await Start();
-					});
+					Task.Factory.StartNew(async () => { await Start(); });
 					return "Will refresh soon.";
 				}
 				return $"Refresh failed. Try `{Settings.Default.PrefixCmd + Settings.Default.LeaderboardCmd} toggleupdate`";
@@ -117,8 +110,8 @@ namespace NeKzBot
 			// Cache which you need to compare for a new check
 			public static string CleanEntryCache()
 			{
-				var bytes = Utils.StringInBytes(NeKzBot.Caching.CFile.Get(cacheKey));
-				NeKzBot.Caching.CFile.Save(cacheKey, string.Empty);
+				var bytes = Utils.StringInBytes(Caching.CFile.Get(cacheKey));
+				Caching.CFile.Save(cacheKey, string.Empty);
 				Logging.CON($"CACHE SIZE CLEANED {bytes} BYTES");
 				return $"Cleaned entry cache with a size of {bytes} bytes.";
 			}
@@ -128,12 +121,11 @@ namespace NeKzBot
 			// Show when the the next entry check is
 			public static string GetRefreshTime()
 			{
-				int min = Convert.ToInt16(Settings.Default.RefreshTime) - refreshWatch.Elapsed.Minutes;
+				var min = Convert.ToInt16(Settings.Default.RefreshTime) - refreshWatch.Elapsed.Minutes;
 				if (min < 1)
 					return "Will check soon for an update.";
-				if (min == 1)
-					return "Will check in 1 minute for an update.";
-				return "Will check in " + min.ToString() + " minutes for an update.";
+				return min == 1 ? 
+					"Will check in 1 minute for an update." : $"Will check in {min.ToString()} minutes for an update.";
 
 			}
 
@@ -142,12 +134,12 @@ namespace NeKzBot
 			{
 				if (!Utils.ValidateString(t, "^[1-9]", 4))
 					return "Invalid paramter. Use numbers from 1-9 only.";
-				int time = Convert.ToInt16(t);
+				var time = Convert.ToInt16(t);
 				if (time > 1440)
 					return "Invalid value. Time is in minutes.";
 				Settings.Default.RefreshTime = (uint)time;
 				Settings.Default.Save();
-				return "New refresh time is set to **" + t + "min**";
+				return $"New refresh time is set to **{t}min**";
 			}
 
 			// Set a new channel
@@ -156,14 +148,8 @@ namespace NeKzBot
 				if (s == Settings.Default.UpdateChannelName)
 					return "Channel is already set with this name.";
 
-				try
-				{
-					var newChannel = NBot.dClient.FindServers(Settings.Default.ServerName).First().FindChannels(s, Discord.ChannelType.Text, true).First();
-				}
-				catch
-				{
+				if (Utils.GetChannel(s) == null)
 					return "Channel name doesn't exist on this server.";
-				}
 
 				Logging.CON("New channel name set", ConsoleColor.DarkBlue);
 				Settings.Default.UpdateChannelName = s;
@@ -207,17 +193,10 @@ namespace NeKzBot
 					return "Board parameter is already set with the same value.";
 				Settings.Default.BoardParameter = s;
 				Settings.Default.Save();
-				return s == string.Empty ? "Saved. Board parameter isn't set." : $"Saved. New board parameter is to **{s}** now.";
+				return s == string.Empty ?
+					"Saved. Board parameter isn't set." : $"Saved. New board parameter is to **{s}** now.";
 			}
 			#endregion
-
-			// Get default leaderboard update channel
-			private static Discord.Channel GetChannelByName(string serverName = null, string channelName = null)
-			{
-				serverName = serverName ?? Settings.Default.ServerName;
-				channelName = channelName ?? Settings.Default.UpdateChannelName;
-				return NBot.dClient?.FindServers(serverName)?.First().FindChannels(channelName, Discord.ChannelType.Text, true)?.First();
-			}
 		}
 	}
 }

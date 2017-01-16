@@ -43,7 +43,7 @@ namespace NeKzBot
 			{
 				fileCache = fileCache ?? new List<string>();
 				fileName = "c4ch3";
-				tempPath = "Resources\\cache\\";
+				tempPath = Path.Combine(Utils.GetPath(), "Resources/cache/");
 				fileExtension = ".tmp";
 			}
 
@@ -84,13 +84,13 @@ namespace NeKzBot
 			/// <param name="key">Name of requester</param>
 			public static string Get(string key) =>
 				(bool)Exists(key) ?
-					GetFile(key) : null;
+				GetFile(key) : null;
 
 			/// <summary>Gets the data of a file</summary>
 			/// <param name="key">Name of requester</param>
 			public static string GetFile(string key) =>
 				FileExists(key) ?
-					File.ReadAllText(GetPath(key), System.Text.Encoding.UTF8) : null;
+				File.ReadAllText(GetPath(key), System.Text.Encoding.UTF8) : null;
 
 			/// <summary>Deletes the given key from the cache list</summary>
 			/// <param name="key">Name of requester</param>
@@ -161,13 +161,7 @@ namespace NeKzBot
 			/// <summary>Builds the file path for the cache file</summary>
 			/// <param name="key">Name of requester</param>
 			private static string GetPath(string key) =>
-				PathBuilder() + FileBuilder(key);
-
-			private static string PathBuilder() =>
-				Utils.GetPath() + tempPath;
-
-			private static string FileBuilder(string key) =>
-				fileName + key + fileExtension;
+				Path.Combine(tempPath, fileName + key + fileExtension);
 		}
 
 		/// <summary>Caching system of internal application</summary>
@@ -203,7 +197,7 @@ namespace NeKzBot
 			/// <param name="key">Name of requester</param>
 			public static List<object> Get(string key) =>
 				(bool)Exists(key) ?
-					appCache[key] : null;
+				appCache[key] : null;
 
 			/// <summary>Removes key from the cache list</summary>
 			/// <param name="key">Name of requester</param>

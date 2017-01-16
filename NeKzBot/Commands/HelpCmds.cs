@@ -1,4 +1,4 @@
-﻿using NeKzBot.Properties;
+﻿using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -60,7 +60,7 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Settings.Default.MaseterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					await e.Channel.SendMessage(Data.gameMsg + Data.adminGameMsg + Data.masterAdminGameMsg);
 				else if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
 					await e.Channel.SendMessage(Data.gameMsg + Data.adminGameMsg);
@@ -74,7 +74,7 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Settings.Default.MaseterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					await e.Channel.SendMessage(Data.botMsg + Data.adminBotMsg + Data.masterAdminBotMsg);
 				else if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
 					await e.Channel.SendMessage(Data.botMsg + Data.adminBotMsg);
@@ -106,7 +106,7 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Settings.Default.MaseterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					await e.Channel.SendMessage(Data.dropboxMsg + Data.masterAdminDropboxMsg);
 				else
 					await e.Channel.SendMessage(Data.dropboxMsg);

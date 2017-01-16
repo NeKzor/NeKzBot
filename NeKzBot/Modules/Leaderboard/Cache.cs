@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using HtmlAgilityPack;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -84,7 +84,7 @@ namespace NeKzBot
 			// Get time when cache will be cleared
 			public static string GetCleanCacheTime()
 			{
-				int min = Convert.ToInt16(Settings.Default.CachingTime) - cacheWatch.Elapsed.Minutes;
+				var min = Convert.ToInt16(Settings.Default.CachingTime) - cacheWatch.Elapsed.Minutes;
 				if (min < 1)
 					return "Leaderboard cache will be cleared soon.";
 				if (min == 1)
@@ -97,7 +97,7 @@ namespace NeKzBot
 			{
 				if (!Utils.ValidateString(t, "^[1-9]", 4))
 					return "Invalid paramter.";
-				int time = Convert.ToInt16(t);
+				var time = Convert.ToInt16(t);
 				if (time < 1 || time > 1440)
 					return "Invalid paramter. Time is in minutes.";
 				Settings.Default.CachingTime = (uint)time;

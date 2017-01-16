@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Discord.Commands;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -10,14 +10,15 @@ namespace NeKzBot
 		{
 			Logging.CON("Loading other commands", System.ConsoleColor.DarkYellow);
 
-			GetRandomCheat(Data.cheatCmd);          // !cheat
-			GetRandomExploit(Data.exploitCmd);      // !exploit
-			GetRandomFact("funfact");               // !funfact, !fact
-			GetScript("script");                    // !script <name>
-			GetElevatorTiming("dialogue");          // !dialogue
-			GetSegmentedRun(Data.srunCmd);          // !segmented <name>
-			GetServerInfo("rpi");                   // !rpi
+			GetRandomCheat(Data.cheatCmd);			// !cheat
+			GetRandomExploit(Data.exploitCmd);		// !exploit
+			GetRandomFact("funfact");				// !funfact, !fact
+			GetScript("script");					// !script <name>
+			GetElevatorTiming("dialogue");			// !dialogue
+			GetSegmentedRun(Data.srunCmd);			// !segmented <name>
+			GetServerInfo("rpi");					// !rpi
 			GetCredits(Data.creditCmd);				// !credits
+			GetMapImage("view");					// !view <mapname>
 			OtherCommands();
 
 			Utils.CommandCreator(() => Tools(Utils.index), 0, Data.toolCommands);
@@ -46,7 +47,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				int rand = Utils.RNG(Data.p2Exploits.GetLength(0));
+				var rand = Utils.RNG(Data.p2Exploits.GetLength(0));
 				await e.Channel.SendMessage($"**{Data.p2Exploits[rand, 0]}**\n{Data.p2Exploits[rand, 1]}");
 			});
 		}
@@ -75,7 +76,7 @@ namespace NeKzBot
 				await e.Channel.SendIsTyping();
 				int index;
 				if (Utils.SearchArray(Data.scriptFiles, 0, e.Args[0], out index))
-					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/scripts/{Data.scriptFiles[index, 1]}");
+					await e.Channel.SendFile($"{Utils.GetPath()}Resources/scripts/{Data.scriptFiles[index, 1]}");
 				else
 					await e.Channel.SendMessage($"Unknown script. Try one of these:\n{Utils.ArrayToList(Data.scriptFiles, 0, "`")}");
 			});
@@ -212,7 +213,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage($"https://discord.gg/{Settings.Default.ServerInviteID}");
+				await e.Channel.SendMessage($"https://discord.gg/{Credentials.Default.DiscordMainServerLinkID}");
 			});
 
 			// Dropbox stuff
@@ -222,7 +223,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage($"https://www.dropbox.com/sh{Settings.Default.DropboxFolderLink}?dl=0");
+				await e.Channel.SendMessage($"https://www.dropbox.com/sh/{Credentials.Default.DropboxFolderID}?dl=0");
 			});
 
 			cmd.CreateCommand("dbfolder")
@@ -241,7 +242,7 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.Args[0].Contains('|') && e.Channel.Id == Settings.Default.MaseterAdminID)
+				if (e.Args[0].Contains('|') && e.Channel.Id == Credentials.Default.DiscordMasterAdminID)
 				{
 					var values = e.Args[0].Split('|');
 					if (values.Count() == 2)
@@ -258,11 +259,34 @@ namespace NeKzBot
 		{
 			// The credits
 			cmd.CreateCommand(c)
-			.Description($"**-** `{Settings.Default.PrefixCmd}credits` shows you a list of people who helped to develope me.")
+			.Description($"**-** `{Settings.Default.PrefixCmd + c}` shows you a list of people who helped to develope me.")
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
 				await e.Channel.SendMessage($"**Special Thanks To**\n{Utils.ArrayToList(Data.specialThanks, string.Empty, "\n", "**-** ")}");
+			});
+		}
+
+		public static void GetMapImage(string c)
+		{
+			cmd.CreateCommand(c)
+			.Description($"**-** `{Settings.Default.PrefixCmd + c}` returns a picture of a random Portal 2 map. Use `{Settings.Default.PrefixCmd}{c} <mapname>` to show a specific image of a level.")
+			.Alias("image", "overview")
+			.Parameter("p", ParameterType.Unparsed)
+			.Do(async e =>
+			{
+				await e.Channel.SendIsTyping();
+				int index;
+				if (e.Args[0] == string.Empty)
+					await e.Channel.SendFile($"Resources/pics/maps/{Data.portal2Maps[Utils.RNG(Data.portal2Maps.GetLength(0)), 0]}.jpg");
+				else if (Utils.SearchArray(Data.portal2Maps, 2, e.Args[0], out index))
+					await e.Channel.SendFile($"Resources/pics/maps/{Data.portal2Maps[index, 0]}.jpg");
+				else if (Utils.SearchArray(Data.portal2Maps, 3, e.Args[0], out index))
+					await e.Channel.SendFile($"Resources/pics/maps/{Data.portal2Maps[index, 0]}.jpg");
+				else if (Utils.SearchArray(Data.portal2Maps, 5, e.Args[0], out index))
+					await e.Channel.SendFile($"Resources/pics/maps/{Data.portal2Maps[index, 0]}.jpg");
+				else
+					await e.Channel.SendMessage($"Couldn't find that map. Try `{Settings.Default.PrefixCmd + c}` with one of these:\n{Utils.ArrayToList(Data.portal2Maps, 5)}");
 			});
 		}
 		#endregion
@@ -275,15 +299,18 @@ namespace NeKzBot
 			.Do(async (e) =>
 			{
 				await e.Channel.SendIsTyping();
+				// Text only
 				if (Data.memeCommands[i, 2] == string.Empty)
-					await e.Channel.SendMessage(Data.memeCommands[i, 3]); // Text only
+					await e.Channel.SendMessage(Data.memeCommands[i, 3]);
+				// File only
 				else if (Data.memeCommands[i, 3] == string.Empty)
-					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/pics/{Data.memeCommands[i, 2]}"); // File only
+					await e.Channel.SendFile($"{Utils.GetPath()}Resources/pics/{Data.memeCommands[i, 2]}");
+				// File and text
 				else
 				{
-					await e.Channel.SendMessage($"**{Data.memeCommands[i, 3]}**"); // File and text
+					await e.Channel.SendMessage($"**{Data.memeCommands[i, 3]}**");
 					await System.Threading.Tasks.Task.Delay(333);
-					await e.Channel.SendFile($"{Settings.Default.ApplicationPath}Resources/pics/{Data.memeCommands[i, 2]}");
+					await e.Channel.SendFile($"{Utils.GetPath()}Resources/pics/{Data.memeCommands[i, 2]}");
 				}
 			});
 		}

@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## Version 1.2
+* Added data debug commands
+* New view image command
+* Early support for other Discord servers
+* Separated credentials from settings
+* Custom http header for web client
+* Lots of bug fixes
+
 ## Version 1.1
 * Speedrun commands
 * Notifications for Speedrun

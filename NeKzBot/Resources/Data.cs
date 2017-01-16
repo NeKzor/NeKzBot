@@ -1,4 +1,4 @@
-﻿using NeKzBot.Properties;
+﻿using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -98,7 +98,8 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd}quote <name>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}invite`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}idinfo`"
-			+ $"\n**-** `{Settings.Default.PrefixCmd}?? <question>`";
+			+ $"\n**-** `{Settings.Default.PrefixCmd}?? <question>`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd}view <mapname>`";
 
 		public static string lbMsg = "\n**[Leaderboard Commands]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}latestwr <mapname>`"
@@ -192,34 +193,27 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} kill`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} add <cmdname> <value1> <value2> <etc.>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} delete <cmdname> <value>`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} revive`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} reload`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} showdata`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} data`";
 
 		public static string settingsMsg =
 			"**[Scope - *Application*]**"
-			+ "\n**Token -** *hidden*"
 			+ $"\n**AppName -** {Settings.Default.AppName}"
 			+ $"\n**AppVersion -** {Settings.Default.AppVersion}"
 			+ $"\n**AppUrl -** {Settings.Default.AppUrl}"
 			+ $"\n**PrefixCmd -** {Settings.Default.PrefixCmd.ToString()}"
 			+ $"\n**BotCmd -** {Settings.Default.BotCmd}"
-			+ $"\n**ServerName -** {Settings.Default.ServerName}"
 			+ $"\n**AllowedRoles -** {Utils.CollectionToList(Settings.Default.AllowedRoles, "`")}"
 			+ $"\n**AudioPath -** {Settings.Default.AudioPath}"
-			+ "\n**GiveawayPrize -** *hidden*"
-			+ "\n**GiveawayCode -** *hidden*"
-			+ $"\n**MasterAdminID -** {Settings.Default.MaseterAdminID.ToString()}"
 			+ $"\n**DataPath -** {Settings.Default.DataPath}"
 			+ $"\n**LeaderboardCmd -** {Settings.Default.LeaderboardCmd}"
 			+ $"\n**ApplicationPath -** {Settings.Default.ApplicationPath}"
-			+ $"\n**SpeedruncomToken -** *hidden*"
 			+ $"\n**NotificationChannelName -** {Settings.Default.NotificationChannelName}"
 			+ $"\n**TwitchChannelName -** {Settings.Default.TwitchChannelName}"
-			+ $"\n**TwitchClientToken -** *hidden*"
-			+ $"\n**DropboxToken -** *hidden*"
-			+ $"\n**DropboxFolderLink -** {Settings.Default.DropboxFolderLink}"
 			+ $"\n**DropboxFolderName -** {Settings.Default.DropboxFolderName}"
 			+ $"\n**LogChannelName -** {Settings.Default.LogChannelName}"
-			+ $"\n**ServerInviteID -** {Settings.Default.ServerInviteID}"
 			+ "\n**[Scope - *User*]**"
 			+ $"\n**UpdateChannelName -** {Settings.Default.UpdateChannelName}"
 			+ $"\n**RefreshTime -** {Settings.Default.RefreshTime.ToString()}"

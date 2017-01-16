@@ -100,7 +100,7 @@
     </Reference>
     <Reference Include="SpeedrunComSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Forked\SpeedrunComSharp-1\SpeedrunComSharp\bin\Debug\SpeedrunComSharp.dll</HintPath>
+      <HintPath>..\..\..\Libraries\SpeedrunComSharp\SpeedrunComSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -141,23 +141,31 @@
     <Compile Include="Resources\Data.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
+    <Compile Include="Server\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Resources\Utils.cs" />
     <Compile Include="Server\VoiceChannel.cs" />
-    <Compile Include="Settings.cs" />
+    <Compile Include="Server\Credentials1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Credentials.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Properties\Settings.settings">
+    <None Include="Server\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Server\Credentials.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Credentials1.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

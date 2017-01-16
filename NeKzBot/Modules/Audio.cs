@@ -32,7 +32,7 @@ namespace NeKzBot
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
-					Arguments = $"-i {Properties.Settings.Default.ApplicationPath + Properties.Settings.Default.AudioPath + filePath} -f s16le -ar 48000 -ac 2 pipe:1",
+					Arguments = $"-i {Server.Settings.Default.ApplicationPath + Server.Settings.Default.AudioPath + filePath} -f s16le -ar 48000 -ac 2 pipe:1",
 					UseShellExecute = false,
 					RedirectStandardOutput = true
 				});
@@ -75,14 +75,13 @@ namespace NeKzBot
 		//	{
 		//		aClient = dClient.GetServer(serverID).GetAudioClient();
 		//		var OutFormat = new WaveFormat(48000, 16, dClient.GetService<AudioService>().Config.Channels);
-		//		using (var MP3Reader = new AudioFileReader(Properties.Settings.Default.ApplicationPath + Properties.Settings.Default.AudioPath + filePath))
+		//		using (var MP3Reader = new AudioFileReader(Utils.GetPath() + Server.Settings.Default.AudioPath + filePath))
 		//		using (var resampler = new MediaFoundationResampler(MP3Reader, OutFormat))
 		//		{
 		//			resampler.ResamplerQuality = 30;
-		//			int blockSize = OutFormat.AverageBytesPerSecond / 50;
-		//			byte[] buffer = new byte[blockSize];
+		//			var blockSize = OutFormat.AverageBytesPerSecond / 50;
+		//			var buffer = new byte[blockSize];
 		//			int byteCount;
-
 		//			while ((byteCount = resampler.Read(buffer, 0, blockSize)) > 0 && !shouldstop)
 		//			{
 		//				if (byteCount < blockSize)
@@ -95,8 +94,8 @@ namespace NeKzBot
 		//	}
 		//	catch
 		//	{
-		//		//dClient.Log.Info($"VC {vChannel.Name}", "NAudio ERROR", null);
-		//		//Logging.CON("NAudio error");
+		//		dClient.Log.Info($"VC {vChannel.Name}", "NAudio ERROR", null);
+		//		Logging.CON("NAudio error");
 		//	}
 		//	isplaying = false;
 		//	shouldstop = false;

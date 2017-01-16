@@ -15,8 +15,8 @@ namespace NeKzBot
 		public static void Init()
 		{
 			Logging.CON("Initialazing Dropbox client", System.ConsoleColor.DarkYellow);
-			dbClientConfig = new DropboxClientConfig($"{Properties.Settings.Default.AppName}/{Properties.Settings.Default.AppVersion}", 3);
-			dbClient = new DropboxClient(Properties.Settings.Default.DropboxToken, dbClientConfig);
+			dbClientConfig = new DropboxClientConfig($"{Server.Settings.Default.AppName}/{Server.Settings.Default.AppVersion}", 3);
+			dbClient = new DropboxClient(Server.Credentials.Default.DropboxToken, dbClientConfig);
 		}
 
 		public static async Task<string> Upload(string folderName, string fileName, string cacheFolder)

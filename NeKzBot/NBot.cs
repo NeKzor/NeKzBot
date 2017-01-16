@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -75,7 +75,7 @@ namespace NeKzBot
 			{
 				dClient.ExecuteAndWait(async () =>
 				{
-					await dClient.Connect(Settings.Default.Token, TokenType.Bot);
+					await dClient.Connect(Credentials.Default.DiscordToken, TokenType.Bot);
 					dClient.SetGame(Data.randomGames[Utils.RNG(0, Data.randomGames.Count())]);
 
 					// Module tasks

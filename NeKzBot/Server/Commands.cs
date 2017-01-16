@@ -13,7 +13,7 @@ namespace NeKzBot
 
 			dClient.UsingCommands(x =>
 			{
-				x.PrefixChar = Properties.Settings.Default.PrefixCmd;
+				x.PrefixChar = Server.Settings.Default.PrefixCmd;
 				x.HelpMode = HelpMode.Public;
 			});
 
@@ -24,6 +24,6 @@ namespace NeKzBot
 		// Ignore commands from private chat rooms and messages from other bots
 		private static bool Permission(Command cmd, User usr, Channel cha) =>
 			cha.IsPrivate || usr.IsBot ?
-				false : true;
+			false : true;
 	}
 }

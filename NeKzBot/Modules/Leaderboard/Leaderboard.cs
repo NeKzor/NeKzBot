@@ -174,7 +174,7 @@ namespace NeKzBot
 				var map = Data.portal2Maps[index, 2];
 
 				// Find index map of all nodes
-				int idx = 0;
+				var idx = 0;
 				for (; idx < maps.Count; idx++)
 					if (maps[idx].Attributes["href"].Value.ToString() == "/chamber/" + mapid)
 						break;

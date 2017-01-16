@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Discord.Commands;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -17,8 +17,16 @@ namespace NeKzBot
 			cmd.CreateGroup(s, g =>
 			{
 				#region EVERYBODY
+				g.CreateCommand("test")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} test` just a test.")
+				.Do(async (e) =>
+				{
+					await e.Channel.SendIsTyping();
+					await e.Channel.SendMessage(await SpeedrunCom.GetNotificationUpdate());
+				});
+
 				g.CreateCommand("uptime")
-				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} uptime shows you how long the bot is running for.")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} uptime` shows you how long the bot is running for.")
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
@@ -88,17 +96,6 @@ namespace NeKzBot
 					await e.Channel.SendIsTyping();
 					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles, "Developer"))
 						await e.Channel.SendMessage(Data.settingsMsg);
-					else
-						await e.Channel.SendMessage(Data.rolesMsg);
-				});
-
-				g.CreateCommand("data")
-				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} data` shows you a list of all data variables.")
-				.Do(async (e) =>
-				{
-					await e.Channel.SendIsTyping();
-					if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
-						await e.Channel.SendMessage($"**[Data Commands]**\n{Utils.ListToList(CmdManager.rwCommands, "`", "\n")}");
 					else
 						await e.Channel.SendMessage(Data.rolesMsg);
 				});
@@ -192,10 +189,10 @@ namespace NeKzBot
 				{
 					await e.Channel.SendIsTyping();
 					// Nobody else except the master admin himself is allowed to change data
-					if (e.User.Id == Settings.Default.MaseterAdminID)
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					{
 						var values = e.Args[0].Split(Utils.seperator);
-						int index = 0;
+						var index = 0;
 						if (values.Count() < 2)
 							await e.Channel.SendMessage("Invalid parameter count.");
 						else if (Utils.SearchArray(CmdManager.dataCommands, 0, values[0], out index))
@@ -203,23 +200,10 @@ namespace NeKzBot
 							if ((bool)CmdManager.dataCommands[index, 1])
 							{
 								bool success = false;
-								await e.Channel.SendMessage(Utils.AddData((string)CmdManager.dataCommands[index, 2], Utils.GetRest(values, 1, 0, " ", true), out success));
+								await e.Channel.SendMessage(Utils.AddData((string)CmdManager.dataCommands[index, 2], Utils.GetRest(values, 1, sep: " ", firstreplace: true), out success));
 								if (success)
-								{
-									try
-									{
-										// Reload new data
-										((System.Action)CmdManager.dataCommands[index, 5]).Invoke();
-										// Reload command
-										((System.Action)CmdManager.dataCommands[index, 4])?.Invoke();
-										// Reload manager
-										CmdManager.Init();
-									}
-									catch
-									{
-										await e.Channel.SendMessage("Reload failed.");
-									}
-								}
+									if (!CmdManager.Reload(index))
+										await e.Channel.SendMessage("**Error**. CmdManager failed to reload command.");
 							}
 							else
 								await e.Channel.SendMessage("This command doesn't allow to be changed.");
@@ -238,16 +222,27 @@ namespace NeKzBot
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
-					if (e.User.Id == Settings.Default.MaseterAdminID)
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					{
 						var values = e.Args[0].Split(Utils.seperator);
-						int index = 0;
+						var index = 0;
 						if (values.Count() != 2)
 							await e.Channel.SendMessage("Invalid parameter count.");
 						else if (Utils.SearchArray(CmdManager.dataCommands, 0, values[0], out index))
 						{
 							if ((bool)CmdManager.dataCommands[index, 1])
-								await e.Channel.SendMessage(Utils.DeleteData((string)CmdManager.dataCommands[index, 2], Utils.GetRest(values, 1, 0, " ", true)));
+							{
+								var msg = Utils.DeleteData((string)CmdManager.dataCommands[index, 2], Utils.GetRest(values, 1));
+								if (msg == string.Empty)
+								{
+									if (CmdManager.Reload(index))
+										await e.Channel.SendMessage("Command deleted.");
+									else
+										await e.Channel.SendMessage("**Error**. CmdManager failed to reload command.");
+								}
+								else
+									await e.Channel.SendMessage(msg);
+							}
 							else
 								await e.Channel.SendMessage("This command doesn't allow to be changed.");
 						}
@@ -256,6 +251,143 @@ namespace NeKzBot
 					}
 					else
 						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to change data.");
+				});
+
+				g.CreateCommand("revive")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} revive <task>` checks if a task has ended and will restart it when it has.")
+				.Parameter("p", ParameterType.Unparsed)
+				.Do(async (e) =>
+				{
+					await e.Channel.SendIsTyping();
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+					{
+						switch (e.Args[0])
+						{
+							case "lb":
+								if (Utils.IsTaskAlive(Leaderboard.AutoUpdater.Start()))
+								{
+									Leaderboard.AutoUpdater.Start().Start();	// lmao
+									await e.Channel.SendMessage("Restarted task.");
+								}
+								else
+									await e.Channel.SendMessage("Task hasn't finished yet.");
+								break;
+									case "twitch":
+								if (Utils.IsTaskAlive(TwitchTv.Start()))
+								{
+									TwitchTv.Start().Start();
+									await e.Channel.SendMessage("Restarted task.");
+								}
+								else
+									await e.Channel.SendMessage("Task hasn't finished yet.");
+								break;
+							case "nf":
+								if (Utils.IsTaskAlive(SpeedrunCom.AutoNotification.Start()))
+								{
+									SpeedrunCom.AutoNotification.Start().Start();
+									await e.Channel.SendMessage("Restarted task.");
+								}
+								else
+									await e.Channel.SendMessage("Task hasn't finished yet.");
+								break;
+							case "giveaway":
+								if (Utils.IsTaskAlive(GiveawayGame.Reset()))
+								{
+									GiveawayGame.Reset().Start();
+									await e.Channel.SendMessage("Restarted task.");
+								}
+								else
+									await e.Channel.SendMessage("Task hasn't finished yet.");
+								break;
+							default:
+								await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb` `twitch` `nf` `giveaway`");
+								break;
+						}
+					}
+					else
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to restart tasks.");
+				});
+
+				g.CreateCommand("reload")
+				.Alias("reloaddata")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} reload` reloads data and all commands.")
+				.Do(async (e) =>
+				{
+					await e.Channel.SendIsTyping();
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+					{
+						Data.Init();
+						CmdManager.Init();
+						await e.Channel.SendMessage("Reloaded data.");
+					}
+					else
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to reload data/commands.");
+				});
+
+				g.CreateCommand("showdata")
+				.Alias("debugdata")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} showdata <name>` shows the data of a certain data array.")
+				.Parameter("p", ParameterType.Unparsed)
+				.Do(async (e) =>
+				{
+					await e.Channel.SendIsTyping();
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+					{
+						var index = 0;
+						var found = false;
+						var output = string.Empty;
+						
+						// Find command
+						for (; index < CmdManager.dataCommands.GetLength(0); index++)
+						{
+							if (e.Args[0] != (string)CmdManager.dataCommands[index, 0])
+								continue;
+							found = true;
+							break;
+						}
+
+						if (found)
+						{
+							var obj = CmdManager.dataCommands[index, 3];
+							if (obj.GetType() == typeof(string[]))
+							{
+								foreach (var item in (string[])obj)
+									output += $"{item}, ";
+							}
+							else if (obj.GetType() == typeof(string[,]))
+							{
+								// Only show first dimension
+								for (int i = 0; i < ((string[,])obj).GetLength(0); i++)
+									output += $"{((string[,])obj)[i, 0]}, ";
+							}
+							else
+								await e.Channel.SendMessage("**Error**");
+
+							if (output != string.Empty)
+							{
+								output = output.Substring(0, output.Length - 2).Replace("_", "\\_");
+								if (output.Length > 2000)
+									await e.Channel.SendMessage(output.Substring(0, 2000));
+								else
+									await e.Channel.SendMessage(output);
+							}
+						}
+						else
+							await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {Utils.ListToList(CmdManager.rwCommands, "`")}");
+					}
+					else
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to show all data.");
+				});
+
+				g.CreateCommand("data")
+				.Description($"**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} data` shows you a list of all data variables.")
+				.Do(async (e) =>
+				{
+					await e.Channel.SendIsTyping();
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+						await e.Channel.SendMessage($"**[Data Commands]**\n{Utils.ListToList(CmdManager.rwCommands, "`", "\n")}");
+					else
+						await e.Channel.SendMessage("You are not allowed to do that. Only the master-server admin is allowed to show and use these commands.");
 				});
 				#endregion
 			});
@@ -272,7 +404,7 @@ namespace NeKzBot
 				.Do(async (e) =>
 				{
 					await e.Channel.SendIsTyping();
-					if (e.User.Id == Settings.Default.MaseterAdminID)
+					if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
 					{
 						await e.Channel.SendMessage("WHY? :anguished: ");
 						await System.Threading.Tasks.Task.Delay(500);
@@ -285,3 +417,4 @@ namespace NeKzBot
 		}
 	}
 }
+ 

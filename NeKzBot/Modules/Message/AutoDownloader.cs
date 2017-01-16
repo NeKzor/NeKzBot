@@ -76,7 +76,7 @@ namespace NeKzBot
 
 							// Every user has its on folder
 							var username = args.User.Nickname;
-							var path = Properties.Settings.Default.DropboxFolderName;
+							var path = Server.Settings.Default.DropboxFolderName;
 
 							//// Don't create a folder with bad characters
 							//if (!Utils.ValidateString(username, "^[a-zA-Z0-9_-]"))
@@ -90,7 +90,7 @@ namespace NeKzBot
 							{
 								if (files.Split('\n').Length > maxfilesperfolder)
 								{
-									await args.Channel.SendMessage($"Your folder is full. Try to list all files with {Properties.Settings.Default.PrefixCmd}dbfolder and delete one with {Properties.Settings.Default.PrefixCmd}dbdelete <filename>");
+									await args.Channel.SendMessage($"Your folder is full. Try to list all files with {Server.Settings.Default.PrefixCmd}dbfolder and delete one with {Server.Settings.Default.PrefixCmd}dbdelete <filename>");
 									continue;
 								}
 							}

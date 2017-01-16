@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace NeKzBot.Properties {
+namespace NeKzBot.Server {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -25,15 +25,6 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
-        public string Token {
-            get {
-                return ((string)(this["Token"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NeKzBot")]
         public string AppName {
             get {
@@ -43,7 +34,7 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.2")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -61,7 +52,7 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("!")]
+        [global::System.Configuration.DefaultSettingValueAttribute("-")]
         public char PrefixCmd {
             get {
                 return ((char)(this["PrefixCmd"]));
@@ -121,15 +112,6 @@ namespace NeKzBot.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("NeKz Server")]
-        public string ServerName {
-            get {
-                return ((string)(this["ServerName"]));
-            }
-        }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("?wr=1")]
@@ -156,16 +138,7 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("INSERT STEAM CODE HERE LOLOLOL")]
-        public string GiveawayPrize {
-            get {
-                return ((string)(this["GiveawayPrize"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("42")]
+        [global::System.Configuration.DefaultSettingValueAttribute("69")]
         public string GiveawayCode {
             get {
                 return ((string)(this["GiveawayCode"]));
@@ -210,15 +183,6 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("84272932246810624")]
-        public ulong MaseterAdminID {
-            get {
-                return ((ulong)(this["MaseterAdminID"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Resources/vars/")]
         public string DataPath {
             get {
@@ -258,15 +222,6 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
-        public string SpeedruncomToken {
-            get {
-                return ((string)(this["SpeedruncomToken"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("notifications")]
         public string NotificationChannelName {
             get {
@@ -285,33 +240,6 @@ namespace NeKzBot.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
-        public string TwitchClientToken {
-            get {
-                return ((string)(this["TwitchClientToken"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
-        public string DropboxToken {
-            get {
-                return ((string)(this["DropboxToken"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE LINK ID HERE")]
-        public string DropboxFolderLink {
-            get {
-                return ((string)(this["DropboxFolderLink"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("/Demos/")]
         public string DropboxFolderName {
             get {
@@ -325,15 +253,6 @@ namespace NeKzBot.Properties {
         public string LogChannelName {
             get {
                 return ((string)(this["LogChannelName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE LINK ID HERE")]
-        public string ServerInviteID {
-            get {
-                return ((string)(this["ServerInviteID"]));
             }
         }
     }

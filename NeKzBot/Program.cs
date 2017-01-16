@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using NeKzBot.Properties;
+using NeKzBot.Server;
 
 namespace NeKzBot
 {
@@ -24,30 +24,11 @@ namespace NeKzBot
 			Console.BackgroundColor = ConsoleColor.Black;
 			Console.ForegroundColor = ConsoleColor.DarkGreen;
 			Console.Title = $"{Settings.Default.AppName} V{Settings.Default.AppVersion} - Discord Server Bot";
-
-			//if (!Debugger.IsAttached)
-			//	ThanksMono();
-
 			NBot bot = new NBot();
 		}
 
 		// Uptime =/= connection time
 		public static string GetUptime() =>
 			uptimeWatch.Elapsed.ToString("h\\h\\ m\\m\\ s\\s");
-
-		//// Mono bug workaround
-		//public static void ThanksMono()
-		//{
-		//	// Scope -> User
-		//	Settings.Default.UpdateChannelName = Settings.Default.UpdateChannelName;
-		//	Settings.Default.RefreshTime = Settings.Default.RefreshTime;
-		//	Settings.Default.BoardParameter = Settings.Default.BoardParameter;
-		//	Settings.Default.AutoUpdate = Settings.Default.AutoUpdate;
-		//	Settings.Default.GiveawayResetTime = Settings.Default.GiveawayResetTime;
-		//	Settings.Default.GiveawayMaxTries = Settings.Default.GiveawayMaxTries;
-		//	Settings.Default.GiveawayEnabled = Settings.Default.GiveawayEnabled;
-		//	Settings.Default.CachingTime = Settings.Default.CachingTime;
-		//	Settings.Default.Save();
-		//}
 	}
 }
