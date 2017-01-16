@@ -22,6 +22,8 @@
 
 ## [Current Progress](https://github.com/NeKzor/NeKzBot/projects?sort=name)
 
+## [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/CHANGELOG.md)
+
 ## Server
 * [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
 * [Raspbian (Debian Jessie)](https://www.raspberrypi.org/downloads/raspbian)
