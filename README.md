@@ -31,6 +31,7 @@
 ## Credits
 * [Discord](https://discordapp.com/developers)
 * [Discord.Net Team](https://github.com/RogueException/Discord.Net)
+* [speedrun.com Staff](https://github.com/speedruncom/api)
 * [SpeedrunComSharp](https://github.com/LiveSplit/SpeedrunComSharp)
 * [Dropbox.NET](https://github.com/dropbox/dropbox-sdk-dotnet)
 * [Raspberry Pi Foundation](https://www.raspberrypi.org)
