@@ -8,9 +8,9 @@ namespace NeKzBot
 	/// Project name:	NeKzBot
 	/// Made by:		NeKz
 	/// Start date:		03/12/2016
-	/// Version:		1.1
+	/// Version:		1.2
 	/// Release date:	26/12/2016
-	/// Latest update:	08/01/2017
+	/// Latest update:	17/01/2017
 	/// GitHub repo:	https://github.com/NeKzor/NeKzBot
 	/// Description:	Test the application here - https://discord.gg/rEazbJn
 	/// </summary>
