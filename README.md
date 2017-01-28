@@ -22,6 +22,8 @@
 
 ## [Current Progress](https://github.com/NeKzor/NeKzBot/projects?sort=name)
 
+## [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/CHANGELOG.md)
+
 ## Server
 * [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
 * [Raspbian (Debian Jessie)](https://www.raspberrypi.org/downloads/raspbian)
@@ -29,6 +31,7 @@
 ## Credits
 * [Discord](https://discordapp.com/developers)
 * [Discord.Net Team](https://github.com/RogueException/Discord.Net)
+* [speedrun.com Staff](https://github.com/speedruncom/api)
 * [SpeedrunComSharp](https://github.com/LiveSplit/SpeedrunComSharp)
 * [Dropbox.NET](https://github.com/dropbox/dropbox-sdk-dotnet)
 * [Raspberry Pi Foundation](https://www.raspberrypi.org)
