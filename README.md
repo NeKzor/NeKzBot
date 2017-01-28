@@ -41,6 +41,7 @@
 * [speedrun.com Staff](https://github.com/speedruncom/api)
 * [SpeedrunComSharp](https://github.com/LiveSplit/SpeedrunComSharp)
 * [Dropbox.NET](https://github.com/dropbox/dropbox-sdk-dotnet)
+* [TweetSharp](https://github.com/Yortw/tweetmoasharp)
 * [Raspberry Pi Foundation](https://www.raspberrypi.org)
 * [.NET Foundation](https://dotnetfoundation.org)
 * [Microsoft Corporation](https://www.visualstudio.com/vs/community)
