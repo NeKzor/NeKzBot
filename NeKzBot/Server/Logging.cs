@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Server;
+using NeKzBot.Resources;
+using NeKzBot.Modules.Message;
 
-namespace NeKzBot
+namespace NeKzBot.Server
 {
-	public class Logging : NBot
+	public class Logging
 	{
 		/*	Event		Color
 		 *	-----------------------
@@ -17,64 +19,61 @@ namespace NeKzBot
 		 *	Giveaway	DarkCyan
 		 *	Audio		DarkGreen
 		 *	Dropbox		Blue
-		 *	Others		White		*/
+		 *	Others		White*/
 
-		public static void Init()
+		public static uint errorCount = 0;
+
+		public static async Task Init()
 		{
-			CON("Initializing logging", ConsoleColor.DarkYellow);
+			await CON("Initializing await Logging", ConsoleColor.DarkYellow);
 
-			dClient.MessageReceived += async(s, e) =>
+			Bot.dClient.MessageReceived += async(s, e) =>
 			{
-				if (!e.Message.IsAuthor && e.Server.Id == Credentials.Default.DiscordMainServerID)
+				if (!e.Message.IsAuthor && e.Server?.Id == Credentials.Default.DiscordMainServerID)
 					await AutoDownloader.Check(e);
 			};
 
-			dClient.UserJoined += async (s, e) =>
+			Bot.dClient.JoinedServer += async (s, e) =>
 			{
-				await Utils.GetChannel(e.Server.DefaultChannel.Name)?.SendMessage($"**{e.User.Name}** joined the server. Hi {e.User.Mention}! {Utils.RNGString(":smile:", ":ok_hand:")}");
+				await (await Utils.GetChannel(Settings.Default.LogChannelName))?.SendMessage($"**{Utils.GetLocalTime()}**\nBot joined the server.");
 			};
-
-			dClient.UserUpdated += async (s, e) =>
-			{
-				var channel = Utils.GetChannel(Settings.Default.LogChannelName, e.Server);
-				if (e.Before.Status == UserStatus.Offline && e.After.Status != UserStatus.Offline)
-					await channel?.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **online**.");
-				else if (e.After.Status == UserStatus.Offline && e.Before.Status != UserStatus.Offline)
-					await channel?.SendMessage($"{Utils.GetLocalTime()} | **{e.After.Name}** is now **offline**.");
-			};
+			await Task.FromResult(0);
 		}
 
 		// Write to console
 		public static void CON(object sender, LogMessageEventArgs e) =>
-			Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss")} @ SOCKET : {e.Severity} : {e.Source} : {e.Message}");
+			Console.WriteLine($"{Utils.GetLocalTime()} @ SOCKET : {e.Severity} : {e.Source} : {e.Message}");
 
-		public static void CON(string s, ConsoleColor c = ConsoleColor.Red, bool toupper = true)
+		public static async Task CON(string msg, ConsoleColor cc, bool toupper = true)
 		{
-			Console.ForegroundColor = c;
-			Console.WriteLine($"{DateTime.Now.ToString("HH:mm:ss @ ROOT : ")}{FormatTime(Program.uptimeWatch.Elapsed.TotalSeconds)}{Utils.UpperString(s, toupper)}");
+			Console.ForegroundColor = cc;
+			Console.WriteLine($"{Utils.GetLocalTime()} @ ROOT : {await FormatTime(Program.uptimeWatch.Elapsed.TotalSeconds)}{Utils.UpperString(msg, toupper)}");
+			Console.ResetColor();
+		}
+
+		public static async Task CON(string msg, Exception ex)
+		{
+			errorCount++;
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine($"{Utils.GetLocalTime()} @ ROOT : {await FormatTime(Program.uptimeWatch.Elapsed.TotalSeconds)}{Utils.UpperString(msg)} : {ex.Source} : {ex.Message}");
 			Console.ResetColor();
 		}
 
 		// Write to channel
-		public static void CHA(string s, ConsoleColor c = ConsoleColor.Red, bool toupper = true)
+		public static async Task CHA(string msg, ConsoleColor cc, bool toupper = true)
 		{
-			CON(s, c, toupper);
-			if (s.Length < 2000)
-				Utils.GetChannel(Settings.Default.LogChannelName)?.SendMessage(s);
-			else
-				Utils.GetChannel(Settings.Default.LogChannelName)?.SendMessage(s.Substring(0, 2000));
+			await CON(msg, cc, toupper);
+			(await Utils.GetChannel(Settings.Default.LogChannelName))?.SendMessage(Utils.CutMessage($"**{Utils.GetLocalTime()}**\n{msg}"));
 		}
 
-		// Write to trace
-		public static void TRA(string s, ConsoleColor c = ConsoleColor.Red, bool toupper = true)
+		public static async Task CHA(string msg, Exception ex)
 		{
-			CON(s, c, toupper);
-			System.Diagnostics.Trace.WriteLine(s);
+			await CON(msg, ex);
+			(await Utils.GetChannel(Settings.Default.LogChannelName))?.SendMessage(Utils.CutMessage($"**{Utils.GetLocalTime()} -> {msg}**\n**Source** {ex.Source}\n**Message** {ex.Message}"));
 		}
 
-		// Show nothing after a random time 
-		private static string FormatTime(double time) =>
-			time > 100000 ?
-			string.Empty : string.Format("{0:N2}s : ", time);
+		// Show nothing after a random time
+		private static Task<string> FormatTime(double time) =>
+			Task.FromResult(time > 100 ? string.Empty : string.Format("{0:N2}s : ", time));
 	}
 }

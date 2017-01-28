@@ -13,7 +13,7 @@ namespace NeKzBot.Server {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
-    internal sealed partial class Credentials : global::System.Configuration.ApplicationSettingsBase {
+    public sealed partial class Credentials : global::System.Configuration.ApplicationSettingsBase {
         
         private static Credentials defaultInstance = ((Credentials)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Credentials())));
         
@@ -34,10 +34,10 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("84272932246810624")]
-        public ulong DiscordMasterAdminID {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public ulong DiscordBotOwnerID {
             get {
-                return ((ulong)(this["DiscordMasterAdminID"]));
+                return ((ulong)(this["DiscordBotOwnerID"]));
             }
         }
         
@@ -97,10 +97,46 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("208570520805965826")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
         public ulong DiscordMainServerID {
             get {
                 return ((ulong)(this["DiscordMainServerID"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        public string TwitterConsumerKey {
+            get {
+                return ((string)(this["TwitterConsumerKey"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        public string TwitterConsumerSecret {
+            get {
+                return ((string)(this["TwitterConsumerSecret"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        public string TwitterAppToken {
+            get {
+                return ((string)(this["TwitterAppToken"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        public string TwitterAppTokenSecret {
+            get {
+                return ((string)(this["TwitterAppTokenSecret"]));
             }
         }
     }

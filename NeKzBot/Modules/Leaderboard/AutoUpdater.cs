@@ -3,67 +3,82 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Leaderboard
 {
 	public partial class Leaderboard
 	{
 		internal class AutoUpdater
 		{
+			public static bool isRunning = false;
 			private static Stopwatch refreshWatch;
 			private static CancellationTokenSource cancelUpdateSource;
 			private static CancellationToken cancelToken;
 			private static string cacheKey;
 
-			public static void Init()
+			public static Task Init()
 			{
 				refreshWatch = new Stopwatch();
 				cancelUpdateSource = new CancellationTokenSource();
 				cancelToken = cancelUpdateSource.Token;
 				cacheKey = "autolb";
+				return Task.FromResult(0);
 			}
 
 			#region ACTIONS
 			public static async Task Start(int serverdelay = 8000)
 			{
+				// Wait some time till bot is on server
+				await Task.Delay(serverdelay);
+				await Logging.CON("Lb autoupdater started", ConsoleColor.DarkBlue);
+				isRunning = true;
+
 				try
 				{
-					// Wait some time till bot is on server
-					await Task.Delay(serverdelay);
-					Logging.CON("Lb autoupdater started", ConsoleColor.DarkBlue);
-
 					// Find channel to send to
-					var channel = Utils.GetChannel(Settings.Default.UpdateChannelName);
+					var channel = await Utils.GetChannel(Settings.Default.UpdateChannelName);
 
 					// Reserve cache memory
-					Caching.CFile.AddKey(cacheKey);
+					await Caching.CFile.AddKey(cacheKey);
+
+					// Twitter stuff
+					var service = Twitter.Twitter.Account.CreateService(Credentials.Default.TwitterConsumerKey, Credentials.Default.TwitterConsumerSecret, Credentials.Default.TwitterAppToken, Credentials.Default.TwitterAppTokenSecret);
 
 					while (Settings.Default.AutoUpdate)
 					{
-						Logging.CON("Lb autoupdater checking", ConsoleColor.DarkBlue);
+						await Logging.CON("Lb autoupdater checking", ConsoleColor.DarkBlue);
 
 						// Get cache from file
-						var cache = Caching.CFile.GetFile(cacheKey);
+						var cache = await Caching.CFile.GetFile(cacheKey);
 
 						// Download entry
-						var entryUpdate = await GetLatestEntry("http://board.iverb.me/changelog" + Settings.Default.BoardParameter, true);
+						var entryUpdate = await GetEntryUpdate("http://board.iverb.me/changelog" + Settings.Default.BoardParameter);
 
 						// Method returns null when an error occurs, ignore it
 						if (entryUpdate != null)
 						{
+							var message = entryUpdate.Item1;
+							var tweet = entryUpdate.Item2;
+							var newcache = entryUpdate.Item3;
+
 							// Only update if new
-							if (entryUpdate != cache)
+							if (cache != newcache)
 							{
 								// Save cache
-								Logging.CON($"CACHING NEW ENTRY {Utils.StringInBytes(entryUpdate)} bytes");
-								Caching.CFile.Save(cacheKey, entryUpdate);
+								await Logging.CON($"Leaderboard AutoUpdater entry cache -> {Utils.StringInBytes(newcache)} bytes", ConsoleColor.Red);
+								await Caching.CFile.Save(cacheKey, newcache);
 
 								// Check if channel name has changed
 								if (channel.Name != Settings.Default.UpdateChannelName)
-									channel = Utils.GetChannel(Settings.Default.UpdateChannelName);
+									channel = await Utils.GetChannel(Settings.Default.UpdateChannelName);
 
-								// Send update
-								await channel?.SendMessage(entryUpdate);
+								// Send update to Discord channel
+								await channel?.SendMessage(message);
+
+								// Send it to Twitter too but make sure it's world record
+								if (tweet != string.Empty && Settings.Default.BoardParameter == "?wr=1")
+									await Twitter.Twitter.SendTweet(service, entryUpdate.Item2);
 							}
 						}
 						// Wait then refresh
@@ -73,21 +88,18 @@ namespace NeKzBot
 				}
 				catch (Exception ex)
 				{
-					Logging.CHA($"Lb autoupdater cancelled\n{ex.ToString()}", ConsoleColor.DarkBlue);
+					await Logging.CHA($"Lb autoupdater cancelled\n{ex.ToString()}", ConsoleColor.DarkBlue);
 				}
-				finally
-				{
-					Logging.CON("Lb autoupdater ended", ConsoleColor.DarkBlue);
-				}
+				isRunning = false;
 			}
 
 			// Start auto updater again if it's dead, cancel it when it's alive
-			public static string ToggleUpdate()
+			public static async Task<string> ToggleUpdate()
 			{
-				Logging.CON("Lb autoupdater requested change", ConsoleColor.DarkBlue);
+				await Logging.CON("Lb autoupdater requested change", ConsoleColor.DarkBlue);
 				if (cancelUpdateSource.IsCancellationRequested || Start().IsCompleted)
 				{
-					Task.Factory.StartNew(async () => { await Start(); });
+					await Task.Factory.StartNew(async () => { await Start(); });
 					return "Auto update started.";
 				}
 				cancelUpdateSource.Cancel();
@@ -95,55 +107,53 @@ namespace NeKzBot
 			}
 
 			// Cancel current wait and check for new entry now
-			public static string RefreshNow()
+			public static async Task<string> RefreshNow()
 			{
-				Logging.CON("Lb autoupdater requested refresh", ConsoleColor.DarkBlue);
+				await Logging.CON("Lb autoupdater requested refresh", ConsoleColor.DarkBlue);
 				if (!cancelUpdateSource.IsCancellationRequested && !Start().IsCompleted)
 				{
 					cancelUpdateSource.Cancel();
-					Task.Factory.StartNew(async () => { await Start(); });
+					await Task.Factory.StartNew(async () => { await Start(); });
 					return "Will refresh soon.";
 				}
 				return $"Refresh failed. Try `{Settings.Default.PrefixCmd + Settings.Default.LeaderboardCmd} toggleupdate`";
 			}
 
 			// Cache which you need to compare for a new check
-			public static string CleanEntryCache()
+			public static async Task<string> CleanEntryCache()
 			{
-				var bytes = Utils.StringInBytes(Caching.CFile.Get(cacheKey));
-				Caching.CFile.Save(cacheKey, string.Empty);
-				Logging.CON($"CACHE SIZE CLEANED {bytes} BYTES");
+				var bytes = Utils.StringInBytes(await Caching.CFile.Get(cacheKey));
+				await Caching.CFile.Save(cacheKey, string.Empty);
+				await Logging.CON($"Cleaned leaderboard cache -> {bytes} bytes", ConsoleColor.Red);
 				return $"Cleaned entry cache with a size of {bytes} bytes.";
 			}
 			#endregion
 
 			#region SETTINGS
 			// Show when the the next entry check is
-			public static string GetRefreshTime()
+			public static Task<string> GetRefreshTime()
 			{
 				var min = Convert.ToInt16(Settings.Default.RefreshTime) - refreshWatch.Elapsed.Minutes;
 				if (min < 1)
-					return "Will check soon for an update.";
-				return min == 1 ? 
-					"Will check in 1 minute for an update." : $"Will check in {min.ToString()} minutes for an update.";
-
+					return Task.FromResult("Will check soon for an update.");
+				return Task.FromResult(min == 1 ?  "Will check in 1 minute for an update." : $"Will check in {min.ToString()} minutes for an update.");
 			}
 
 			// Set time when to refresh
-			public static string SetResfreshTime(string t)
+			public static Task<string> SetResfreshTime(string t)
 			{
 				if (!Utils.ValidateString(t, "^[1-9]", 4))
-					return "Invalid paramter. Use numbers from 1-9 only.";
+					return Task.FromResult("Invalid paramter. Use numbers from 1-9 only.");
 				var time = Convert.ToInt16(t);
 				if (time > 1440)
-					return "Invalid value. Time is in minutes.";
+					return Task.FromResult("Invalid value. Time is in minutes.");
 				Settings.Default.RefreshTime = (uint)time;
 				Settings.Default.Save();
-				return $"New refresh time is set to **{t}min**";
+				return Task.FromResult(Utils.CutMessage($"New refresh time is set to **{t}min**"));
 			}
 
 			// Set a new channel
-			public static string SetUpdateChannel(string s)
+			public static async Task<string> SetUpdateChannel(string s)
 			{
 				if (s == Settings.Default.UpdateChannelName)
 					return "Channel is already set with this name.";
@@ -151,50 +161,49 @@ namespace NeKzBot
 				if (Utils.GetChannel(s) == null)
 					return "Channel name doesn't exist on this server.";
 
-				Logging.CON("New channel name set", ConsoleColor.DarkBlue);
+				await Logging.CON("New channel name set", ConsoleColor.DarkBlue);
 				Settings.Default.UpdateChannelName = s;
 				Settings.Default.Save();
 				return $"Auto updates will be send to **{s}** now.";
 			}
 
 			// Set the state of the updater
-			public static string SetAutoUpdateState(string s)
+			public static Task<string> SetAutoUpdateState(string s)
 			{
 				var state = s.ToLower();
 				if (state == "toggle")
 				{
 					Settings.Default.AutoUpdate = !Settings.Default.AutoUpdate;
 					Settings.Default.Save();
-					return $"Auto leaderboard update state is set to **{Settings.Default.AutoUpdate.ToString()}** now.";
+					return Task.FromResult($"Auto leaderboard update state is set to **{Settings.Default.AutoUpdate.ToString()}** now.");
 				}
 				if (state == "true")
 				{
 					if (Settings.Default.AutoUpdate.ToString() == state)
-						return "Auto updater already enabled.";
+						return Task.FromResult("Auto updater already enabled.");
 					Settings.Default.AutoUpdate = true;
 					Settings.Default.Save();
-					return "Channel will update again.";
+					return Task.FromResult("Channel will update again.");
 				}
 				if (state == "false")
 				{
 					if (Settings.Default.AutoUpdate.ToString() == state)
-						return "Auto updater already disabled.";
+						return Task.FromResult("Auto updater already disabled.");
 					Settings.Default.AutoUpdate = false;
 					Settings.Default.Save();
-					return "Channel won't update anymore.";
+					return Task.FromResult("Channel won't update anymore.");
 				}
-				return "Invalid state. Try one of these `toggle`, `true`, `false`";
+				return Task.FromResult("Invalid state. Try one of these `toggle`, `true`, `false`");
 			}
 
 			// Set board parameter after /changelog (example: ?wr=1)
-			public static string SetNewBoardParameter(string s)
+			public static Task<string> SetNewBoardParameter(string s)
 			{
 				if (s == Settings.Default.BoardParameter)
-					return "Board parameter is already set with the same value.";
+					return Task.FromResult("Board parameter is already set with the same value.");
 				Settings.Default.BoardParameter = s;
 				Settings.Default.Save();
-				return s == string.Empty ?
-					"Saved. Board parameter isn't set." : $"Saved. New board parameter is to **{s}** now.";
+				return Task.FromResult(s == string.Empty ? "Saved. Board parameter isn't set." : Utils.CutMessage($"Saved. New board parameter is to **{s}** now."));
 			}
 			#endregion
 		}

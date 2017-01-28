@@ -5,29 +5,31 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using HtmlAgilityPack;
 using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Leaderboard
 {
 	public partial class Leaderboard
 	{
 		internal class Cache
 		{
+			public static bool isRunning = false;
 			private static Stopwatch cacheWatch;
 			private static string cacheKey;
 
-			public static void Init()
+			public static async Task Init()
 			{
 				// Reserve cache memory
 				cacheKey = cacheKey ?? "lb";
-				Caching.CApplication.Save(cacheKey, new Dictionary<string, HtmlDocument>());
+				await Caching.CApplication.Save(cacheKey, new Dictionary<string, HtmlDocument>());
 			}
 
 			// Get new or cached document
 			public static async Task<HtmlDocument> GetCache(string url, bool ignore = false)
 			{
 				// Get cache
-				var cache = Caching.CApplication.Get(cacheKey);
-
+				var cache = await Caching.CApplication.Get(cacheKey);
+				
 				// Search and find cached data
 				if (!ignore)
 					if (cache != null)
@@ -43,7 +45,8 @@ namespace NeKzBot
 				}
 				catch (Exception ex)
 				{
-					Logging.CHA($"Fetching error\n{ex.ToString()}");
+					await Logging.CHA("Fetching error", ex);
+					return null;
 				}
 				if (doc == null)
 					return null;
@@ -53,8 +56,8 @@ namespace NeKzBot
 				temp.Add(url, doc);
 				
 				// Save cache
-				Logging.CON($"CACHING DATA WITH {Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes");
-				Caching.CApplication.Add(cacheKey, temp);
+				await Logging.CON($"Leaderboard cache -> {Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", ConsoleColor.Red);
+				await Caching.CApplication.Add(cacheKey, temp);
 				temp = null;
 				return doc;
 			}
@@ -62,47 +65,47 @@ namespace NeKzBot
 			// Timer
 			public static async Task Reset()
 			{
+				await Logging.CON("Lb caching reset started", ConsoleColor.DarkBlue);
+				isRunning = true;
 				try
 				{
-					Logging.CON("Lb caching reset started", ConsoleColor.DarkBlue);
-
 					for (;;)
 					{
-						Logging.CON("Lb caching reset cleared", ConsoleColor.DarkBlue);
 						cacheWatch = new Stopwatch();
 						cacheWatch.Start();
-						Caching.CApplication.ClearData(cacheKey);
+						await Caching.CApplication.ClearData(cacheKey);
 						await Task.Delay((int)Settings.Default.CachingTime * 60000);
 					}
 				}
 				catch
 				{
-					Logging.CON("Leaderboard caching error");
+					await Logging.CON("Leaderboard reset cache error", ConsoleColor.Red);
 				}
+				isRunning = false;
 			}
 
 			// Get time when cache will be cleared
-			public static string GetCleanCacheTime()
+			public static Task<string> GetCleanCacheTime()
 			{
 				var min = Convert.ToInt16(Settings.Default.CachingTime) - cacheWatch.Elapsed.Minutes;
 				if (min < 1)
-					return "Leaderboard cache will be cleared soon.";
+					return Task.FromResult("Leaderboard cache will be cleared soon.");
 				if (min == 1)
-					return "Leaderboard cache will be cleared in 1 minute.";
-				return $"Leaderboard cache will be cleared in {min.ToString()} minutes.";
+					return Task.FromResult("Leaderboard cache will be cleared in 1 minute.");
+				return Task.FromResult($"Leaderboard cache will be cleared in {min.ToString()} minutes.");
 			}
 
 			// Set time when to clear cache
-			public static string SetCleanCacheTime(string t)
+			public static Task<string> SetCleanCacheTime(string t)
 			{
 				if (!Utils.ValidateString(t, "^[1-9]", 4))
-					return "Invalid paramter.";
+					return Task.FromResult("Invalid paramter.");
 				var time = Convert.ToInt16(t);
 				if (time < 1 || time > 1440)
-					return "Invalid paramter. Time is in minutes.";
+					return Task.FromResult("Invalid paramter. Time is in minutes.");
 				Settings.Default.CachingTime = (uint)time;
 				Settings.Default.Save();
-				return $"New clean cache time is set to **{t}min**.";
+				return Task.FromResult($"New clean cache time is set to **{t}min**.");
 			}
 		}
 	}

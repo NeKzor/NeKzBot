@@ -1,6 +1,7 @@
 ﻿using NeKzBot.Server;
+using System.Threading.Tasks;
 
-namespace NeKzBot
+namespace NeKzBot.Resources
 {
 	public class Data
 	{
@@ -43,40 +44,40 @@ namespace NeKzBot
 		public static readonly string fileNameSoundNames = "sounds" + fileExtension;
 		public static readonly string fileNameP2Exploits = "exploits" + fileExtension;
 
-		public static void InitConsoleCommands() => consoleCommands = (string[])Utils.ReadFromFile(fileNameConsoleCommands);
-		public static void InitAudioAliases() => audioAliases = (string[])Utils.ReadFromFile(fileNameAudioAliases);
-		public static void InitRandomGames() => randomGames = (string[])Utils.ReadFromFile(fileNameRandomGames);
-		public static void InitkillBotAliases() => killBotAliases = (string[])Utils.ReadFromFile(fileNameKillBotAliases);
-		public static void InitSpecialThanks() => specialThanks = (string[])Utils.ReadFromFile(fileNameSpecialThanks);
-		public static void InitTwitchStreamers() => twitchStreamers = (string[])Utils.ReadFromFile(fileNameTwitchStreamers);
-		public static void InitScriptFiles() => scriptFiles = (string[,])Utils.ReadFromFile(fileNameScriptFiles);
-		public static void InitMemeCommands() => memeCommands = (string[,])Utils.ReadFromFile(fileNameMemeCommands);
-		public static void InitToolCommands() => toolCommands = (string[,])Utils.ReadFromFile(fileNameToolCommands);
-		public static void InitLinkCommands() => linkCommands = (string[,])Utils.ReadFromFile(fileNameLinkCommands);
-		public static void InitProjectNames() => projectNames = (string[,])Utils.ReadFromFile(fileNameProjectNames);
-		public static void InitPortal2Maps() => portal2Maps = (string[,])Utils.ReadFromFile(fileNamePortal2Maps);
-		public static void InitQuoteNames() => quoteNames = (string[,])Utils.ReadFromFile(fileNameQuoteNames);
-		public static void InitSoundNames() => soundNames = (string[,])Utils.ReadFromFile(fileNameSoundNames);
-		public static void InitP2Exploits() => p2Exploits = (string[,])Utils.ReadFromFile(fileNameP2Exploits);
+		public static async Task InitConsoleCommands() => consoleCommands = (string[])(await Utils.ReadFromFile(fileNameConsoleCommands));
+		public static async Task InitAudioAliases() => audioAliases = (string[])(await Utils.ReadFromFile(fileNameAudioAliases));
+		public static async Task InitRandomGames() => randomGames = (string[])(await Utils.ReadFromFile(fileNameRandomGames));
+		public static async Task InitkillBotAliases() => killBotAliases = (string[])(await Utils.ReadFromFile(fileNameKillBotAliases));
+		public static async Task InitSpecialThanks() => specialThanks = (string[])(await Utils.ReadFromFile(fileNameSpecialThanks));
+		public static async Task InitTwitchStreamers() => twitchStreamers = (string[])(await Utils.ReadFromFile(fileNameTwitchStreamers));
+		public static async Task InitScriptFiles() => scriptFiles = (string[,])(await Utils.ReadFromFile(fileNameScriptFiles));
+		public static async Task InitMemeCommands() => memeCommands = (string[,])(await Utils.ReadFromFile(fileNameMemeCommands));
+		public static async Task InitToolCommands() => toolCommands = (string[,])(await Utils.ReadFromFile(fileNameToolCommands));
+		public static async Task InitLinkCommands() => linkCommands = (string[,])(await Utils.ReadFromFile(fileNameLinkCommands));
+		public static async Task InitProjectNames() => projectNames = (string[,])(await Utils.ReadFromFile(fileNameProjectNames));
+		public static async Task InitPortal2Maps() => portal2Maps = (string[,])(await Utils.ReadFromFile(fileNamePortal2Maps));
+		public static async Task InitQuoteNames() => quoteNames = (string[,])(await Utils.ReadFromFile(fileNameQuoteNames));
+		public static async Task InitSoundNames() => soundNames = (string[,])(await Utils.ReadFromFile(fileNameSoundNames));
+		public static async Task InitP2Exploits() => p2Exploits = (string[,])(await Utils.ReadFromFile(fileNameP2Exploits));
 
-		public static void Init()
+		public static async Task Init()
 		{
-			Logging.CON("Initializing data", System.ConsoleColor.DarkYellow);
-			InitAudioAliases();
-			InitConsoleCommands();
-			InitkillBotAliases();
-			InitLinkCommands();
-			InitMemeCommands();
-			InitP2Exploits();
-			InitPortal2Maps();
-			InitProjectNames();
-			InitQuoteNames();
-			InitRandomGames();
-			InitScriptFiles();
-			InitSoundNames();
-			InitSpecialThanks();
-			InitToolCommands();
-			InitTwitchStreamers();
+			await Logging.CON("Initializing data", System.ConsoleColor.DarkYellow);
+			await InitAudioAliases();
+			await InitConsoleCommands();
+			await InitkillBotAliases();
+			await InitLinkCommands();
+			await InitMemeCommands();
+			await InitP2Exploits();
+			await InitPortal2Maps();
+			await InitProjectNames();
+			await InitQuoteNames();
+			await InitRandomGames();
+			await InitScriptFiles();
+			await InitSoundNames();
+			await InitSpecialThanks();
+			await InitToolCommands();
+			await InitTwitchStreamers();
 		}
 
 		#region HELP COMMAND LIST
@@ -108,7 +109,7 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd}player <rankname>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}latestentry <mapname>`";
 
-		public static string adminLbMsg = $"\n**[Leaderboard Commands - {Utils.CollectionToList(Settings.Default.AllowedRoles)} Only]**"
+		public static string adminLbMsg = $"\n**[Leaderboard Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.LeaderboardCmd} refreshtime`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.LeaderboardCmd} setrefreshtime <time>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.LeaderboardCmd} setchannel <name>`"
@@ -135,7 +136,7 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway resetwhen`";
 
-		public static string adminGameMsg = $"\n**[Game Commands - {Utils.CollectionToList(Settings.Default.AllowedRoles)} Only]**"
+		public static string adminGameMsg = $"\n**[Game Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway resettime`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway maxtries`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway resetnow`"
@@ -143,7 +144,7 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway setstate`";
 
 		public static string masterAdminGameMsg =
-			"\n**[Game Commands - Master-Server Admin Only]**"
+			"\n**[Game Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}giveaway status`";
 
 		public static string rpiMsg =
@@ -175,11 +176,11 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd}dbdelete <file>`";
 
 		public static string masterAdminDropboxMsg =
-			$"\n**[Dropbox Commands - Master-Server Admin Only]**"
+			$"\n**[Dropbox Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd}dbdelete <folder> <file>`";
 
 		public static string adminBotMsg =
-			$"\n**[Bot Commands - {Utils.CollectionToList(Settings.Default.AllowedRoles)} Only]**"
+			$"\n**[Bot Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} connect`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} disconnect`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} stop`"
@@ -189,23 +190,24 @@ namespace NeKzBot
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} setgame <name>`";
 
 		public static string masterAdminBotMsg =
-			"\n**[Bot Commands - Master-Server Admin Only]**"
+			"\n**[Bot Commands - Bot Owner Only]**"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} kill`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} add <cmdname> <value1> <value2> <etc.>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} delete <cmdname> <value>`"
-			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} revive`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} revive <name>`"
 			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} reload`"
-			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} showdata`"
-			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} data`";
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} showdata <name>`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} data`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} say <channel> <message>`"
+			+ $"\n**-** `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} taskstatus <name>`";
 
 		public static string settingsMsg =
-			"**[Scope - *Application*]**"
+			"**[SCOPE - *APPLICATION*]**"
 			+ $"\n**AppName -** {Settings.Default.AppName}"
 			+ $"\n**AppVersion -** {Settings.Default.AppVersion}"
 			+ $"\n**AppUrl -** {Settings.Default.AppUrl}"
 			+ $"\n**PrefixCmd -** {Settings.Default.PrefixCmd.ToString()}"
 			+ $"\n**BotCmd -** {Settings.Default.BotCmd}"
-			+ $"\n**AllowedRoles -** {Utils.CollectionToList(Settings.Default.AllowedRoles, "`")}"
 			+ $"\n**AudioPath -** {Settings.Default.AudioPath}"
 			+ $"\n**DataPath -** {Settings.Default.DataPath}"
 			+ $"\n**LeaderboardCmd -** {Settings.Default.LeaderboardCmd}"
@@ -214,7 +216,7 @@ namespace NeKzBot
 			+ $"\n**TwitchChannelName -** {Settings.Default.TwitchChannelName}"
 			+ $"\n**DropboxFolderName -** {Settings.Default.DropboxFolderName}"
 			+ $"\n**LogChannelName -** {Settings.Default.LogChannelName}"
-			+ "\n**[Scope - *User*]**"
+			+ "\n**[SCOPE - *USER*]**"
 			+ $"\n**UpdateChannelName -** {Settings.Default.UpdateChannelName}"
 			+ $"\n**RefreshTime -** {Settings.Default.RefreshTime.ToString()}"
 			+ $"\n**BoardParameter -** {Settings.Default.BoardParameter}"
@@ -235,7 +237,9 @@ namespace NeKzBot
 			+ "\n**Network\n-** 10/100 Ethernet\n**-** 802.11n Wireless";
 
 		public static string msgEnd = $"\n**Note**\n**-** Game commands are in developement.\n**-** Some commands don't require a parameter.\n**-** Try `{Settings.Default.PrefixCmd}help <command>` for more infromation.";
-		public static string rolesMsg = $"You are not allowed to do that.\nAllowed roles: {Utils.CollectionToList(Settings.Default.AllowedRoles, "`")}";
+		public static string[] botGreetings = { "Hey!", "Yo!", "Hi!", "Yoo!", "Hello!", "Hej!", "Hallo!", "Hola!", "Salut!" };
+		public static string[] botFeelings = { ":grinning:", ":grimacing:", ":grin:", ":smiley:", ":smile:", ":sweat_smile:", ":wink:", ":slight_smile:", ":rage:", ":yum:", ":blush:", ":robot:", ":thumbsup:", ":ok_hand:", ":v:", ":heart:" };
+		public static string[] botAnswers = { "Yes.", "**YEEE!**", "Yeah.", "Ye", "Oke", "OK", ":ok_hand:", ":thumbsup:", "No.", "**NO.**", "Nah.", ":thumbsdown:", "Maybe.", "Perhaps.", "What do yo mean?", "I not understund you.", "What do you think?" };
 		#endregion
 	}
 }

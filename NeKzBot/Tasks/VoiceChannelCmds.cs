@@ -1,18 +1,21 @@
-﻿using NeKzBot.Server;
+﻿using System.Threading.Tasks;
+using NeKzBot.Server;
+using NeKzBot.Modules;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Tasks
 {
 	public class VoiceChannelCmds : Commands
 	{
-		public static void Load()
+		public static async Task Load()
 		{
-			Logging.CON("Loading voice channel commands", System.ConsoleColor.DarkYellow);
-			GetRandomYanniSound("yanni");
-			GetRandomPortal2Sound("p2");
-			Utils.CommandCreator(() => PlaySoundInVC(Utils.group, Utils.index), 0, Data.soundNames, true, Data.audioAliases);
+			await Logging.CON("Loading voice channel commands", System.ConsoleColor.DarkYellow);
+			await GetRandomYanniSound("yanni");
+			await GetRandomPortal2Sound("p2");
+			await Utils.CommandCreator(() => PlaySoundInVC(Utils.group, Utils.index), 0, Data.soundNames, true, Data.audioAliases);
 		}
 
-		public static void PlaySoundInVC(string s, int i)
+		public static Task PlaySoundInVC(string s, int i)
 		{
 			cmd.CreateGroup(s, g =>
 			{
@@ -31,12 +34,13 @@ namespace NeKzBot
 						await e.Channel.SendMessage($"Bot isn't VC connected. Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} vc`");
 				});
 			});
+			return Task.FromResult(0);
 		}
 
-		public static void GetRandomYanniSound(string c)
+		public static Task GetRandomYanniSound(string c)
 		{
 			cmd.CreateCommand(c)
-			.Description($"**-** `{Settings.Default.PrefixCmd + c}` plays a random sound from the living meme. <:yanni:257551518700404747>\n**-** Only works when in VC.")
+			.Description($"**-** `{Settings.Default.PrefixCmd + c}` plays a random sound from the living meme.\n**-** Only works when in VC.")
 			.Do(async (e) =>
 			{
 				if (VoiceChannel.vcconnected)
@@ -44,14 +48,15 @@ namespace NeKzBot
 					if (!VoiceChannel.isplaying)
 						await Audio.PlayWithFFmpeg(e.Server.Id, e.User.VoiceChannel, Data.soundNames[Utils.RNG(24, 31), 2]); // Array range of yanni sounds
 					else
-						await e.Channel.SendMessage($"Bot is already playing sound. <:yanni:257551518700404747> Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} " + Data.soundNames[Utils.RNG(24, 31), 0] + "`");
+						await e.Channel.SendMessage($"Bot is already playing sound. Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} " + Data.soundNames[Utils.RNG(24, 31), 0] + "`");
 				}
 				else
-					await e.Channel.SendMessage($"Bot isn't VC connected. <:yanni:257551518700404747> Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} vc`");
+					await e.Channel.SendMessage($"Bot isn't VC connected. Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} vc`");
 			});
+			return Task.FromResult(0);
 		}
 
-		public static void GetRandomPortal2Sound(string c)
+		public static Task GetRandomPortal2Sound(string c)
 		{
 			cmd.CreateCommand(c)
 			.Description($"**-** `{Settings.Default.PrefixCmd + c}` plays a random challenge mode sound.\n**-** Only works when in VC.")
@@ -67,6 +72,7 @@ namespace NeKzBot
 				else
 					await e.Channel.SendMessage($"Bot isn't VC connected. Try `{Settings.Default.PrefixCmd + Settings.Default.BotCmd} vc`");
 			});
+			return Task.FromResult(0);
 		}
 	}
 }

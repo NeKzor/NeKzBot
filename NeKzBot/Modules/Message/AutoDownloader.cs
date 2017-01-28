@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using HtmlAgilityPack;
+using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Message
 {
 	public class AutoDownloader : DropboxCom
 	{
@@ -19,11 +21,11 @@ namespace NeKzBot
 			await SteamWorkshop(args);
 		}
 
-		public static void Load()
+		public static async Task Load()
 		{
 			dropboxCacheKey = dropboxCacheKey ?? "dropbox";
 			steamCacheKey = steamCacheKey ?? "steam";
-			Caching.CApplication.Save(steamCacheKey, new Dictionary<string, HtmlDocument>());
+			await Caching.CApplication.Save(steamCacheKey, new Dictionary<string, HtmlDocument>());
 		}
 		
 		// Uploads to Dropbox.com
@@ -31,7 +33,7 @@ namespace NeKzBot
 		{
 			try
 			{
-				Load();
+				await Load();
 				if (args.Message.Attachments.Length > 0)
 				{
 					foreach (var file in args.Message.Attachments)
@@ -62,27 +64,20 @@ namespace NeKzBot
 							}
 							catch (System.Exception ex)
 							{
-								Logging.CHA($"Fetching error\n{ex.ToString()}");
+								await Logging.CHA("Fetching error", ex);
 							}
 
 							// Get file
-							var cacheFile = Caching.CFile.GetPathAndSave(dropboxCacheKey);
+							var cacheFile = await Caching.CFile.GetPathAndSave(dropboxCacheKey);
 							if (string.IsNullOrEmpty(cacheFile))
 							{
 								await args.Channel.SendMessage("**Caching Error**");
-								Logging.CON("AutoDownloader caching error");
+								await Logging.CON("AutoDownloader caching error", System.ConsoleColor.Red);
 								return;
 							}
 
 							// Every user has its on folder
-							var username = args.User.Nickname;
-							var path = Server.Settings.Default.DropboxFolderName;
-
-							//// Don't create a folder with bad characters
-							//if (!Utils.ValidateString(username, "^[a-zA-Z0-9_-]"))
-							//	path += username;
-							//else
-								path += args.User.Id;	// Unique folder ids for safety of course
+							var path = Settings.Default.DropboxFolderName + args.User.Id;
 
 							// Check if folder full
 							var files = await ListFiles(path);
@@ -90,7 +85,7 @@ namespace NeKzBot
 							{
 								if (files.Split('\n').Length > maxfilesperfolder)
 								{
-									await args.Channel.SendMessage($"Your folder is full. Try to list all files with {Server.Settings.Default.PrefixCmd}dbfolder and delete one with {Server.Settings.Default.PrefixCmd}dbdelete <filename>");
+									await args.Channel.SendMessage($"Your folder is full. Try to list all files with {Settings.Default.PrefixCmd}dbfolder and delete one with {Settings.Default.PrefixCmd}dbdelete <filename>");
 									continue;
 								}
 							}
@@ -104,7 +99,7 @@ namespace NeKzBot
 			}
 			catch (System.Exception ex)
 			{
-				Logging.CHA($"AutoDownloader dropbox error\n{ex.ToString()}");
+				await Logging.CHA("AutoDownloader dropbox error", ex);
 				await args.Channel.SendMessage("**Error**");
 			}
 		}
@@ -161,9 +156,9 @@ namespace NeKzBot
 					await args.Channel.SendMessage($"**[Steam Workshop - *{game}*]**\n{item} made by {user}{picture}");
 				}
 			}
-			catch
+			catch (System.Exception ex)
 			{
-				Logging.CON("AutoDownloader steam error");
+				await Logging.CHA("AutoDownloader steam error", ex);
 				await args.Channel.SendMessage("**Error**");
 			}
 		}
@@ -172,7 +167,7 @@ namespace NeKzBot
 		public static async Task<HtmlDocument> GetCache(string url)
 		{
 			// Get cache
-			var cache = Caching.CApplication.Get(steamCacheKey);
+			var cache = await Caching.CApplication.Get(steamCacheKey);
 
 			// Search and find cached data
 			if (cache != null)
@@ -188,7 +183,8 @@ namespace NeKzBot
 			}
 			catch (System.Exception ex)
 			{
-				Logging.CHA($"Fetching error\n{ex.ToString()}");
+				await Logging.CHA("Fetching error", ex);
+				return null;
 			}
 			if (doc == null)
 				return null;
@@ -198,8 +194,8 @@ namespace NeKzBot
 			temp.Add(url, doc);
 
 			// Save cache
-			Logging.CON($"CACHING DATA WITH {Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes");
-			Caching.CApplication.Add(steamCacheKey, temp);
+			await Logging.CON($"SteamWorkshop data cache -> {Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", System.ConsoleColor.Red);
+			await Caching.CApplication.Add(steamCacheKey, temp);
 			temp = null;
 			return doc;
 		}

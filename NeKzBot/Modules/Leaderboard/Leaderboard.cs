@@ -1,103 +1,138 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NeKzBot.Resources;
+using NeKzBot.Server;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Leaderboard
 {
 	public partial class Leaderboard
 	{
 		private const int maxytid = 11;     // Maximum length of a YouTube ID
 
-		public static async Task<string> GetLatestEntry(string url, bool autoupdate = false)
+		public static async Task<string> GetLatestEntry(string url)
 		{
-			Logging.CON("Requesting new entry", ConsoleColor.DarkBlue);
-
-			// Don't look into cache when the request comes from the auto updater
-			HtmlAgilityPack.HtmlDocument doc;
-			if (autoupdate)
-			{
-				doc = await Cache.GetCache(url, true);
-				if (doc == null)
-					return null;
-			}
-			else
-			{
-				doc = await Cache.GetCache(url);
-				if (doc == null)
-					return "**Error**";
-			}
+			var doc = await Cache.GetCache(url);
+			if (doc == null)
+				return "**Error**";
 
 			try
 			{
-				var map = doc.DocumentNode.SelectSingleNode("//div[@class='map']//a").FirstChild.InnerHtml;
-				var ranking = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//div[@class='rank']").FirstChild.InnerHtml;
-				var time = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//a[@class='time']").FirstChild.InnerHtml;
-				var player = doc.DocumentNode.SelectSingleNode("//div[@class='boardname']//a").FirstChild.InnerHtml;
-				var date = doc.DocumentNode.SelectSingleNode("//div[@class='datatable page-entries active']//div[@class='entry']//div[@class='date']").Attributes["date"].Value.ToString();
+				var map = doc.DocumentNode.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+				var ranking = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
+				var time = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
+				var player = doc.DocumentNode.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+				var date = doc.DocumentNode.SelectSingleNode("//div[@class='datatable page-entries active']//div[@class='entry']//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
+
+				if (new System.Collections.Generic.List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
+				{
+					await Logging.CHA("GetLatestEntry document node error", ConsoleColor.Red);
+					return null;
+				}
 
 				// Only add when it exists
 				var demo = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='demo-url']").Descendants("a").Any()
 					? $"\nDemo **-** http://board.iverb.me{doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='demo-url']//a").Attributes["href"].Value.ToString()}"
 					: string.Empty;
 				var youtube = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='youtube']").Descendants("i").Any()
-					? $"\nVideo **-** https://youtu.be/{doc.DocumentNode.SelectSingleNode("//div[@class='youtube']//i").Attributes["onclick"].Value.ToString().Substring("embedOnBody('".Length, maxytid)}"
+					? $"\nVideo **-** http://youtu.be/{doc.DocumentNode.SelectSingleNode("//div[@class='youtube']//i").Attributes["onclick"].Value.ToString().Substring("embedOnBody('".Length, maxytid)}"
 					: string.Empty;
 				var comment = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']").Descendants("i").Any()
 					? $"\nComment **- *{doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']//i").Attributes["data-content"].Value.ToString()}***"
 					: string.Empty;
 
-				doc = null;
-				var title = string.Empty;
-				if (ranking == "1")
-				{
-					// If call comes from auto updater
-					if (autoupdate)
-						title = "**[New World Record - *";
-					title = "**[World Record - *";
-					ranking = string.Empty;
-				}
-				else
-				{
-					if (autoupdate)
-						title = "**[New Entry - *";
-					else
-						title = "**[Entry - *";
-					ranking = $"Rank **-** {TopTenFormat(ranking, true)}\n";
-				}
+				ranking = ranking == "1" ? string.Empty : $"Rank **-** {TopTenFormat(ranking, true)}\n";
+				var title = ranking == string.Empty ? "**[World Record - *" : "**[Entry - *";
 
-				return
-					$"{title + map}*]**\n" +
-					$"Time **- {time}**\n" +
-					$"Player **- {player}**\n" +
-					$"{ranking}" +
-					$"Date **- {date}**" +
-					$"{demo + youtube + comment}";
+				return $"{title + map}*]**\n"
+					+ $"Time **- {time}**\n"
+					+ $"Player **- {player}**\n"
+					+ ranking
+					+ $"Date **- {date}**"
+					+ demo + youtube + comment;
 			}
 			catch (Exception ex)
 			{
-				Logging.CHA($"Lb GetLatestEntry error\n{ex.ToString()}");
-				// Some caching for debug purposes
-				doc?.Save(Caching.CFile.GetPathAndSave("lb"));
-				// ^ just in case only execute when it's not null
-				if (autoupdate)
-					return null;
+				await Logging.CHA("Lb GetLatestEntry error", ex);
+				doc?.Save(await Caching.CFile.GetPathAndSave("lb"));
 				return "**Error**";
+			}
+		}
+
+		public static async Task<Tuple<string, string, string>> GetEntryUpdate(string url)
+		{
+			await Logging.CON("Requesting new entry", ConsoleColor.DarkBlue);
+
+			var doc = await Cache.GetCache(url, true);
+			if (doc == null)
+				return null;
+
+			try
+			{
+				var map = doc.DocumentNode.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+				var ranking = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
+				var time = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
+				var player = doc.DocumentNode.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+				var date = doc.DocumentNode.SelectSingleNode("//div[@class='datatable page-entries active']//div[@class='entry']//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
+
+				if (new System.Collections.Generic.List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
+				{
+					await Logging.CHA("GetEntryUpdate document node error", ConsoleColor.Red);
+					return null;
+				}
+
+				// Only add when it exists
+				var demo = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='demo-url']").Descendants("a").Any()
+					? $"http://board.iverb.me{doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='demo-url']//a").Attributes["href"].Value.ToString()}"
+					: string.Empty;
+				var youtube = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='youtube']").Descendants("i").Any()
+					? $"http://youtu.be/{doc.DocumentNode.SelectSingleNode("//div[@class='youtube']//i").Attributes["onclick"].Value.ToString().Substring("embedOnBody('".Length, maxytid)}"
+					: string.Empty;
+				var comment = doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']").Descendants("i").Any()
+					? doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']//i").Attributes["data-content"].Value.ToString()
+					: string.Empty;
+
+				// Might change this to wr only (it's currently possible to change the board parameter)
+				ranking = ranking == "1" ? string.Empty : $"Rank **-** {TopTenFormat(ranking, true)}\n";
+				var title = ranking == string.Empty ? "**[New World Record - *" : "**[New Entry - *";
+
+				return new Tuple<string, string, string>(
+					// Channel message format
+					$"{title + map}*]**\n"
+					+ $"Time **- {time}**\n"
+					+ $"Player **- {player}**\n"
+					+ ranking
+					+ $"Date **- {date}**"
+					+ $"\nDemo **-** {demo}"
+					+ $"\nVideo **-** {youtube}"
+					+ $"\nComment **- *{comment}***",
+					// Tweet format
+					await FormatTweet(
+						$"New World Record in {map}\n{time} by {player}\n{date}",
+						demo,
+						youtube,
+						comment
+					),
+					// Cache format
+					map + time + player // <- this will also detect player name changes (pls don't) and ties
+				);
+			}
+			catch (Exception ex)
+			{
+				await Logging.CHA("Lb GetEntryUpdate error", ex);
+				doc?.Save(await Caching.CFile.GetPathAndSave("lb"));
+				return null;
 			}
 		}
 
 		public static async Task<string> GetUserStats(string url)
 		{
-			Logging.CON("Requesting new user stats", ConsoleColor.DarkBlue);
-
-			// Download website
 			var doc = await Cache.GetCache(url);
 			if (doc == null)
 				return "**Error**";
 
-			// Check if profile does Portal 2
 			if (doc.DocumentNode.Descendants("div").Any(x => x.GetAttributeValue("class", string.Empty) == "user-noexist"))
 				return "Player profile doesn't exist.";
-			Logging.CON("Profile found.", ConsoleColor.DarkBlue);
 
 			try
 			{
@@ -117,7 +152,6 @@ namespace NeKzBot
 				var coopwrs = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml;
 				var wrs = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml;
 
-				doc = null;
 				// Only show when player has at least one wr
 				var fastpeopleonly = "\n__*World Records*__";
 				if (spwrs != "0")
@@ -129,35 +163,31 @@ namespace NeKzBot
 				else
 					fastpeopleonly = string.Empty;
 
-				return
-					$"**[Global Statistics For *{player}*]**\n" +
-					$"__*Ranking*__\n" +
-					$"Single Player **-** {TopTenFormat(sprank)}\n" +
-					$"	(Average - {AddDecimalPlace(spaverage)})\n" +
-					$"Cooperative **-** {TopTenFormat(cooprank)}\n" +
-					$"	(Average - {AddDecimalPlace(coopaverage)})\n" +
-					$"Overall **-** {TopTenFormat(rank)}\n" +
-					$"	(Average - {AddDecimalPlace(average)})" +
-					$"{fastpeopleonly}";
+				return $"**[Global Statistics For *{player}*]**\n"
+					+ $"__*Ranking*__\n"
+					+ $"Single Player **-** {TopTenFormat(sprank)}\n"
+					+ $"	(Average - {AddDecimalPlace(spaverage)})\n"
+					+ $"Cooperative **-** {TopTenFormat(cooprank)}\n"
+					+ $"	(Average - {AddDecimalPlace(coopaverage)})\n"
+					+ $"Overall **-** {TopTenFormat(rank)}\n"
+					+ $"	(Average - {AddDecimalPlace(average)})"
+					+ fastpeopleonly;
 			}
 			catch
 			{
-				Logging.CON("Lb GetUserStats error");
-				doc?.Save(Caching.CFile.GetPathAndSave("lb"));
+				await Logging.CON("Lb GetUserStats error", ConsoleColor.Red);
+				doc?.Save(await Caching.CFile.GetPathAndSave("lb"));
 				return "**Error**";
 			}
 		}
 
 		public static async Task<string> GetUserRank(string url, int index)
 		{
-			Logging.CON("Requesting new user rank", ConsoleColor.DarkBlue);
-
 			// Check if map has a leaderboard
 			var mapid = Data.portal2Maps[index, 0];
 			if (mapid == string.Empty)
 				return "Map is not supported.";
 
-			// Download website
 			var doc = await Cache.GetCache(url);
 			if (doc == null)
 				return "**Error**";
@@ -167,7 +197,6 @@ namespace NeKzBot
 				// Check if profile is actually a Portal 2 challenge mode runner
 				if (doc.DocumentNode.Descendants("div").Any(x => x.GetAttributeValue("class", string.Empty) == "user-noexist"))
 					return "Player profile doesn't exist.";
-				Logging.CON("Profile found", ConsoleColor.DarkBlue);
 
 				// First get all maps
 				var maps = doc.DocumentNode.SelectNodes("//div[@class='cell title']//a");
@@ -189,25 +218,23 @@ namespace NeKzBot
 					? $"\nDemo **-** http://board.iverb.me{doc.DocumentNode.SelectNodes("//div[@class='cell demo-url']//a")[idx].Attributes["href"].Value.ToString()}"
 					: string.Empty;
 				var youtube = doc.DocumentNode.SelectNodes("//div[@class='cell youtube']//i")[idx].Attributes["onclick"] != null
-					? $"\nVideo **-** https://youtu.be/{doc.DocumentNode.SelectNodes("//div[@class='cell youtube']//i")[idx].Attributes["onclick"].Value.ToString().Substring("embedOnBody('".Length, maxytid)}"
+					? $"\nVideo **-** http://youtu.be/{doc.DocumentNode.SelectNodes("//div[@class='cell youtube']//i")[idx].Attributes["onclick"].Value.ToString().Substring("embedOnBody('".Length, maxytid)}"
 					: string.Empty;
 				var comment = doc.DocumentNode.SelectNodes("//div[@class='cell comment']//i")[idx].Attributes["data-content"].Value != string.Empty
 					? $"\nComment **- *{doc.DocumentNode.SelectNodes("//div[@class='cell comment']//i")[idx].Attributes["data-content"].Value.ToString()}***"
 					: string.Empty;
 
-				doc = null;
-				return
-					$"{GetTitle(ranking) + map}*]**\n" +
-					$"Player **- {player}**\n" +
-					$"Time **- {time}**\n" +
-					$"{RankFromat(ranking)}" +
-					$"Date **- {date}**\n" +
-					$"{demo + youtube + comment}";
+				return $"{GetTitle(ranking) + map}*]**\n"
+					+ $"Player **- {player}**\n"
+					+ $"Time **- {time}**\n"
+					+ $"{RankFromat(ranking)}"
+					+ $"Date **- {date}**\n"
+					+ demo + youtube + comment;
 			}
 			catch
 			{
-				Logging.CON("Lb GetUserRank error");
-				doc?.Save(Caching.CFile.GetPathAndSave("lb"));
+				await Logging.CON("Lb GetUserRank error", ConsoleColor.Red);
+				doc?.Save(await Caching.CFile.GetPathAndSave("lb"));
 				return "**Error**";
 			}
 		}
@@ -253,7 +280,51 @@ namespace NeKzBot
 		}
 
 		private static string AddDecimalPlace(string s) =>
-			!s.Contains(".") ?
-				$"{s}.0" : s; 
+			!s.Contains(".") ? $"{s}.0" : s;
+
+		private static async Task<string> FormatTweet(string msg, string demo, string youtube, string comment)
+		{
+			try
+			{
+				var cut = "...";
+				var newline = "\nComment: ";
+				var output = msg;
+
+				// Check if we exceed the character limit
+				if (Twitter.Twitter.tweetLimit - output.Length < 0)
+					return string.Empty;
+
+				// Only append demo link if it fits
+				if (Twitter.Twitter.tweetLimit - output.Length - demo.Length < 0)
+					return output;
+				output += "\n" + demo;
+
+				// Only append youtube link if it fits
+				if (Twitter.Twitter.tweetLimit - output.Length - youtube.Length < 0)
+					return output;
+				output += "\n" + youtube;
+
+				// There isn't always a comment
+				if (comment == string.Empty)
+					return output;
+
+				// Check what we have left
+				var left = Twitter.Twitter.tweetLimit - output.Length - newline.Length - comment.Length;
+				if (-left + cut.Length == comment.Length || newline.Length >= Twitter.Twitter.tweetLimit - output.Length)
+					return output;
+
+				// It's safe to append comment
+				if (left >= 0)
+					return output + newline + comment;
+
+				// Cut comment and append "..." at the end
+				return output + newline + comment.Substring(0, Twitter.Twitter.tweetLimit - output.Length - newline.Length - cut.Length) + cut;
+			}
+			catch (Exception ex)
+			{
+				await Logging.CHA("Format tweet error", ex);
+				return string.Empty;
+			}
+		}
 	}
 }

@@ -1,9 +1,11 @@
 ﻿using System.Net;
 using System.Linq;
-using SpeedrunComSharp;
 using System.Threading.Tasks;
+using SpeedrunComSharp;
+using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Speedrun
 {
 	public partial class SpeedrunCom
 	{
@@ -12,20 +14,20 @@ namespace NeKzBot
 		private const int maxnfcount = 10;
 		private const int maxnffetchcount = 100;
 
-		public static void Init()
+		public static async Task Init()
 		{
-			Logging.CON("Initializing speedruncom client", System.ConsoleColor.DarkYellow);
-			srcClient = new SpeedrunComClient($"{Server.Settings.Default.AppName}/{Server.Settings.Default.AppVersion}", Server.Credentials.Default.SpeedruncomToken, 5);
-			
+			await Logging.CON("Initializing speedruncom client", System.ConsoleColor.DarkYellow);
+			srcClient = new SpeedrunComClient($"{Settings.Default.AppName}/{Settings.Default.AppVersion}", Credentials.Default.SpeedruncomToken, 5);
+
 			// Make custom header
 			srcHeaders = new WebHeaderCollection();
 			srcHeaders["Host"] = "www.speedrun.com";
 			srcHeaders["Accept"] = "application/json";
-			srcHeaders["X-API-Key"] = Server.Credentials.Default.SpeedruncomToken;
-			srcHeaders["User-Agent"] = $"{Server.Settings.Default.AppName}/{Server.Settings.Default.AppVersion}";
+			srcHeaders["X-API-Key"] = Credentials.Default.SpeedruncomToken;
+			srcHeaders["User-Agent"] = $"{Settings.Default.AppName}/{Settings.Default.AppVersion}";
 
 			if (!srcClient.IsAccessTokenValid)
-				Logging.CON("invalid token");
+				await Logging.CON("Invalid token", System.ConsoleColor.Red);
 		}
 
 		public static string GetGameWorldRecord(string gName)
@@ -41,9 +43,7 @@ namespace NeKzBot
 			}
 			catch
 			{
-				return "**Failed** to find the world record\n"
-					+ $"**-** Game might have a level leaderboard instead. Try `{Server.Settings.Default.PrefixCmd}{Server.Settings.Default.PrefixCmd}il <game>`\n"
-					+ "**-** Game doesn't have a world record yet.";
+				return "**Failed** to find the world record\n**-** Game might have a level leaderboard instead.\n**-** Game doesn't have a world record yet.";
 			}
 
 			try
@@ -55,27 +55,35 @@ namespace NeKzBot
 				var time = wr.Times.Primary.Value;
 				// Player stats
 				var player = wr.Player.Name;
-				var country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-				if (country != string.Empty)
-					country = $" :flag_{country}:";
+				var country = string.Empty;
+				if (wr.Player.IsUser)
+				{
+					country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+					if (country != string.Empty)
+						country = $" :flag_{country}:";
+				}
 				// Proof
-				var video = wr.Videos.Links.First().OriginalString;
+				var video = $"{wr.Videos.Links.First().OriginalString}\n";
 				// Stats
 				var platform = wr.Platform.Name;
-				var date = wr.Date.Value.Date.ToString("dd.MM.yyyy");
-				var sdate = wr.DateSubmitted.Value.Date.ToString("dd.MM.yyyy");
+				var date = wr.Date == null ? string.Empty : $" on {wr.Date.Value.Date.ToString("dd.MM.yyyy")}";
+				var sdate = wr.DateSubmitted == null ? string.Empty : $"Submitted on {wr.DateSubmitted.Value.Date.ToString("dd.MM.yyyy")}\n";
 				// Verfied status
 				var status = string.Empty;
 				if (wr.Status.Type == RunStatusType.Verified && game.Ruleset.RequiresVerification)
-					status = $"Verfied by {wr.Status.Examiner.Name} on {wr.Status.VerifyDate.Value.Date.ToString("dd.MM.yyyy")}";
-				var comment = string.IsNullOrEmpty(wr.Comment) ? "" : $"\n*{wr.Comment}*";
+				{
+					var vdate = wr.Status.VerifyDate == null ? string.Empty : wr.Status.VerifyDate.Value.Date.ToString("dd.MM.yyyy");
+					var examiner = wr.Status.ExaminerUserID == null ? string.Empty : $"Verfied by {wr.Status.Examiner.Name}";
+					status = examiner + vdate;
+				}
+				var comment = string.IsNullOrEmpty(wr.Comment) ? string.Empty : $"\n*{wr.Comment}*";
 				return $"**[World Record - *{name}*]**\n"
-					+ $"{category} in **{FormatTime(time)}** by {player}{country}\n"
-					+ $"{video}\n"
-					+ $"Played on {platform} on {date}\n"
-					+ $"Submitted on {sdate}\n"
-					+ $"{status}"
-					+ $"{comment}";
+					+ $"{category} in **{FormatTime(time)}** by {player + country}\n"
+					+ video
+					+ $"Played on {platform + date}\n"
+					+ sdate
+					+ status
+					+ comment;
 			}
 			catch
 			{
@@ -87,7 +95,7 @@ namespace NeKzBot
 		{
 			try
 			{
-				var player = srcClient.Users.GetUsers(pName).First();
+				var player = srcClient.Users.GetUsers(pName)?.First();
 				if (player == null)
 					return "Player profile doesn't exist.";
 
@@ -125,10 +133,11 @@ namespace NeKzBot
 				if (game == null)
 					return "Unknown game.";
 
-				var all = game.Categories.ToArray();
+				var categories = game.Categories.Where(x => x.Type == CategoryType.PerGame);
 				var name = game.Name;
-				var output = $"**[World Records - *{name}*]**\n";
-				foreach (var item in all)
+				var title = $"**[World Records - *{name}*]**\n";
+				var output = title;
+				foreach (var item in categories)
 				{
 					var wr = item.WorldRecord;
 					// Skip when there is no record
@@ -139,14 +148,20 @@ namespace NeKzBot
 					var time = wr.Times.Primary.Value;
 					// Player stats
 					var player = wr.Player.Name;
-					var country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-					if (country != string.Empty)
-						country = $" :flag_{country}:";
+					var country = string.Empty;
+					if (wr.Player.IsUser)
+					{
+						country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+						if (country != string.Empty)
+							country = $" :flag_{country}:";
+					}
 					// Stats
 					var platform = wr.Platform.Name;
-					var date = wr.Date.Value.Date.ToString("dd.MM.yyyy");
-					output += $"{category} in **{FormatTime(time)}** by {player}{country} (Played on {platform} on {date})\n";
+					var date = wr.Date == null ? string.Empty : $" on {wr.Date.Value.Date.ToString("dd.MM.yyyy")}";
+					output += $"{category} in **{FormatTime(time)}** by {player + country} (Played on {platform + date})\n";
 				}
+				if (output == title)
+					return "**Failed** to find the world record\n**-** Game might have a level leaderboard instead.\n**-** Game doesn't have a world record yet.";
 				return output.Substring(0, output.Length - 1);
 			}
 			catch
@@ -184,17 +199,17 @@ namespace NeKzBot
 				var web = "\n" + player.WebLink.OriginalString;
 				return $"**[Player Info - *{name}*{country}]**\n"
 					+ $"**ID -** {id}\n"
-					+ $"{countrycode}"
-					+ $"{region}"
+					+ countrycode
+					+ region
 					+ $"**Moderator -** {mods}\n"
 					+ $"**Personal Records -** {pbs}\n"
 					+ $"**Role -** {role}\n"
 					+ $"**Runs -** {runs}\n"
 					+ $"**Join Date -** {sudate}"
-					+ $"{yt}"
-					+ $"{twitch}"
-					+ $"{twitter}"
-					+ $"{web}";
+					+ yt
+					+ twitch
+					+ twitter
+					+ web;
 			}
 			catch
 			{
@@ -322,9 +337,13 @@ namespace NeKzBot
 							if (IsTied(runs[i].Times.Primary.Value, runs[i - 1].Times.Primary.Value))
 								rank--;
 						names.Add(runs[i].Player.Name);
-						var country = runs[i].Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-						if (country != string.Empty)
-							country = $" :flag_{country}:";
+						var country = string.Empty;
+						if (runs[i].Player.IsUser)
+						{
+							country = runs[i].Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
+							if (country != string.Empty)
+								country = $" :flag_{country}:";
+						}
 						output += $"{TopTenFormat(rank.ToString(), false)} **{runs[i].Player.Name}**{country} in {FormatTime(runs[i].Times.Primary.Value)}\n";
 					}
 					else
@@ -353,7 +372,7 @@ namespace NeKzBot
 					nftype = "any";
 
 				// Web request
-				var json = await Fetching.GetString($"http://www.speedrun.com/api/v1/notifications?max={maxnffetchcount}", srcHeaders);
+				var json = await Fetching.GetString($"https://www.speedrun.com/api/v1/notifications?max={maxnffetchcount}", srcHeaders);
 
 				// Read
 				if (string.IsNullOrEmpty(json))
@@ -379,22 +398,16 @@ namespace NeKzBot
 					//var url = item.item.uri.ToString();
 
 					// Filter
-					if (nftype == "any")
-						output += $"{FormatMessage(status)} | {created} | {text}\n";
-					else if (nftype == type)
-						output += $"{FormatMessage(status)} | {created} | {text}\n";
+					if (nftype == "any" || nftype == type)
+						output += $"{(status == "read" ? "Read" : "Unread")} | {created} | {text}\n";
 					else
 						count++;
 				}
-				output = output.Replace("_", "\\_");
-				if (output.Length > 2000)
-					return output.Substring(0, 2000);
-				else
-					return output.Substring(0, output.Length - 1);
+				return Utils.CutMessage(output.Replace("_", "\\_"), 1);
 			}
 			catch (System.Exception ex)
 			{
-				Logging.CON(ex.ToString());
+				await Logging.CHA("SpeedrunCom GetNotification error", ex);
 				return "**Error**";
 			}
 		}
@@ -403,7 +416,7 @@ namespace NeKzBot
 		{
 			try
 			{
-				var json = await Fetching.GetString("http://www.speedrun.com/api/v1/notifications", srcHeaders);
+				var json = await Fetching.GetString("https://www.speedrun.com/api/v1/notifications", srcHeaders);
 				
 				// Read
 				if (string.IsNullOrEmpty(json))
@@ -423,8 +436,8 @@ namespace NeKzBot
 					var url = item.item.uri.ToString();
 
 					// Filter out stuff
-					if ((text.Contains("posted a new thread") && type == "post") || type == "resource")
-						return $"**[{created}]**\n{text}\n{url}";
+					//if ((text.Contains("posted a new thread") && type == "thread") || type == "resource")
+					//	return $"**[{created}]**\n{text}\n{url}";
 					if (text.Contains("beat the WR") && type == "run")
 						return $"**[{created}]**\n@here {text}\n{url}";
 				}
@@ -432,7 +445,7 @@ namespace NeKzBot
 			}
 			catch (System.Exception ex)
 			{
-				Logging.CON(ex.ToString());
+				await Logging.CHA("SpeedrunCom NotficationUpdate error", ex);
 				return null;
 			}
 		}
@@ -468,7 +481,7 @@ namespace NeKzBot
 			}
 			catch
 			{
-				return $"**Error.** Try `{Server.Settings.Default.PrefixCmd}{Server.Settings.Default.PrefixCmd}ilrules <game>` if you haven't already.";
+				return $"**Error.** Try `{Settings.Default.PrefixCmd}{Settings.Default.PrefixCmd}ilrules <game>` if you haven't already.";
 			}
 		}
 
@@ -480,10 +493,10 @@ namespace NeKzBot
 			var s = time.Seconds.ToString();
 			var ms = time.Milliseconds.ToString();
 			var output = string.Empty;
-			output += (h == "0") ? "" : h + ":";
-			output += (m == "0" && output == string.Empty) ? "" : m + ":";
+			output += (h == "0") ? string.Empty : h + ":";
+			output += (m == "0" && output == string.Empty) ? string.Empty : (m.Length == 1) ? "0" + m + ":" : m + ":";
 			output += (s.Length == 1) ? (output == string.Empty) ? s : "0" + s : s;
-			output += (ms == "0") ? (output.Length <= 2) ? "s" : "" : "." + ms;
+			output += (ms == "0") ? (output.Length <= 2) ? "s" : string.Empty : "." + ms;
 			return output;
 		}
 
@@ -507,10 +520,6 @@ namespace NeKzBot
 				return "**3rd**";
 			return $"**{rank}th**";
 		}
-
-		private static string FormatMessage(string msg) =>
-			msg == "Unread" ?
-			"New" : "Old";
 
 		// Others
 		private static bool IsTied(System.TimeSpan t1, System.TimeSpan t2) =>

@@ -1,24 +1,37 @@
-﻿using NeKzBot.Server;
+﻿using System.Threading.Tasks;
+using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Tasks
 {
 	public class HelpCmds : Commands
 	{
-		public static void Load()
+		public static async Task Load()
 		{
-			Logging.CON("Loading help commands", System.ConsoleColor.DarkYellow);
-			BasicHelp();
+			await Logging.CON("Loading help commands", System.ConsoleColor.DarkYellow);
+			await BasicHelp();
 		}
 
-		private static void BasicHelp()
+		private static Task BasicHelp()
 		{
+			cmd.CreateCommand("help")
+			.Alias("?")
+			.Description("Returns information about commands.")
+			.Parameter("command", Discord.Commands.ParameterType.Unparsed)
+			.Do(async e =>
+			{
+				await e.Channel.SendIsTyping();
+				await e.Channel.SendMessage(await Utils.FindDescription(e.Args[0]));
+			});
+
 			cmd.CreateCommand("commands")
-			.Alias("cmds", "?")
+			.Alias("cmds")
 			.Description($"**-** `{Settings.Default.PrefixCmd}commands` shows you a list of commands.")
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))	// Thanks for the 2k character limit, Discord
+				if (Permission.BotOwnerOnly(null, e.User, null))
+					// Thanks for the 2k character limit, Discord
 					await e.Channel.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.gameMsg + Data.srcomMsg + Data.rpiMsg + Data.dropboxMsg + Data.botMsg + Data.msgEnd);
 				else
 					await e.User.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.gameMsg + Data.botMsg + Data.msgEnd);
@@ -39,7 +52,7 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
+				if (Permission.BotOwnerOnly(null, e.User, null))
 					await e.Channel.SendMessage(Data.lbMsg + Data.adminLbMsg);
 				else
 					await e.Channel.SendMessage(Data.lbMsg);
@@ -60,9 +73,9 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordBotOwnerID)
 					await e.Channel.SendMessage(Data.gameMsg + Data.adminGameMsg + Data.masterAdminGameMsg);
-				else if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
+				else if (Permission.BotOwnerOnly(null, e.User, null))
 					await e.Channel.SendMessage(Data.gameMsg + Data.adminGameMsg);
 				else
 					await e.Channel.SendMessage(Data.gameMsg);
@@ -74,9 +87,9 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordBotOwnerID)
 					await e.Channel.SendMessage(Data.botMsg + Data.adminBotMsg + Data.masterAdminBotMsg);
-				else if (Utils.RoleCheck(e.User, Settings.Default.AllowedRoles))
+				else if (Permission.BotOwnerOnly(null, e.User, null))
 					await e.Channel.SendMessage(Data.botMsg + Data.adminBotMsg);
 				else
 					await e.Channel.SendMessage(Data.botMsg);
@@ -106,11 +119,12 @@ namespace NeKzBot
 			.Do(async e =>
 			{
 				await e.Channel.SendIsTyping();
-				if (e.User.Id == Credentials.Default.DiscordMasterAdminID)
+				if (e.User.Id == Credentials.Default.DiscordBotOwnerID)
 					await e.Channel.SendMessage(Data.dropboxMsg + Data.masterAdminDropboxMsg);
 				else
 					await e.Channel.SendMessage(Data.dropboxMsg);
 			});
+			return Task.FromResult(0);
 		}
 	}
 }

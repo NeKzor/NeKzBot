@@ -1,5 +1,18 @@
 ﻿# Changelog
 
+## Version 1.3
+* Sending leaderboard update to a Twitter account
+* Fixed an exploit which crashes the bot
+* Fixed leaderboard caching
+* Exception logging
+* Permissions checks
+* Custom help mode
+* Prefix handler
+* Error handler
+* Added namespaces
+* Even more bug fixes
+* Removed NSA code
+
 ## Version 1.2
 * Added data debug commands
 * New view image command

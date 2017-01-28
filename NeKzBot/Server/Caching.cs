@@ -1,8 +1,9 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Server
 {
 	/*	Advanced caching system variants
 	 *	 - As unique files
@@ -22,11 +23,11 @@ namespace NeKzBot
 	public class Caching
 	{
 		/// <summary>Used to initialize all caching methods<summary>
-		public static void Init()
+		public static async Task Init()
 		{
-			Logging.CON("Initializing caching systems", System.ConsoleColor.DarkYellow);
-			CFile.Init();
-			CApplication.Init();
+			await Logging.CON("Initializing caching systems", System.ConsoleColor.DarkYellow);
+			await CFile.Init();
+			await CApplication.Init();
 		}
 
 		/// <summary>Caching system with files</summary>
@@ -39,129 +40,122 @@ namespace NeKzBot
 			private static string fileExtension;
 
 			/// <summary>Used for class initialization</summary>
-			public static void Init()
+			public static Task Init()
 			{
 				fileCache = fileCache ?? new List<string>();
 				fileName = "c4ch3";
 				tempPath = Path.Combine(Utils.GetPath(), "Resources/cache/");
 				fileExtension = ".tmp";
+				return Task.FromResult(0);
 			}
 
 			/// <summary>Saves data to a file with the key as a name</summary>
 			/// <param name="key">Name of requester</param>
 			/// <param name="data">Data to store</param>
-			public static void Save(string key, string data)
+			public static async Task Save(string key, string data)
 			{
-				AddKey(key);
-				File.WriteAllText(GetPath(key), data);
+				await AddKey(key);
+				File.WriteAllText(await GetPath(key), data);
 			}
 
 			/// <summary>Adds the key to the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			public static void AddKey(string key)
+			public static async Task AddKey(string key)
 			{
-				ClearKey(key);
+				await ClearKey(key);
 				fileCache.Add(key);
 			}
 
 			/// <summary>Clears the cache before adding a new key to the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearAndAddKey(string key)
+			public static async Task ClearAndAddKey(string key)
 			{
-				ClearKeyAndFile(key);
+				await ClearKeyAndFile(key);
 				fileCache.Add(key);
 			}
 
 			/// <summary>Returns the path of the key</summary>
 			/// <param name="key">Name of requester</param>
-			public static string GetPathAndSave(string key)
+			public static async Task<string> GetPathAndSave(string key)
 			{
-				AddKey(key);
-				return GetPath(key);
+				await AddKey(key);
+				return await GetPath(key);
 			}
 
 			/// <summary>Gets the data of a key</summary>
 			/// <param name="key">Name of requester</param>
-			public static string Get(string key) =>
-				(bool)Exists(key) ?
-				GetFile(key) : null;
+			public static async Task<string> Get(string key) =>
+				(bool)(await Exists(key)) ?
+				await GetFile(key) : null;
 
 			/// <summary>Gets the data of a file</summary>
 			/// <param name="key">Name of requester</param>
-			public static string GetFile(string key) =>
-				FileExists(key) ?
-				File.ReadAllText(GetPath(key), System.Text.Encoding.UTF8) : null;
+			public static async Task<string> GetFile(string key) =>
+				await FileExists(key) ?
+				File.ReadAllText(await GetPath(key), System.Text.Encoding.UTF8) : null;
 
 			/// <summary>Deletes the given key from the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearKey(string key)
+			public static async Task ClearKey(string key)
 			{
-				if ((bool)Exists(key))
+				if ((bool) await Exists(key))
 					fileCache.Remove(key);
 			}
 
 			/// <summary>Deletes the file of the give key</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearFile(string key)
+			public static async Task ClearFile(string key)
 			{
-				if (FileExists(key))
-					File.Delete(GetPath(key));
+				if (await FileExists(key))
+					File.Delete(await GetPath(key));
 			}
 
 			/// <summary>Deletes the key and the file</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearKeyAndFile(string key)
+			public static async Task ClearKeyAndFile(string key)
 			{
-				ClearKey(key);
-				ClearFile(key);
+				await ClearKey(key);
+				await ClearFile(key);
 			}
 
 			/// <summary>Deletes current files of each key in the cache list</summary>
-			public static void ClearFiles()
+			public static async Task ClearFiles()
 			{
 				foreach (var item in fileCache)
-					if (FileExists(item))
-						File.Delete(GetPath(item));
+					if (await FileExists(item))
+						File.Delete(await GetPath(item));
 			}
 
 			/// <summary>Deletes all files in the cache folder</summary>
-			public static void ClearAllFiles()
+			public static Task ClearAllFiles()
 			{
 				foreach (var item in new DirectoryInfo(tempPath).GetFiles())
 					if (item.Extension == fileExtension)
 						item.Delete();
+				return Task.FromResult(0);
 			}
 
 			/// <summary>Clears the cache list</summary>
-			public static void ClearKeys() =>
-				fileCache = new List<string>();
-
-			/// <summary>Global reset of cache after a certain time</summary>
-			/// <param name="delay">Time (in minutes) to wait until reset</param>
-			public static async Task ResetTimer(int delay)
+			public static Task ClearKeys()
 			{
-				for (;;)
-				{
-					await Task.Delay(delay * 60000);
-					ClearKeys();
-					Logging.CON("File cache reset");
-				}
+				fileCache = new List<string>();
+				return Task.FromResult(0);
 			}
 
 			/// <summary>Checks if the key exists in the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			private static bool? Exists(string key) =>
-				fileCache?.Contains(key);
+			private static Task<bool?> Exists(string key) =>
+				Task.FromResult(fileCache?.Contains(key));
 
 			/// <summary>Checks if the file exists in the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			private static bool FileExists(string key) =>
-				File.Exists(GetPath(key));
+			private static async Task<bool> FileExists(string key) =>
+				File.Exists(await GetPath(key));
 
 			/// <summary>Builds the file path for the cache file</summary>
 			/// <param name="key">Name of requester</param>
-			private static string GetPath(string key) =>
-				Path.Combine(tempPath, fileName + key + fileExtension);
+			private static Task<string> GetPath(string key) =>
+				Task.FromResult(Path.Combine(tempPath, fileName + key + fileExtension));
 		}
 
 		/// <summary>Caching system of internal application</summary>
@@ -171,81 +165,78 @@ namespace NeKzBot
 			private static Dictionary<string, List<object>> appCache;
 
 			/// <summary>Used for class initialization</summary>
-			public static void Init() =>
+			public static Task Init()
+			{
 				appCache = appCache ?? new Dictionary<string, List<object>>();
+				return Task.FromResult(0);
+			}
 
 			/// <summary>Used to reset cache</summary>
-			public static void Reset() =>
+			public static Task Reset()
+			{
 				appCache = new Dictionary<string, List<object>>();
+				return Task.FromResult(0);
+			}
 
 			/// <summary>Save new data to cache</summary>
 			/// <param name="key">Name of requester</param>
 			/// <param name="data">Data to store</param>
-			public static void Save(string key, object data)
+			public static async Task Save(string key, object data)
 			{
-				ClearKey(key);
-				appCache.Add(key, ToList(data));
+				await ClearKey(key);
+				appCache.Add(key, await ToList(data));
 			}
 
 			/// <summary>Add data to existing cache</summary>
 			/// <param name="key">Name of requester</param>
 			/// <param name="data">Data to store</param>
-			public static void Add(string key, object data) =>
+			public static Task Add(string key, object data)
+			{
 				appCache[key]?.Add(data);
+				return Task.FromResult(0);
+			}
 
 			/// <summary>Returns data if the key exists in the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			public static List<object> Get(string key) =>
-				(bool)Exists(key) ?
+			public static async Task<List<object>> Get(string key) =>
+				(bool)(await Exists(key)) ?
 				appCache[key] : null;
 
 			/// <summary>Removes key from the cache list</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearKey(string key)
+			public static async Task ClearKey(string key)
 			{
-				if ((bool)Exists(key))
+				if ((bool)(await Exists(key)))
 					appCache.Remove(key);
 			}
 
 			/// <summary>Clears data cache of specific requester</summary>
 			/// <param name="key">Name of requester</param>
-			public static void ClearData(string key)
+			public static async Task ClearData(string key)
 			{
-				if ((bool)Exists(key))
+				if ((bool)(await Exists(key)))
 					appCache[key] = new List<object>();
 			}
 
 			/// <summary>Clears specific data cache of specific requester</summary>
 			/// <param name="key">Name of requester</param>
 			/// <param name="data">Data to delete</param>
-			public static void ClearValue(string key, string data)
+			public static async Task ClearValue(string key, string data)
 			{
-				if ((bool)Exists(key))
+				if ((bool)(await Exists(key)))
 					appCache[key].Remove(data);
-			}
-
-			/// <summary>Global reset of cache after a certain time</summary>
-			/// <param name="delay">Time (in minutes) to wait until reset</param>
-			public static async Task ResetTimer(int delay)
-			{
-				for (;;)
-				{
-					await Task.Delay(delay * 60000);
-					Reset();
-					Logging.CON("Application cache reset");
-				}
 			}
 
 			/// <summary>Checks if cache contains the given key already</summary>
 			/// <param name="key">Name of requester in the cache list</param>
-			public static bool? Exists(string key) =>
-				appCache?.ContainsKey(key);
+			public static Task<bool?> Exists(string key) =>
+				Task.FromResult(appCache?.ContainsKey(key));
 
-			private static List<object> ToList(object data)
+			private static Task<List<object>> ToList(object data)
 			{
 				var temp = new List<object>();
 				temp.Add(data);
-				return temp;
+				return Task.FromResult(temp);
 			}
 		}
 	}

@@ -1,35 +1,35 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NeKzBot.Server;
+using NeKzBot.Resources;
 
-namespace NeKzBot
+namespace NeKzBot.Modules.Speedrun
 {
 	public partial class SpeedrunCom
 	{
 		internal class AutoNotification
 		{
+			public static bool isRunning = false;
+
 			public static async Task Start(int clientdelay = 8000)
 			{
+				// Wait some time till speedrun client connected to the API
+				await Task.Delay(clientdelay);
+				await Logging.CON("AutoNotification started", ConsoleColor.DarkRed);
+				isRunning = true;
 				try
 				{
-					// Wait some time till speedrun client connected to the API
-					await Task.Delay(clientdelay);
-
-					Logging.CON("AutoNotification started", ConsoleColor.DarkRed);
-
 					// Find channel to send to
-					var channel = Utils.GetChannel(Settings.Default.NotificationChannelName);
+					var channel = await Utils.GetChannel(Settings.Default.NotificationChannelName);
 
 					// Reserve cache memory
 					var cachekey = "autonf";
-					Caching.CFile.AddKey(cachekey);
+					await Caching.CFile.AddKey(cachekey);
 
 					for (;;)
 					{
-						Logging.CON("AutoNotification checking", ConsoleColor.DarkRed);
-						
 						// Get cache
-						var cache = Caching.CFile.GetFile(cachekey);
+						var cache = await Caching.CFile.GetFile(cachekey);
 
 						// Download data
 						var notification = await GetNotificationUpdate();
@@ -41,8 +41,8 @@ namespace NeKzBot
 							if (notification != cache)
 							{
 								// Save cache
-								Logging.CON($"CACHING NEW DATA {Utils.StringInBytes(notification)} bytes");
-								Caching.CFile.Save(cachekey, notification);
+								await Logging.CON($"AutoNotification data cache -> {Utils.StringInBytes(notification)} bytes", ConsoleColor.Red);
+								await Caching.CFile.Save(cachekey, notification);
 
 								// Send update
 								await channel?.SendMessage(notification);
@@ -53,8 +53,9 @@ namespace NeKzBot
 				}
 				catch
 				{
-					Logging.CON("AutoNotification error");
+					await Logging.CON("AutoNotification error", ConsoleColor.Red);
 				}
+				isRunning = false;
 			}
 		}
 	}

@@ -2,16 +2,17 @@
 using System.Threading.Tasks;
 using Discord.Audio;
 //using NAudio.Wave;
+using NeKzBot.Server;
 
-namespace NeKzBot
+namespace NeKzBot.Modules
 {
 	public class Audio : VoiceChannel
 	{
-		public static void Init()
+		public static async Task Init()
 		{
-			Logging.CON("Initializing audio", System.ConsoleColor.DarkYellow);
+			await Logging.CON("Initializing audio", System.ConsoleColor.DarkYellow);
 
-			dClient.UsingAudio(x =>
+			Bot.dClient.UsingAudio(x =>
 			{
 				x.Mode = AudioMode.Outgoing;
 			});
@@ -19,7 +20,7 @@ namespace NeKzBot
 
 		public static async Task PlayWithFFmpeg(ulong serverID, Discord.Channel vChannel, string filePath)
 		{
-			Logging.CON("Trying to play FFmpeg", System.ConsoleColor.DarkGreen);
+			await Logging.CON("Trying to play FFmpeg", System.ConsoleColor.DarkGreen);
 			if (isplaying)
 				return;
 			isplaying = true;
@@ -28,15 +29,15 @@ namespace NeKzBot
 			Process process = null;
 			try
 			{
-				aClient = dClient.GetServer(serverID).GetAudioClient();
+				aClient = Bot.dClient.GetServer(serverID).GetAudioClient();
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
-					Arguments = $"-i {Server.Settings.Default.ApplicationPath + Server.Settings.Default.AudioPath + filePath} -f s16le -ar 48000 -ac 2 pipe:1",
+					Arguments = $"-i {Settings.Default.ApplicationPath + Settings.Default.AudioPath + filePath} -f s16le -ar 48000 -ac 2 pipe:1",
 					UseShellExecute = false,
 					RedirectStandardOutput = true
 				});
-				await Task.Delay(2000);
+				await Task.Delay(1000);
 
 				byte[] buffer = new byte[3840];
 				int byteCount;
@@ -50,8 +51,7 @@ namespace NeKzBot
 			}
 			catch
 			{
-				//dClient.Log.Info($"VC {vChannel.Name}", "FFmpeg ERROR", null);
-				Logging.CON("FFmpeg error");
+				await Logging.CON("FFmpeg error", System.ConsoleColor.Red);
 			}
 			finally
 			{
@@ -65,7 +65,7 @@ namespace NeKzBot
 		#region UNUSED CODE FOR WINDOWS SYSETEMS
 		//public static async Task PlayWithNAudio(ulong serverID, Discord.Channel vChannel, string filePath)
 		//{
-		//	Logging.CON("Trying to play naudio");
+		//	await Logging.CON("Trying to play naudio", System.ConsoleColor.DarkGreen);
 		//	if (isplaying)
 		//		return;
 		//	isplaying = true;
@@ -73,9 +73,9 @@ namespace NeKzBot
 		//	IAudioClient aClient;
 		//	try
 		//	{
-		//		aClient = dClient.GetServer(serverID).GetAudioClient();
-		//		var OutFormat = new WaveFormat(48000, 16, dClient.GetService<AudioService>().Config.Channels);
-		//		using (var MP3Reader = new AudioFileReader(Utils.GetPath() + Server.Settings.Default.AudioPath + filePath))
+		//		aClient = Bot.dClient.GetServer(serverID).GetAudioClient();
+		//		var OutFormat = new WaveFormat(48000, 16, Bot.dClient.GetService<AudioService>().Config.Channels);
+		//		using (var MP3Reader = new AudioFileReader(Resources.Utils.GetPath() + Settings.Default.AudioPath + filePath))
 		//		using (var resampler = new MediaFoundationResampler(MP3Reader, OutFormat))
 		//		{
 		//			resampler.ResamplerQuality = 30;
@@ -94,8 +94,7 @@ namespace NeKzBot
 		//	}
 		//	catch
 		//	{
-		//		dClient.Log.Info($"VC {vChannel.Name}", "NAudio ERROR", null);
-		//		Logging.CON("NAudio error");
+		//		await Logging.CON("NAudio error", System.ConsoleColor.Red);
 		//	}
 		//	isplaying = false;
 		//	shouldstop = false;
