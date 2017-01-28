@@ -9,18 +9,25 @@
 * Changing data with commands
 * Giveaway mini game
 * Basic system information feedback
+* Prefix handler
+* Error handler
+* Permission checks
+* Exception logging in text channel
+* Custom help mode
+* Sending tweets to [twitter.com](https://twitter.com)
 * Fetching data from
-  * [board.iverb.me](http://board.iverb.me)
-  * [speedrun.com](http://www.speedrun.com)
+  * [board.iverb.me](https://board.iverb.me)
+  * [speedrun.com](https://www.speedrun.com)
   * [steamcommunity.com](http://steamcommunity.com/workshop)
+  * [twitch.tv](https://www.twitch.tv)
 * Auto notifications for
   * board.iverb.me
   * speedrun.com
-  * [twitch.tv](https://www.twitch.tv)
+  * twitch.tv
 * Automatic file uploader to [Dropbox](https://www.dropbox.com)
 * Works fine on Linux + [Mono](http://www.mono-project.com)
 
-## [Current Progress](https://github.com/NeKzor/NeKzBot/projects?sort=name)
+## [Current Progress](https://github.com/NeKzor/NeKzBot/projects?sort=recently-updated)
 
 ## [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/CHANGELOG.md)
 
