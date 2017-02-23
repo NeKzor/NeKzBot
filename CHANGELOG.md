@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 ## Version 1.3
 * Sending leaderboard update to a Twitter account
