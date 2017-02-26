@@ -7,5 +7,5 @@ Running on rPi3 with Raspbian Jessie.
 
 ## Additional Options
 If you have connection issues execute these commands in the CLI:
-* certmgr -ssl https://gateway.discord.gg
-* certmgr -ssl https://discordapp.com/api
+* `certmgr -ssl https://gateway.discord.gg`
+* `certmgr -ssl https://discordapp.com/api`

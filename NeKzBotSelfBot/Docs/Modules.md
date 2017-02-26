@@ -29,7 +29,7 @@
 * Upload any file to own cloud folder from Dropbox
 
 ## Portal2
-* Get latest leaderboard entry from [board.iverb.me](https://board.iver.bme)
+* Get latest leaderboard entry from [board.iverb.me](https://board.iverb.me)
 * Get latest leaderboard entry of a player
 * Get leaderboard statistics of a player
 * Compare different leaderboard statistics of players
