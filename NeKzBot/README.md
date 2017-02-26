@@ -30,11 +30,11 @@
 * Works fine on Linux + [Mono](http://www.mono-project.com)
 
 ## Documentation
-* [Modules](https://github.com/NeKzor/NeKzBot/NeKzBot/Docs/blob/master/Modules.md)
-* [Settings](https://github.com/NeKzor/NeKzBot/NeKzBot/Docs/blob/master/Settings.md)
-* [Audio](https://github.com/NeKzor/NeKzBot/NeKzBot/Docs/blob/master/Audio.md)
-* [RaspberryPi](https://github.com/NeKzor/NeKzBot/NeKzBot/Docs/blob/master/RaspberryPi.md)
-* [Changelog](https://github.com/NeKzor/NeKzBot/NeKzBot/Docs/blob/master/Changelog.md)
+* [Modules](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Modules.md)
+* [Settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Settings.md)
+* [Audio](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Audio.md)
+* [RaspberryPi](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/RaspberryPi.md)
+* [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Changelog.md)
 
 ## Server
 * [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
