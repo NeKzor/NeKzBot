@@ -1,106 +1,136 @@
 ﻿using System;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
+using NeKzBot.Tasks;
 using NeKzBot.Server;
-using NeKzBot.Resources;
 using NeKzBot.Modules;
-using NeKzBot.Modules.Games;
-using NeKzBot.Modules.Twitch;
-using NeKzBot.Modules.Message;
-using NeKzBot.Modules.Speedrun;
-using NeKzBot.Modules.Leaderboard;
+using NeKzBot.Classes;
+using NeKzBot.Resources;
+using NeKzBot.Tasks.Speedrun;
+using NeKzBot.Tasks.NonModules;
+using NeKzBot.Tasks.Leaderboard;
 
 namespace NeKzBot
 {
 	public class Bot
 	{
-		public static DiscordClient dClient;
+		public static DiscordClient Client { get; private set; }
 
-		public async Task Start()
+		private static void OnExit(object _, EventArgs __)
+			=> Task.WaitAll(
+				Logger.SendAsync("Bot Shutdown...", LogColor.Default),
+				Twitter.UpdateDescriptionAsync(Portal2.AutoUpdater.LeaderboardTwitterAccount, $"{Configuration.Default.TwitterDescription} #OFFLINE"));
+
+		public async Task StartAsync()
 		{
-			await Create();
-			await Init();
-			await Load();
-			await Connect();
+			// Do things on exit
+			if (Debugger.IsAttached)
+				Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+			else
+				AppDomain.CurrentDomain.ProcessExit += OnExit;
+
+			// Start
+			Console.Title = $"{Configuration.Default.AppName} V{Configuration.Default.AppVersion} - Discord Server Bot";
+			await CreateAsync();
+			await InitAsync();
+			await LoadAsync();
+			await ConnectAsync();
 		}
 
-		private static async Task Create()
+		private static async Task CreateAsync()
 		{
-			await Logging.CON("Creating client", ConsoleColor.White);
-
-			dClient = new DiscordClient(x =>
+			await Logger.SendAsync("Creating Client", LogColor.Default);
+			Client = new DiscordClient(c =>
 			{
-				x.LogLevel = LogSeverity.Error;
-				x.LogHandler = Logging.CON;
-				x.AppName = Settings.Default.AppName;
-				x.AppVersion = Settings.Default.AppVersion;
-				x.AppUrl = Settings.Default.AppUrl;
+				c.LogLevel = LogSeverity.Error;
+				c.LogHandler = Logger.CON;
+				c.AppName = Configuration.Default.AppName;
+				c.AppVersion = Configuration.Default.AppVersion;
+				c.AppUrl = Configuration.Default.AppUrl;
 			});
 		}
 
-		private static async Task Init()
+		private static async Task InitAsync()
 		{
 			try
 			{
-				await Audio.Init();
-				await Logging.Init();
-				await Commands.Init();
-				await Data.Init();
-				await Caching.Init();
-				await DataManager.Init();
-				await Leaderboard.Cache.Init();
-				await Leaderboard.AutoUpdater.Init();
-				await SpeedrunCom.Init();
-				await DropboxCom.Init();
+				await Logger.SendAsync("Initialization", LogColor.Init);
+				await Audio.InitAsync();
+				await Logger.InitAsync();
+				await Commands.InitAsync();
+				await Data.InitAsync();
+				await Data.InitMangerAsync();
+				await Caching.InitAsync();
+				// ^Important stuff first
+				await Portal2.Cache.InitAsync();
+				await Portal2.AutoUpdater.InitAsync();
+				await Steam.InitAsync();
+				await Twitch.InitAsync();
+				await Giveaway.InitAsync();
+				await DropboxCom.InitAsync();
+				await SpeedrunCom.InitAsync();
+				await SpeedrunCom.AutoNotification.InitAsync();
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				await Logging.CON("Initialization failed", ex);
+				await Logger.SendAsync("Initialization Failed", e);
 			}
 		}
 
-		private static async Task Load()
+		private static async Task LoadAsync()
 		{
 			try
 			{
-				await DataManager.LoadModules();
+				await Logger.SendAsync("Loading Modules", LogColor.Default);
+				await Admin.LoadAsync();
+				await Exclusive.LoadAsync();
+				await Giveaway.LoadAsync();
+				await Help.LoadAsync();
+				await Info.LoadAsync();
+				await Leaderboard.LoadAsync();
+				await Others.LoadAsync();
+				await Sound.LoadAsync();
+				await Speedrun.LoadAsync();
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				await Logging.CON("Module error", ex);
+				await Logger.SendAsync("Module Error", e);
 			}
 		}
 
-		private static async Task Connect()
+		private static async Task ConnectAsync()
 		{
 			try
 			{
-				dClient.ExecuteAndWait(async () =>
+				Client.ExecuteAndWait(async () =>
 				{
-					await dClient.Connect(Credentials.Default.DiscordToken, TokenType.Bot);
-					dClient.SetGame(Data.randomGames[Utils.RNG(0, Data.randomGames.Count())]);
-					await LoadModulesAndWait();
+					await Logger.SendAsync("Connecting", LogColor.Default);
+					await Client.Connect(Credentials.Default.DiscordBotToken, TokenType.Bot);
+					await Logger.SendAsync("Connected", LogColor.Default);
+					Client.SetGame(await Utils.RNGAsync(Data.RandomGames) as string);
+					await LoadTasksAndWaitAsync();
 				});
 			}
-			catch (Exception ex)
+			catch (Exception e)
 			{
-				await Logging.CON("Something bad happened", ex);
+				await Logger.SendAsync("Something Failed", e);
 			}
 		}
 
-		private static async Task LoadModulesAndWait()
+		private static async Task LoadTasksAndWaitAsync()
 		{
+			await Logger.SendAsync("Loading Tasks", LogColor.Default);
 			Task.WaitAll(
 				// Leaderboard
-				Leaderboard.Cache.Reset(),
-				Leaderboard.AutoUpdater.Start(),
+				Portal2.Cache.ResetCacheAsync(),
+				Portal2.AutoUpdater.StartAsync(),
 				// Game
-				GiveawayGame.Reset(),
+				Giveaway.ResetAsync(),
 				// SpeedrunCom
-				SpeedrunCom.AutoNotification.Start(),
+				SpeedrunCom.AutoNotification.StartAsync(),
 				// TwitchTv
-				TwitchTv.Start()
+				Twitch.StartAsync()
 			);
 			await Task.Delay(-1);
 		}
