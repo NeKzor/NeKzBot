@@ -1,8 +1,8 @@
 ﻿# Settings
 
-## [/Server/Configuration.settings](https://github.com/NeKzor/NeKzBot/NeKzBot/Server/blob/master/Configuration.settings)
+## [/Server/Configuration.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Configuration.settings)
 | Name | Scope | Description |
-| --- | --- |
+| --- | :-: | --- |
 | AppName | Application | Name of application, used for user agents. |
 | AppVersion | Application | Current version of this application. |
 | AppUrl | Application | Link to your application website. |
@@ -16,16 +16,16 @@
 | GiveawayResetTime | User | Giveaway reset time in milliseconds. |
 | GiveawayMaxTries | User | Maximum user tries per reset time to solve the puzzle. |
 | GiveawayEnabled | User | State of the giveaway game. |
-| DataPath | Application | Folder path to the [data variables](#data-example). |
+| DataPath | Application | Folder path to the [data files](#data-example). |
 | CachingTime | User | Task delay of the Portal 2 internal cache reset timer in minutes.  |
-| LeaderboardCmd | Application | The prefix to use specific leaderboard commands. |
+| LeaderboardCmd | Application | The group prefix to use specific leaderboard commands. |
 | DropboxFolderName | Application | Main folder in the Dropbox cloud application folder.  |
 | LogChannelName | Application | Name of the channel where events and exceptions will be logged. |
 | StreamingRoleName | Application | Role name to give when a user stream on Twitch. |
 | WorldRecordRoleName | Application | Role name to give when a user has a world record. |
 | TwitterDescription | Application | Static Twitter description for the online-offline event updater. |
 
-## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/NeKzBot/Server/blob/master/Credentials.settings)
+## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Credentials.settings)
 | Name | Description |
 | --- | --- |
 | DiscordBotOwnerId | Your Discord user id. |
@@ -46,15 +46,15 @@
 | Name | Description |
 | --- | --- |
 | /Resources/Cache | Create this folder for the file caching system. |
-| /Resources/Private | All the data file variables are in there, [see below](#data-example). |
+| /Resources/Private | All the data files are in there, [see below](#data-example). |
 
 
 
 ## Other Settings
-* The default internal separator '|' can be changed in this class [Utils.cs](https://github.com/NeKzor/NeKzBot/NeKzBot/Resources/blob/master/Utils.cs#23).
-* The default caching extension '.tmp' can be changed in this class [Caching.cs](https://github.com/NeKzor/NeKzBot/NeKzBot/Server/blob/master/Caching.cs#49).
-* The default data file extension '.dat' can be changed in this class [Data.cs](https://github.com/NeKzor/NeKzBot/NeKzBot/Resources/blob/master/Data.cs#46).
-* Don't forget to change the [assembly information](https://github.com/NeKzor/NeKzBot/NeKzBot/Properties/blob/master/AssemblyInfo.cs) too.
+* The default internal separator '|' can be changed in this class [Utils.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Resources/Utils.cs#25).
+* The default caching extension '.tmp' can be changed in this class [Caching.cs](https://github.com/NeKzor/blob/master/NeKzBot/NeKzBot/Server/Caching.cs#49).
+* The default data file extension '.dat' can be changed in this class [Data.cs](https://github.com/NeKzor/blob/master/NeKzBot/NeKzBot/Resources/Data.cs#62).
+* Don't forget to change the [assembly information](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Properties/AssemblyInfo.cs) too.
 
 ## Data Example
 | Type | Array |
@@ -62,4 +62,4 @@
 | Single-Dimensional | Channel1<br>Channel2<br>Channel3 |
 | Multidimensional | Command1\|Description1\|Something1<br>Command2\|Description2\|Something2<br>Command3\|Description3\|Something3|
 
-Oh well, not the best data [parsing algorithm](https://github.com/NeKzor/NeKzBot/NeKzBot/Resources/blob/master/Utils.cs#170) but it works.
+Oh well, not the best data [parsing algorithm](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Resources/Utils.cs#149) but it works.

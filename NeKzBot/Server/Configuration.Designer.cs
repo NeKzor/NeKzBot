@@ -43,7 +43,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://github.com/NeKzor/NeKzBot/NeKzBot")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://github.com/NeKzor/NeKzBot")]
         public string AppUrl {
             get {
                 return ((string)(this["AppUrl"]));

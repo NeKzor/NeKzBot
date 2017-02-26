@@ -4,7 +4,7 @@
 Requires the bot prefix command, and to be the bot owner:
 * Change playing game status
 * Set playing game status
-* Reset _/Server/Configuration.settings_ to its defaults
+* Reset _/Server/Configuration.settings_ to its default values
 * Add new command or new data to the memory
 * Delete a command or data from memory
 * Revive dead tasks
@@ -17,10 +17,10 @@ Requires the bot prefix command, and to be the bot owner:
 * Create and delete webhooks
 
 ## Exclusive
-Requires bot prefix command, and to be on the main server:
+Requires the bot prefix command, and to be on the main server:
 * Connect the bot to a voice channel
 * Disconnect the bot from a voice channel
-* End a currently running sound or song
+* Stop a currently running sound or song
 
 ## Giveaway
 Requires to be on the main server:
@@ -48,7 +48,7 @@ Requires to be the bot owner:
 * Get latest developer changelog
 
 ## Leaderboard
-Portal 2 challenge mode data is from [board.iverb.me](https://board.iverb.me)
+Portal 2 challenge mode data is from [board.iverb.me](https://board.iverb.me).
 * Get latest world record with optional filter
 * Get latest leaderboard entry with optional filter
 * Get current world record of a map
@@ -97,13 +97,13 @@ Requires to be the bot owner:
 * Return information about the server's operating system
 
 ## Sound
-Requires to be on the main server.
+Requires to be on the main server:
 * Play a specific sound file from private data
 * Play a random meme sound
 * Play a random Portal 2 leaderboard sound
 
 ## Speedrun
-Data is from [speedrun.com](https://speedrun.com)
+Data is from [speedrun.com](https://speedrun.com).
 * Get the latest speedrun world record of a game
 * List all the personal records of a player
 * Return information about a game

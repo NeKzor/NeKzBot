@@ -105,6 +105,7 @@ namespace NeKzBot.Modules
 						{
 							await e.Channel.SendIsTyping();
 							await e.Channel.SendMessage("**Version 1.4**"
+													  + "\n• Added support for webhooks"
 													  + "\n• Added documentation"
 													  + "\n• Massive code cleanup"
 													  + "\n• Automatic Twitch channel detection with role assignment"

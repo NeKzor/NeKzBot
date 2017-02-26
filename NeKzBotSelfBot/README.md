@@ -10,9 +10,9 @@
 * Custom typereader for parsing the [Uri class](https://msdn.microsoft.com/en-us/library/system.uri(v=vs.110).aspx)
 
 ## Documentation
-* [Modules](https://github.com/NeKzor/NeKzBot/NeKzBotSelfBot/Docs/blob/master/Modules.md)
-* [Settings](https://github.com/NeKzor/NeKzBot/NeKzBotSelfBot/Docs/blob/master/Settings.md)
-* [Changelog](https://github.com/NeKzor/NeKzBot/NeKzBotSelfBot/Docs/blob/master/Changelog.md)
+* [Modules](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Docs/Modules.md)
+* [Settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Docs/Settings.md)
+* [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Docs/Changelog.md)
 
 ## Building
 * Made with [Visual Studio 2017 RC](https://www.visualstudio.com/vs/visual-studio-2017-rc)
@@ -20,7 +20,7 @@
 * You would have to change some things and replace some libraries (or even make your own ones) if you want to port this to .NET Core 1.0+
 
 ## Libraries
-| Use the NuGet Package Manager under _Tools_. |
+| Use the NuGet Package Manager under *Tools*. |
 | --- |
 | [Discord.Net](https://github.com/RogueException/Discord.Net/tree/dev) |
 | [Discord.Addons.EmojiTools](https://github.com/foxbot/Discord.Addons.EmojiTools) |
