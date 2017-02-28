@@ -2,14 +2,16 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Tasks;
-using NeKzBot.Server;
-using NeKzBot.Modules;
 using NeKzBot.Classes;
+using NeKzBot.Modules.Private.MainServer;
+using NeKzBot.Modules.Public;
+using NeKzBot.Modules.Public.Others;
 using NeKzBot.Resources;
-using NeKzBot.Tasks.Speedrun;
-using NeKzBot.Tasks.NonModules;
+using NeKzBot.Server;
+using NeKzBot.Tasks;
 using NeKzBot.Tasks.Leaderboard;
+using NeKzBot.Tasks.NonModules;
+using NeKzBot.Tasks.Speedrun;
 
 namespace NeKzBot
 {
@@ -18,9 +20,9 @@ namespace NeKzBot
 		public static DiscordClient Client { get; private set; }
 
 		private static void OnExit(object _, EventArgs __)
-			=> Task.WaitAll(
-				Logger.SendAsync("Bot Shutdown...", LogColor.Default),
-				Twitter.UpdateDescriptionAsync(Portal2.AutoUpdater.LeaderboardTwitterAccount, $"{Configuration.Default.TwitterDescription} #OFFLINE"));
+			=> Task.WaitAll(Logger.SendAsync("Bot Shutdown...", LogColor.Default),
+							Twitter.UpdateDescriptionAsync(Portal2.AutoUpdater.LeaderboardTwitterAccount,
+														   $"{Configuration.Default.TwitterDescription} #OFFLINE"));
 
 		public async Task StartAsync()
 		{
@@ -31,7 +33,7 @@ namespace NeKzBot
 				AppDomain.CurrentDomain.ProcessExit += OnExit;
 
 			// Start
-			Console.Title = $"{Configuration.Default.AppName} V{Configuration.Default.AppVersion} - Discord Server Bot";
+			Console.Title = $"{Configuration.Default.AppName} v{Configuration.Default.AppVersion} - Discord Server Bot";
 			await CreateAsync();
 			await InitAsync();
 			await LoadAsync();
@@ -83,15 +85,24 @@ namespace NeKzBot
 			try
 			{
 				await Logger.SendAsync("Loading Modules", LogColor.Default);
-				await Admin.LoadAsync();
+				// Private
 				await Exclusive.LoadAsync();
 				await Giveaway.LoadAsync();
+				await Admin.LoadAsync();
+				await DataBase.LoadAsync();
+				await Debugging.LoadAsync();
+				await Subscription.LoadAsync();
+				// Public
 				await Help.LoadAsync();
 				await Info.LoadAsync();
 				await Leaderboard.LoadAsync();
-				await Others.LoadAsync();
 				await Sound.LoadAsync();
 				await Speedrun.LoadAsync();
+				await Builder.LoadAsync();
+				await Fun.LoadAsync();
+				await RaspberryPi.LoadAsync();
+				await Resource.LoadAsync();
+				await Rest.LoadAsync();
 			}
 			catch (Exception e)
 			{

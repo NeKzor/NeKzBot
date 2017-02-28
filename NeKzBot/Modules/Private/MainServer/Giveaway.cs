@@ -1,20 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using NeKzBot.Server;
 using Discord.Commands;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
-namespace NeKzBot.Modules
+namespace NeKzBot.Modules.Private.MainServer
 {
 	// TODO: lol I still didn't delete this
 	public class Giveaway : Commands
 	{
 		public static bool IsRunning { get; set; } = false;
-		public static InternalWatch Watch { get; private set; } = new InternalWatch();
+		public static InternalWatch Watch { get; } = new InternalWatch();
 		private static Stopwatch _nextReset;
 		private static CancellationTokenSource _cancelResetSource;
 		private static CancellationToken _cancelToken;
@@ -37,7 +37,7 @@ namespace NeKzBot.Modules
 
 		public static async Task LoadAsync()
 		{
-			await Logger.SendAsync("Loading Giveaway Game", LogColor.Init);
+			await Logger.SendAsync("Loading Giveaway Module", LogColor.Init);
 			await GetGiveaway("giveaway");
 			await GiveawayCommands("giveaway");
 		}
@@ -45,7 +45,7 @@ namespace NeKzBot.Modules
 		private static Task GetGiveaway(string c)
 		{
 			CService.CreateCommand(c)
-					.Description($"• `{Configuration.Default.PrefixCmd + c}` could give you a prize.\n• Algorithm: User requests random number, bot checks if number equals value[index], if it does index++, tries--, try again, if index == value.length, puzzle solved.\n• Solve status and value (code to solve) are hidden.\n• Good luck!\n• This isn't always available.")
+					.Description("Could give you a prize. Algorithm:\n• User requests random number\n• Checking if number equals value[index]\n• If it does index++ and tries--\n• Try again\n• If index == value.length, puzzle solved.\n• Good luck!\n• Notes: Solve status and value (code to solve) are hidden, this game isn't always available.")
 					.AddCheck(Permissions.MainServerOnly)
 					.Do(async e =>
 					{
@@ -83,7 +83,7 @@ namespace NeKzBot.Modules
 			{
 				GBuilder.CreateCommand("resetwhen")
 						.Alias("when")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} resetwhen` shows you when the bot will forget your attempts.")
+						.Description("Shows you when the bot will forget your attempts.")
 						.AddCheck(Permissions.MainServerOnly)
 						.Do(async e =>
 						{
@@ -97,7 +97,7 @@ namespace NeKzBot.Modules
 				#region BOT OWNER ONLY
 				GBuilder.CreateCommand("resettime")
 						.Alias("time")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} resettime <time>` will set a new reset time for the giveaway.")
+						.Description("Will set a new reset time for the giveaway.")
 						.Parameter("time", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -109,12 +109,12 @@ namespace NeKzBot.Modules
 							else if (await SetNewResetTime(Convert.ToInt16(e.Args[0])))
 								await e.Channel.SendMessage($"New reset time is set to: **{e.Args[0]}min**");
 							else
-								await e.Channel.SendMessage("Invalid paramter. Time is in minutes.");
+								await e.Channel.SendMessage("Invalid parameter. Time is in minutes.");
 						});
 
 				GBuilder.CreateCommand("maxtries")
 						.Alias("tries")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} maxtries <tries>` will set the amount of tries for each user.")
+						.Description("Will set the amount of tries for each user.")
 						.Parameter("tries", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -126,12 +126,12 @@ namespace NeKzBot.Modules
 							else if (await SetNewMaxTries(Convert.ToInt16(e.Args[0])))
 								await e.Channel.SendMessage($"New max tries is set to: *{e.Args[0]} tries*");
 							else
-								await e.Channel.SendMessage("Invalid paramter.");
+								await e.Channel.SendMessage("Invalid parameter.");
 						});
 
 				GBuilder.CreateCommand("resetnow")
 						.Alias("reset")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} resetnow` resets the waiting time when you're out of attempts of the give away.")
+						.Description("Resets the waiting time when you're out of attempts of the give away.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -145,7 +145,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("togglereset")
 						.Alias("toggle")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} togglereset` toggles the reset timer for the give away attempts.")
+						.Description("Toggles the reset timer for the give away attempts.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -156,7 +156,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("setstate")
 						.Alias("state")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} setstate <state>` enables or disables the giveaway game.")
+						.Description("Enables or disables the giveaway game.")
 						.Parameter("state", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -168,7 +168,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("status")
 						.Alias("debug")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} status` will log some information about the giveaway.")
+						.Description("Will log some information about the giveaway.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>

@@ -2,8 +2,8 @@
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using NeKzBot.Server;
 using NeKzBot.Classes;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks
 {

@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
 using Discord.Addons.EmojiTools;
+using Discord.Commands;
 using NeKzBot.Resources;
 
 namespace NeKzBot.Modules

@@ -1,16 +1,16 @@
 ﻿using System.Threading.Tasks;
 using Discord.Commands;
-using NeKzBot.Server;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 using NeKzBot.Tasks.Leaderboard;
 
-namespace NeKzBot.Modules
+namespace NeKzBot.Modules.Public
 {
 	public class Leaderboard : Commands
 	{
 		public static async Task LoadAsync()
 		{
-			await Logger.SendAsync("Loading Leaderboard Commands", LogColor.Init);
+			await Logger.SendAsync("Loading Leaderboard Module", LogColor.Init);
 			await GetLatestWorldRecord("latestwr");
 			await GetCurrentWorldRecord("wr");
 			await GetOwnRank("rank", "me", "pb");
@@ -23,7 +23,7 @@ namespace NeKzBot.Modules
 		{
 			CService.CreateCommand(c)
 					.Alias("wrupdate")
-					.Description($"• `{Configuration.Default.PrefixCmd + c}` gives you the most recent world record.\n• `{Configuration.Default.PrefixCmd + c} yt` filters wrs by videos only.\n• `{Configuration.Default.PrefixCmd + c} demo` filters wrs by demos only.\n• Data is from board.iverb.me.")
+					.Description($"Gives you the most recent world record. Try `{Configuration.Default.PrefixCmd + c} yt` to filter wrs by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter them by demos only.")
 					.Parameter("filter", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -35,7 +35,7 @@ namespace NeKzBot.Modules
 						else if (e.Args[0] == "demo")
 							await e.Channel.SendMessage(await Portal2.GetLatestEntryAsync("http://board.iverb.me/changelog?wr=1&demo=1"));
 						else
-							await e.Channel.SendMessage($"Unknow parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`");
+							await e.Channel.SendMessage($"Unknown parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`.");
 					});
 			return Task.FromResult(0);
 		}
@@ -44,7 +44,7 @@ namespace NeKzBot.Modules
 		{
 			CService.CreateCommand(c)
 					.Alias("entry")
-					.Description($"• `{Configuration.Default.PrefixCmd + c}` gives you the most recent leaderboard entry.\n• `{Configuration.Default.PrefixCmd + c} yt` filters entries by videos only.\n• `{Configuration.Default.PrefixCmd + c} demo` filters entries by demos only.\n• Data is from board.iverb.me.")
+					.Description($"Gives you the most recent leaderboard entry. Try `{Configuration.Default.PrefixCmd + c} yt` to filter entries by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter by demos only.")
 					.Parameter("filter", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -56,7 +56,7 @@ namespace NeKzBot.Modules
 						else if (e.Args[0] == "demo")
 							await e.Channel.SendMessage(await Portal2.GetLatestEntryAsync("http://board.iverb.me/changelog?demo=1"));
 						else
-							await e.Channel.SendMessage($"Unknow parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`");
+							await e.Channel.SendMessage($"Unknown parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`.");
 					});
 			return Task.FromResult(0);
 		}
@@ -64,7 +64,7 @@ namespace NeKzBot.Modules
 		private static Task GetCurrentWorldRecord(string c)
 		{
 			CService.CreateCommand(c)
-					.Description($"• `{Configuration.Default.PrefixCmd + c} <mapname>` shows you the latest world record of a map.\n• `{Configuration.Default.PrefixCmd + c}` shows you a random wr entry.\n• Data is from board.iverb.me.")
+					.Description($"Shows you the latest world record of a map. Try `{Configuration.Default.PrefixCmd + c}` to show a random wr entry.")
 					.Parameter("mapname", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -87,7 +87,7 @@ namespace NeKzBot.Modules
 		{
 			CService.CreateCommand(c)
 					.Alias(a)
-					.Description($"• `{Configuration.Default.PrefixCmd + c}` shows your leaderboard stats.\n• `{c} <mapname>` shows your personal best of a map.\n• Data is from board.iverb.me.")
+					.Description($"Shows your leaderboard stats. Try `{Configuration.Default.PrefixCmd + c} <mapname>` to show your personal best of a map.")
 					.Parameter("mapname", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -109,7 +109,7 @@ namespace NeKzBot.Modules
 		private static Task GetUserRank(string c)
 		{
 			CService.CreateCommand(c)
-					.Description($"• `{Configuration.Default.PrefixCmd + c} <playername>` shows leaderboard stats about that player.\n• `{Configuration.Default.PrefixCmd + c} <playername> <mapname>` shows the ranking of a specific map.\n• `{Configuration.Default.PrefixCmd + c} <steamid>` would also work as parameter.\n• Data is from board.iverb.me.")
+					.Description($"Shows leaderboard stats about that player. Try `{Configuration.Default.PrefixCmd + c} <playername> <mapname>` to show the ranking of a specific map. This `{Configuration.Default.PrefixCmd + c} <steamid>` would also work.")
 					.Parameter("playername", ParameterType.Multiple)
 					.Do(async e =>
 					{
@@ -139,7 +139,7 @@ namespace NeKzBot.Modules
 			{
 				GBuilder.CreateCommand("refreshtime")
 						.Alias("rt")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} refreshtime` shows when the bot will refresh the channel.")
+						.Description("Shows when the bot will check for the next update.")
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
@@ -149,7 +149,7 @@ namespace NeKzBot.Modules
 				#region SETTINGS
 				GBuilder.CreateCommand("setrefreshtime")
 						.Alias("setrt")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} setrefreshtime <time>` sets the refresh update time of leaderboard updater.")
+						.Description("Sets the refresh update time of leaderboard updater.")
 						.Parameter("time", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -161,7 +161,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("updatestate")
 						.Alias("us")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} updatestate <state>` sets the updating state of the leaderboard auto updater.")
+						.Description("Sets the updating state of the leaderboard auto updater.")
 						.Parameter("state", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -173,7 +173,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("boardparameter")
 						.Alias("bp")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} boardparameter <name>` sets a new parameter for the leaderboard auto updater.")
+						.Description("Sets a new parameter for the leaderboard auto updater.")
 						.Parameter("name", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -187,7 +187,7 @@ namespace NeKzBot.Modules
 				#region ACTIONS
 				GBuilder.CreateCommand("toggleupdate")
 						.Alias("tu")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} toggleupdate` enables or disables the update channel where the bot writes his updates.")
+						.Description("Enables or disables the update channel where the bot writes his updates.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -198,7 +198,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("refreshnow")
 						.Alias("refresh")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} refreshnow` refreshes the update channel where the bot writes his updates.")
+						.Description("Stops the auto updater task and starts a new one.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -209,7 +209,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("cleanentrycache")
 						.Alias("cleanentry")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} cleanentrycache` clears entry cache which is used to compare old data with new one when checking for an update.")
+						.Description("Clears entry cache which is used to compare old data with new one when checking for an update.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -222,7 +222,7 @@ namespace NeKzBot.Modules
 				#region CACHING
 				GBuilder.CreateCommand("cachetime")
 						.Alias("ct")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} cachetime` shows you when the bot clears all data about leaderboard entries and stats.")
+						.Description("Shows you when the bot clears all data about leaderboard entries and stats.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -233,7 +233,7 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("setcachetime")
 						.Alias("setct")
-						.Description($"• `{Configuration.Default.PrefixCmd + c} setcachetime <value>` sets a new time when the bot will clean the leaderboard cache.")
+						.Description("Sets a new time when the bot will clean the leaderboard cache.")
 						.Parameter("value", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()

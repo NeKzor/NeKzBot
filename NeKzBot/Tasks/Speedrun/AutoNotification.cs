@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using NeKzBot.Server;
+using System.Threading.Tasks;
 using NeKzBot.Classes;
-using NeKzBot.Resources;
-using NeKzBot.Internals;
 using NeKzBot.Classes.Discord;
+using NeKzBot.Internals;
+using NeKzBot.Resources;
+using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks.Speedrun
@@ -22,7 +22,7 @@ namespace NeKzBot.Tasks.Speedrun
 			public static async Task InitAsync()
 			{
 				await Logger.SendAsync("Initializing SpeedrunCom AutoNotification", LogColor.Init);
-				_notificationCount = 50;
+				_notificationCount = 10;
 				_cacheKey = "autonf";
 
 				// Reserve cache memory
@@ -60,26 +60,26 @@ namespace NeKzBot.Tasks.Speedrun
 								else
 									break;
 							}
-							if (nfstosend.Count == 0)
-								continue;
-
-							nfstosend.Reverse();
-							foreach (var notification in nfstosend)
+							if (nfstosend?.Count > 0)
 							{
-								foreach (var item in Data.SRComSubscribers)
+								nfstosend.Reverse();
+								foreach (var notification in nfstosend)
 								{
-									await WebhookService.ExecuteWebhookAsync(item, new Webhook
+									foreach (var item in Data.SpeedrunComSubscribers)
 									{
-										UserName = item.UserName,
-										AvatarUrl = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png",
-										Embeds = new Embed[] { await CreateEmbed(notification) }
-									});
+										await WebhookService.ExecuteWebhookAsync(item, new Webhook
+										{
+											UserName = item.UserName,
+											AvatarUrl = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png",
+											Embeds = new Embed[] { await CreateEmbed(notification) }
+										});
+									}
 								}
+								// Save cache
+								var newcache = nfstosend[nfstosend.Count - 1].Cache;
+								await Logger.SendAsync($"SpeedrunCom.AutoNotification.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
+								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
 							}
-							// Save cache
-							var newcache = nfstosend[nfstosend.Count - 1].Cache;
-							await Logger.SendAsync($"SpeedrunCom.AutoNotification.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
-							await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
 						}
 						await Task.Delay((1 * 60000) - await Watch.GetElapsedTimeAsync(message: "Speedrun.AutoNotification.StartAsync Delay Took -> "));   // Check in about every minute (max speed request is 100 per min tho)
 						await Watch.RestartAsync();

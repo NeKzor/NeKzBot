@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using NeKzBot.Resources;
 
 namespace NeKzBot.Server
 {
@@ -26,17 +27,25 @@ namespace NeKzBot.Server
 		{
 			if (usr.ServerPermissions.Administrator)
 				return true;
-			cha.SendMessage("Only administrators are allowed to execute this command.");
+			cha.SendMessage("Only an administrator is allowed to execute this command.");
 			return false;
 		}
 
 		public static bool DisallowBots(Command _, User usr, Channel __)
-			=> !usr.IsBot;
+			=> !(usr.IsBot);
 
 		public static bool DisallowDMs(Command _, User __, Channel cha)
-			=> !cha.IsPrivate;
+			=> !(cha.IsPrivate);
 
-		// For CommandBuilders
+		public static bool LinuxOnly(Command _, User __, Channel cha)
+		{
+			if (Utils.IsLinux().Result)
+				return true;
+			cha.SendMessage("The bot is currently not running on the main server host.");
+			return false;
+		}
+
+		// In CommandBuilders
 		public static bool AdminOnly(User usr)
 			=> usr.ServerPermissions.Administrator;
 

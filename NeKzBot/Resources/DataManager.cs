@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using NeKzBot.Internals;
 using NeKzBot.Server;
 using NeKzBot.Webhooks;
-using NeKzBot.Internals;
 
 namespace NeKzBot.Resources
 {
@@ -29,24 +29,24 @@ namespace NeKzBot.Resources
 			await Logger.SendAsync("Initializing Data Manger", LogColor.Init);
 			Manager = new List<InternalData>
 			{
-				new InternalData("cc", true, true, fileNameConsoleCommands, ConsoleCommands),
-				new InternalData("aa", false, false, fileNameAudioAliases, AudioAliases),
-				new InternalData("playingstatus", true, true, fileNameRandomGames, RandomGames),
-				new InternalData("credits", true, true, fileNameSpecialThanks, SpecialThanks),
-				new InternalData("twitch", true, true, fileNameTwitchStreamers, TwitchStreamers),
-				new InternalData("scripts", false, false, fileNameScriptFiles, ScriptFiles),
-				new InternalData("memes", true, true, fileNameMemeCommands, MemeCommands),
-				new InternalData("twitch", true, true, fileNameTwitchStreamers, TwitchStreamers),
-				new InternalData("tools", true, true, fileNameToolCommands, ToolCommands),
-				new InternalData("links", true, true, fileNameLinkCommands, LinkCommands),
-				new InternalData("runs", true, true, fileNameProjectNames, ProjectNames),
-				new InternalData("p2maps", false, false, fileNamePortal2Maps, Portal2Maps),
-				new InternalData("quotes", true, true, fileNameQuoteNames, QuoteNames),
-				new InternalData("sounds", false, false, fileNameSoundNames, SoundNames),
-				new InternalData("exploits", true, true, fileNameP2Exploits, Portal2Exploits),
-				new InternalData("p2hook", true, true, fileNameP2Subscribers, P2Subscribers),
-				new InternalData("srcomhook", true, true, fileNameSRComSubscribers, SRComSubscribers),
-				new InternalData("twtvhook", true, true, fileNameTwitchTvSubscribers, TwitchTvSubscribers)
+				new InternalData("cc", true, true, _fileNameConsoleCommands, ConsoleCommands),
+				new InternalData("aa", false, false, _fileNameAudioAliases, AudioAliases),
+				new InternalData("playingstatus", true, true, _fileNameRandomGames, RandomGames),
+				new InternalData("credits", true, true, _fileNameSpecialThanks, SpecialThanks),
+				new InternalData("twitch", true, true, _fileNameTwitchStreamers, TwitchStreamers),
+				new InternalData("scripts", false, false, _fileNameScriptFiles, ScriptFiles),
+				new InternalData("memes", true, true, _fileNameMemeCommands, MemeCommands),
+				new InternalData("twitch", true, true, _fileNameTwitchStreamers, TwitchStreamers),
+				new InternalData("tools", true, true, _fileNameToolCommands, ToolCommands),
+				new InternalData("links", true, true, _fileNameLinkCommands, LinkCommands),
+				new InternalData("runs", true, true, _fileNameProjectNames, ProjectNames),
+				new InternalData("p2maps", false, false, _fileNamePortal2Maps, Portal2Maps),
+				new InternalData("quotes", true, true, _fileNameQuoteNames, QuoteNames),
+				new InternalData("sounds", false, false, _fileNameSoundNames, SoundNames),
+				new InternalData("exploits", true, true, _fileNameP2Exploits, Portal2Exploits),
+				new InternalData("p2hook", true, true, _fileNameP2Subscribers, P2Subscribers),
+				new InternalData("srcomhook", true, true, _fileNameSpeedrunComSubscribers, SpeedrunComSubscribers),
+				new InternalData("twtvhook", true, true, _fileNameTwitchTvSubscribers, TwitchTvSubscribers)
 			};
 		}
 

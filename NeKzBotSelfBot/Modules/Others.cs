@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Net;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using TweetSharp;
-using Google.Apis.Services;
 using Google.Apis.Customsearch.v1;
+using Google.Apis.Services;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
-using NeKzBot.Tasks;
-using NeKzBot.Server;
+using TweetSharp;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
+using NeKzBot.Tasks;
 
 namespace NeKzBot.Modules
 {
@@ -156,7 +156,7 @@ namespace NeKzBot.Modules
 		[Command("upload")]
 		public async Task UploadToDropbox([Remainder]string text = "")
 		{
-			// I still don't know how you can have more than one attachement but whatever, handle only one at the time
+			// I still don't know how you can have more than one attachment but whatever, handle only one at the time
 			if (Context.Message.Attachments?.Count != 1)
 				return;
 
@@ -167,7 +167,7 @@ namespace NeKzBot.Modules
 			var embed = new EmbedBuilder
 			{
 				Color = Data.DropboxColor,
-				Title = "Attachement Found",
+				Title = "Attachment Found",
 				Description = "Downloading file...",
 				Url = "https://github.com/NeKzor"
 			};
@@ -249,7 +249,7 @@ namespace NeKzBot.Modules
 			await Message.EditAsync(Context.Message, embed, text);
 		}
 
-		// To remove the redundance
+		// Removing redundancy
 		private async Task GetTweet(long id, IUserMessage message)
 		{
 			var tweet = await Twitter.GetTweetAsync(Data.TwitterAccount, id);
@@ -285,7 +285,7 @@ namespace NeKzBot.Modules
 			});
 		}
 
-		// Replace mentions with with a link to make it look nicer
+		// Replace mentions with a link to make it look nicer
 		private Task<string> ReplaceMention(string text, string mention)
 			=> Task.FromResult(text.Replace($"@{mention}", $"[@{mention}](https://twitter.com/{mention})"));
 	}

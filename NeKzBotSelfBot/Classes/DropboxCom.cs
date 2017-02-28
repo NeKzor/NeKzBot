@@ -16,7 +16,7 @@ namespace NeKzBot.Classes
 
 		public static async Task InitAsync()
 		{
-			await Logger.SendAsync("Initialazing Dropbox Client", LogColor.Init);
+			await Logger.SendAsync("Initializing Dropbox Client", LogColor.Init);
 			_clientConfig = new DropboxClientConfig($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", 3);
 			_client = new DropboxClient(Credentials.Default.DropboxToken, _clientConfig);
 		}

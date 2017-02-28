@@ -111,24 +111,31 @@
     <Compile Include="Classes\Errors.cs" />
     <Compile Include="Internals\InternalWatch.cs" />
     <Compile Include="Internals\InternalData.cs" />
-    <Compile Include="Classes\Others.cs" />
+    <Compile Include="Classes\Utils.cs" />
     <Compile Include="Classes\Portal2Board.cs" />
     <Compile Include="Classes\Speedrun.cs" />
     <Compile Include="Classes\TwitchTv.cs" />
     <Compile Include="Classes\Twitter.cs" />
+    <Compile Include="Modules\Private\Owner\Debugging.cs" />
+    <Compile Include="Modules\Private\Owner\Subscription.cs" />
+    <Compile Include="Modules\Private\Owner\DataBase.cs" />
+    <Compile Include="Modules\Public\Others\RaspberryPi.cs" />
+    <Compile Include="Modules\Public\Others\Builder.cs" />
+    <Compile Include="Modules\Public\Others\Rest.cs" />
+    <Compile Include="Modules\Public\Others\Resource.cs" />
     <Compile Include="Server\Handlers.cs" />
     <Compile Include="Webhooks\WebhookData.cs" />
     <Compile Include="Webhooks\Webhook.cs" />
     <Compile Include="Webhooks\WebhookService.cs" />
-    <Compile Include="Modules\Admin.cs" />
-    <Compile Include="Modules\Exclusive.cs" />
-    <Compile Include="Modules\Giveaway.cs" />
-    <Compile Include="Modules\Help.cs" />
-    <Compile Include="Modules\Info.cs" />
-    <Compile Include="Modules\Leaderboard.cs" />
-    <Compile Include="Modules\Others.cs" />
-    <Compile Include="Modules\Sound.cs" />
-    <Compile Include="Modules\Speedrun.cs" />
+    <Compile Include="Modules\Private\Owner\Admin.cs" />
+    <Compile Include="Modules\Private\MainServer\Exclusive.cs" />
+    <Compile Include="Modules\Private\MainServer\Giveaway.cs" />
+    <Compile Include="Modules\Public\Help.cs" />
+    <Compile Include="Modules\Public\Info.cs" />
+    <Compile Include="Modules\Public\Leaderboard.cs" />
+    <Compile Include="Modules\Public\Others\Fun.cs" />
+    <Compile Include="Modules\Public\Sound.cs" />
+    <Compile Include="Modules\Public\Speedrun.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Data.cs" />
@@ -152,7 +159,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Configuration.settings</DependentUpon>
     </Compile>
-    <Compile Include="Server\VoiceChannel.cs" />
+    <Compile Include="Tasks\VoiceChannel.cs" />
     <Compile Include="Tasks\Leaderboard\AutoUpdater.cs" />
     <Compile Include="Tasks\Leaderboard\Portal2.cs" />
     <Compile Include="Tasks\Leaderboard\Cache.cs" />
@@ -187,9 +194,7 @@
       <LastGenOutput>Configuration.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\Public\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
       <Visible>False</Visible>

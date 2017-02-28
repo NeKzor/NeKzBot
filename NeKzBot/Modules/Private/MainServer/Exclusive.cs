@@ -1,15 +1,15 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using NeKzBot.Tasks;
 using NeKzBot.Server;
+using NeKzBot.Tasks;
 
-namespace NeKzBot.Modules
+namespace NeKzBot.Modules.Private.MainServer
 {
 	public class Exclusive : Commands
 	{
 		public static async Task LoadAsync()
 		{
-			await Logger.SendAsync("Loading Bot Exclusive Commands", LogColor.Init);
+			await Logger.SendAsync("Loading Exclusive Module", LogColor.Init);
 			await ExclusiveCommands(Configuration.Default.BotCmd);
 		}
 
@@ -19,7 +19,7 @@ namespace NeKzBot.Modules
 			{
 				GBuilder.CreateCommand("connect")
 						.Alias("vc")
-						.Description($"• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} connect` connects the bot to a voice channel.\n• It will follow you automatically if you connected to one already.")
+						.Description("Connects the bot to a voice channel. It will follow you automatically if you connected to one already.")
 						.AddCheck(Permissions.MainServerOnly)
 						.Do(async e =>
 						{
@@ -31,12 +31,12 @@ namespace NeKzBot.Modules
 
 				GBuilder.CreateCommand("disconnect")
 						.Alias("dc")
-						.Description($"• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} disconnect` disconnects the bot when it's in a voice channel.")
+						.Description("Disconnects the bot from a voice channel.")
 						.AddCheck(Permissions.MainServerOnly)
 						.Do(async e => await VoiceChannel.DisconnectAsync(e.Server.Id));
 
 				GBuilder.CreateCommand("stop")
-						.Description($"• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} stop` stops a currently running audio stream.")
+						.Description("Stops a currently running audio stream.")
 						.AddCheck(Permissions.MainServerOnly)
 						.Do(async _ => await VoiceChannel.StopAudio());
 			});

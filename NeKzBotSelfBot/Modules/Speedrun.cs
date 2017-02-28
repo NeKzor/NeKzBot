@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using NeKzBot.Classes;
-using NeKzBot.Tasks;
 using NeKzBot.Resources;
+using NeKzBot.Tasks;
 
 namespace NeKzBot.Modules
 {

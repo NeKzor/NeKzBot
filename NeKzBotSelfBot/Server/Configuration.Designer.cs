@@ -43,7 +43,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.0.1")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -68,15 +68,12 @@ namespace NeKzBot.Server {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("https://twitch.tv/NeKzor")]
         public string TwitchChannelLink {
             get {
                 return ((string)(this["TwitchChannelLink"]));
-            }
-            set {
-                this["TwitchChannelLink"] = value;
             }
         }
     }

@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Reflection;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -162,7 +162,7 @@ namespace NeKzBot.Resources
 				else
 					continue;
 
-				// Don't add double emojies
+				// Don't add double emojis
 				if (emojis.Contains(temp))
 					continue;
 				else

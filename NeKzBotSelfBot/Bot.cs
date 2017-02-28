@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using NeKzBot.Tasks;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
+using NeKzBot.Tasks;
 
 namespace NeKzBot
 {

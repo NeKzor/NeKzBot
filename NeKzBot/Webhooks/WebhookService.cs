@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Classes.Discord;
+using NeKzBot.Server;
 
 namespace NeKzBot.Webhooks
 {
-	// Note: only tested 3 out of 7
+	// Note: only tested 4 out of 7
+	// Resource: https://discordapp.com/developers/docs/resources/webhook
 	public static class WebhookService
 	{
 		// For authentication only
@@ -80,15 +81,19 @@ namespace NeKzBot.Webhooks
 			return null;
 		}
 
-		public static async Task<WebhookObject> GetWebhookAsync(WebhookData data)
+		public static async Task<WebhookObject> GetWebhookAsync(WebhookData data, bool ispingtest = false)
 		{
 			try
 			{
 				using (var client = await Fetching.CreateHttpClient(_headers))
 				{
-					var result = await client.GetAsync($"{DiscordConstants.BaseApiUrl}/channels/{data.Id}{(string.IsNullOrEmpty(data.Token) ? string.Empty : $"/{data.Token}")}");
+					var result = await client.GetAsync($"{DiscordConstants.BaseApiUrl}/webhooks/{data.Id}{(string.IsNullOrEmpty(data.Token) ? string.Empty : $"/{data.Token}")}");
 					if (!(result.IsSuccessStatusCode))
-						return await Logger.SendAsync($"WebhookService.GetWebhookAsync GET Error ({data.UserName})(ID {data.Id})\n{result.Content}", LogColor.Error) as WebhookObject;
+					{
+						return (ispingtest)
+									? default(WebhookObject)
+									: await Logger.SendAsync($"WebhookService.GetWebhookAsync GET Error ({data.UserName})(ID {data.Id})\n{result.Content}", LogColor.Error) as WebhookObject;
+					}
 					return JsonConvert.DeserializeObject<WebhookObject>(await result.Content.ReadAsStringAsync());
 				}
 			}
@@ -106,11 +111,11 @@ namespace NeKzBot.Webhooks
 				&& string.IsNullOrEmpty(avatar))
 					return null;
 
-				var hook = string.IsNullOrEmpty(username)
-									? new Webhook { AvatarUrl = avatar }
-									: string.IsNullOrEmpty(avatar)
-												? new Webhook { UserName = username }
-												: new Webhook { UserName = username, AvatarUrl = avatar };
+				var hook = (string.IsNullOrEmpty(username))
+								  ? new Webhook { AvatarUrl = avatar }
+								  : (string.IsNullOrEmpty(avatar))
+										   ? new Webhook { UserName = username }
+										   : new Webhook { UserName = username, AvatarUrl = avatar };
 
 				using (var client = await Fetching.CreateHttpClient(_headers))
 				{

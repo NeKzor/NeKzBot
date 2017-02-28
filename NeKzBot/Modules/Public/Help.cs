@@ -1,15 +1,15 @@
 ﻿using System.Threading.Tasks;
 using Discord.Commands;
-using NeKzBot.Server;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
-namespace NeKzBot.Modules
+namespace NeKzBot.Modules.Public
 {
 	public class Help : Commands
 	{
 		public static async Task LoadAsync()
 		{
-			await Logger.SendAsync("Loading Help Commands", LogColor.Init);
+			await Logger.SendAsync("Loading Help Module", LogColor.Init);
 			await HelpCommands();
 		}
 
@@ -17,7 +17,7 @@ namespace NeKzBot.Modules
 		{
 			CService.CreateCommand("help")
 					.Alias("?")
-					.Description($"• `{Configuration.Default.PrefixCmd}help <command>` returns information about that command.")
+					.Description("Returns the description of a command.")
 					.Parameter("command", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -27,57 +27,57 @@ namespace NeKzBot.Modules
 
 			CService.CreateCommand("commands")
 					.Alias("cmds")
-					.Description($"• `{Configuration.Default.PrefixCmd}commands` shows you a list of commands.")
+					.Description("Shows you a list of commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						if (Permissions.BotOwnerOnly(e.User))
 							// Thanks for the 2k character limit, Discord
-							await e.Channel.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.mainServerMsg + Data.srcomMsg + Data.rpiMsg + Data.dropboxMsg + Data.botMsg + Data.botOwnerBotMsg + Data.msgEnd);
+							await e.Channel.SendMessage(Data.FunMessage + Data.LeaderboardMessage + Data.VoiceChannelMessage + Data.MainServerMessage + Data.SpeedrunComMessage + Data.RaspberryPiMessage + Data.DropboxMessage + Data.BotMessage + Data.BotOwnerBotMessage + Data.MessagEnding);
 						else if (Permissions.MainServerOnly(e.Server))
-							await e.User.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.mainServerMsg + Data.srcomMsg + Data.rpiMsg + Data.dropboxMsg + Data.botMsg + Data.msgEnd);
+							await e.User.SendMessage(Data.FunMessage + Data.LeaderboardMessage + Data.VoiceChannelMessage + Data.MainServerMessage + Data.SpeedrunComMessage + Data.RaspberryPiMessage + Data.DropboxMessage + Data.BotMessage + Data.MessagEnding);
 						else
-							await e.User.SendMessage(Data.funMsg + Data.lbMsg + Data.vcMsg + Data.botMsg + Data.msgEnd);
+							await e.User.SendMessage(Data.FunMessage + Data.LeaderboardMessage + Data.VoiceChannelMessage + Data.BotMessage + Data.MessagEnding);
 					});
 
 			CService.CreateCommand("fun")
 					.Alias("fun?")
-					.Description($"• `{Configuration.Default.PrefixCmd}fun` shows you a list of \"fun\" commands.")
+					.Description("Shows you a list of \"fun\" commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.funMsg);
+						await e.Channel.SendMessage(Data.FunMessage);
 					});
 
 			CService.CreateCommand("leaderboard")
 					.Alias("lb", "lb?")
-					.Description($"• `{Configuration.Default.PrefixCmd}leaderboard` shows you a list of leaderboard commands.")
+					.Description("Shows you a list of leaderboard commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						if (Permissions.BotOwnerOnly(e.User))
-							await e.Channel.SendMessage(Data.lbMsg + Data.botOwnerLbMsg);
+							await e.Channel.SendMessage(Data.LeaderboardMessage + Data.BotOwnerLeaderboardMessage);
 						else
-							await e.Channel.SendMessage(Data.lbMsg);
+							await e.Channel.SendMessage(Data.LeaderboardMessage);
 					});
 
 			CService.CreateCommand("sounds")
 					.Alias("vc?")
-					.Description($"• `{Configuration.Default.PrefixCmd}sounds` shows you a list of sound commands.")
+					.Description("Shows you a list of sound commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.vcMsg);
+						await e.Channel.SendMessage(Data.VoiceChannelMessage);
 					});
 
 			CService.CreateCommand("game")
 					.Alias("game?")
-					.Description($"• `{Configuration.Default.PrefixCmd}sounds` shows you a list of sound commands.")
+					.Description("Shows you a list of sound commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						if (Permissions.BotOwnerOnly(e.User))
-							await e.Channel.SendMessage(Data.botOwnerGameMsg);
+							await e.Channel.SendMessage(Data.BotOwnerGameMessage);
 						else if (Permissions.MainServerOnly(e.Server))
 							await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}giveaway`.");
 						else
@@ -86,53 +86,53 @@ namespace NeKzBot.Modules
 
 			CService.CreateCommand("rpi")
 					.Alias("rpi?")
-					.Description($"• `{Configuration.Default.PrefixCmd}rpi` shows you a list of commands which give you information about the server.")
+					.Description("Shows you a list of commands which give you information about the server.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.rpiMsg);
+						await e.Channel.SendMessage(Data.RaspberryPiMessage);
 					});
 
 			CService.CreateCommand("speedrun")
 					.Alias("speedruncom", "srcom", "srcom?")
-					.Description($"• `{Configuration.Default.PrefixCmd}speedrun` shows you a list of speedruncom commands.")
+					.Description("Shows you a list of speedruncom commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.srcomMsg);
+						await e.Channel.SendMessage(Data.SpeedrunComMessage);
 					});
 
 			CService.CreateCommand("dropbox")
 					.Alias("dropbox", "db?")
-					.Description($"• `{Configuration.Default.PrefixCmd}dropbox` shows you a list of Dropbox commands.")
+					.Description("Shows you a list of Dropbox commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						if (Permissions.BotOwnerOnly(e.User))
-							await e.Channel.SendMessage(Data.dropboxMsg + Data.botOwnerDropboxMsg);
+							await e.Channel.SendMessage(Data.DropboxMessage + Data.BotOwnerDropboxMessage);
 						else
-							await e.Channel.SendMessage(Data.dropboxMsg);
+							await e.Channel.SendMessage(Data.DropboxMessage);
 					});
 
 			CService.CreateCommand("server")
 					.Alias("servercmds", "mainserver")
-					.Description($"• `{Configuration.Default.PrefixCmd}server` shows you a list of server exclusive commands.")
+					.Description("Shows you a list of server exclusive commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.mainServerMsg);
+						await e.Channel.SendMessage(Data.MainServerMessage);
 					});
 
 			CService.CreateCommand("botcommands")
 					.Alias("botcmds", "bot?")
-					.Description($"• `{Configuration.Default.PrefixCmd}botcommands` shows you a list of bot commands.")
+					.Description("Shows you a list of bot commands.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						if (Permissions.BotOwnerOnly(e.User))
-							await e.Channel.SendMessage(Data.botOwnerBotMsg);
+							await e.Channel.SendMessage(Data.BotOwnerBotMessage);
 						else
-							await e.Channel.SendMessage(Data.botMsg);
+							await e.Channel.SendMessage(Data.BotMessage);
 					});
 			return Task.FromResult(0);
 		}

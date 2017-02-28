@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Resources;
-using NeKzBot.Tasks.Speedrun;
-using NeKzBot.Tasks.NonModules;
 using NeKzBot.Tasks.Leaderboard;
+using NeKzBot.Tasks.NonModules;
+using NeKzBot.Tasks.Speedrun;
 
 namespace NeKzBot.Server
 {
@@ -35,31 +35,31 @@ namespace NeKzBot.Server
 
 		public static async Task OnJoinedServerAsync(ServerEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\nBot joined a server.\nName • *{e.Server.Name}* (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{await Utils.FormatId(e.Server.Owner.Discriminator)}*" : "*not found*")} (ID {e.Server.Owner.Id})");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} joined a server.\nName • {e.Server.Name} (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{e.Server.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server.Owner.Id})");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnLeftServerAsync(ServerEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\nBot left a server.\nName • *{e.Server.Name}* (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{await Utils.FormatId(e.Server.Owner.Discriminator)}*" : "*not found*")} (ID {e.Server.Owner.Id})");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} left a server.\nName • {e.Server.Name} (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{e.Server.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server.Owner.Id})");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserBannedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{await Utils.FormatId(e.User.Discriminator)} (ID {e.User.Id}) has been banned from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has been banned from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserUnbannedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{await Utils.FormatId(e.User.Discriminator)} (ID {e.User.Id}) has been unbanned from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has been unbanned from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserJoinedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{await Utils.FormatId(e.User.Discriminator)} (ID {e.User.Id}) joined the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) joined the server.");
 
 			// Give new user a world record role if he has one on speedrun.com
 			if (!(e.User.IsBot))
@@ -90,7 +90,7 @@ namespace NeKzBot.Server
 					}
 					else
 						return;
-					await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{await Utils.FormatId(e.User.Discriminator)} (ID {e.User.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
+					await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
 				}
 			}
 			await Task.Delay(_ratelimit);
@@ -98,7 +98,7 @@ namespace NeKzBot.Server
 
 		public static async Task OnUserLeftAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{await Utils.FormatId(e.User.Discriminator)} (ID {e.User.Id}) left or was kicked from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) left or was kicked from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
@@ -112,12 +112,12 @@ namespace NeKzBot.Server
 				var gameafter = e.After.CurrentGame.Value;
 				if (gameafter.Type == GameType.Twitch)
 				{
-					var channelname = gameafter.Url.Substring(gameafter.Url.LastIndexOf('/') + 1, gameafter.Url.Length - gameafter.Url.LastIndexOf('/') - 1);
+					var channel = gameafter.Url.Substring(gameafter.Url.LastIndexOf('/') + 1, gameafter.Url.Length - gameafter.Url.LastIndexOf('/') - 1);
 					// Add streamer
 					if ((await Data.DataExists("twitch", out var index))
 					&& (Data.Manager[index].ReadingAllowed)
 					&& (Data.Manager[index].WrittingAllowed)
-					&& !(await Utils.SearchArray(Data.Manager[index].Data as string[], channelname)))
+					&& !(await Utils.SearchArray(Data.Manager[index].Data as string[], channel)))
 					{
 						if (!(e.Server.FindRoles(Configuration.Default.StreamingRoleName).Any()))
 							await e.Server.CreateRole(Configuration.Default.StreamingRoleName, color: Data.TwitchColor);
@@ -128,8 +128,8 @@ namespace NeKzBot.Server
 							return;
 						await e.After.AddRoles(role);
 						// Not adding this to the streaming list, somebody could have abused this by changing his game url multiple times
-						//var result = await Utils.AddDataAsync(index, channelname);
-						await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.After.Name}#{await Utils.FormatId(e.After.Discriminator)} (ID {e.After.Id}) has  earned the _{Configuration.Default.StreamingRoleName}_ role.");
+						//var result = await Utils.AddDataAsync(index, channel);
+						await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.After.Name}#{e.After.Discriminator.ToString("D4")} (ID {e.After.Id}) has  earned the _{Configuration.Default.StreamingRoleName}_ role.");
 					}
 				}
 			}

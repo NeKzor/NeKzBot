@@ -1,7 +1,7 @@
 ﻿# Audio
 The audio module doesn't work without these libraries:
 
-| Name | Descripton |
+| Name | Description |
 | --- | --- |
 | FFmpeg | Get the static binary for Windows or install it on Linux from the [official website](https://ffmpeg.org/download.html).
 | Opus Audio Codec | Precompiled binaries can be downloaded from [foxbot's website](https://discord.foxbot.me/binaries/opus).

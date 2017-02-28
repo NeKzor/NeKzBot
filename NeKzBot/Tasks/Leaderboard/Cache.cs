@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Discord;
 using HtmlAgilityPack;
-using NeKzBot.Server;
-using NeKzBot.Resources;
 using NeKzBot.Internals;
+using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Leaderboard
 {
@@ -16,7 +16,7 @@ namespace NeKzBot.Tasks.Leaderboard
 		internal static class Cache
 		{
 			public static bool IsRunning { get; private set; } = false;
-			public static InternalWatch Watch { get; private set; } = new InternalWatch();
+			public static InternalWatch Watch { get; } = new InternalWatch();
 			private static Stopwatch _cacheWatch;
 			private static string _cacheKey;
 
@@ -80,7 +80,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						// Use cache reset to set new game and status
 						await Task.Factory.StartNew(async() => Bot.Client.SetGame(await Utils.RNGAsync(Data.RandomGames) as string));
-						await Task.Factory.StartNew(async() => Bot.Client.SetStatus(await Utils.RNGAsync(Data.botStatus) as UserStatus));
+						await Task.Factory.StartNew(async() => Bot.Client.SetStatus(await Utils.RNGAsync(Data.BotStatus) as UserStatus));
 					}
 				}
 				catch
@@ -105,11 +105,11 @@ namespace NeKzBot.Tasks.Leaderboard
 			public static async Task<string> SetCleanCacheTimeAsync(string t)
 			{
 				if (!(await Utils.ValidateString(t, "^[1-9]", 4)))
-					return "Invalid paramter.";
+					return "Invalid parameter.";
 				var time = Convert.ToInt16(t);
 				if ((time < 1)
 				|| (time > 1440))
-					return "Invalid paramter. Time is in minutes.";
+					return "Invalid parameter. Time is in minutes.";
 				Configuration.Default.CachingTime = (uint)time;
 				Configuration.Default.Save();
 				return $"New clean cache time is set to **{t}min**.";

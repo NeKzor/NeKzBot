@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.Commands;
-using NeKzBot.Resources;
 
 namespace NeKzBot.Server
 {
@@ -53,14 +52,14 @@ namespace NeKzBot.Server
 					await e.Channel.SendMessage("**Error.**");
 					await Logger.SendToChannelAsync("Commands.ErrorHandler Unhandled Exception", e.Exception);
 					break;
-				case CommandErrorType.UnknownCommand:
-					//e.Channel.SendMessage("Unknown command.");
-					break;
-				case CommandErrorType.BadPermissions:
-					await e.Channel.SendMessage("You don't have the permission to do that.");
-					break;
+				//case CommandErrorType.UnknownCommand:
+				//	await e.Channel.SendMessage("Unknown command.");
+				//	break;
+				//case CommandErrorType.BadPermissions:
+				//	await e.Channel.SendMessage("You don't have the permission to do that.");
+				//	break;
 				case CommandErrorType.BadArgCount:
-					await e.Channel.SendMessage(await Utils.FindDescriptionAsync(e.Message.RawText.Substring(PrefixHandler(e.Message)).Split(' ')[0]));
+					await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}help <command>`.");
 					break;
 				case CommandErrorType.InvalidInput:
 					await e.Channel.SendMessage("**Invalid input.**");

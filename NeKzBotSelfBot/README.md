@@ -7,7 +7,7 @@
 * File caching system
 * Cache reset timer
 * Data fetching system
-* Custom typereader for parsing the [Uri class](https://msdn.microsoft.com/en-us/library/system.uri(v=vs.110).aspx)
+* Custom TypeReader for parsing the [Uri class](https://msdn.microsoft.com/en-us/library/system.uri(v=vs.110).aspx)
 
 ## Documentation
 * [Modules](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Docs/Modules.md)

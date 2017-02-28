@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using HtmlAgilityPack;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks
 {

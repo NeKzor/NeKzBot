@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using NeKzBot.Server;
+using System.Threading.Tasks;
 using NeKzBot.Classes;
-using NeKzBot.Webhooks;
-using NeKzBot.Resources;
-using NeKzBot.Internals;
 using NeKzBot.Classes.Discord;
+using NeKzBot.Internals;
+using NeKzBot.Resources;
+using NeKzBot.Server;
+using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks
 {

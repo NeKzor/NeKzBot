@@ -28,6 +28,6 @@
 ## Others
 | Name | Description |
 | --- | --- |
-| /Data/Cache | Create this folder to use the Dropbox upload module, it is used to download your attachement. |
+| /Data/Cache | Create this folder to use the Dropbox upload module, it is used to download your attachment. |
 | /Data/Private | Only used once for parsing Portal 2 data. |
 | ... /AssemblyInfo.cs | Don't forget to change this too. |

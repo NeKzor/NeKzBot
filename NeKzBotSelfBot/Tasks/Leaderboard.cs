@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using NeKzBot.Server;
 using NeKzBot.Classes;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks
 {
@@ -119,7 +119,7 @@ namespace NeKzBot.Tasks
 							Date = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='date']")?[i].Attributes["date"]?.Value?.ToString() ?? string.Empty
 						};
 
-						// Don't check date because this can sometimes be unkown
+						// Don't check date because this can sometimes be unknown
 						if (new List<string>() { entry.Ranking, entry.Time, entry.Player }.Contains(string.Empty))
 							return await Logger.SendAsync("Leaderboard.GetMapEntriesAsync Node Empty", LogColor.Error) as Portal2Leaderboard;
 						entries.Add(entry);

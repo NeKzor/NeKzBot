@@ -32,22 +32,24 @@ namespace NeKzBot.Classes
 		public string ContentLink { get; set; }
 		public SpeedrunNotificationType Type { get; set; }
 		public SpeedrunGame Game { get; private set; }
-
-		public string Cache
-		{
-			get => CreationDate + ContentLink + ContentText;
-		}
+		public string Cache { get; private set; }
 
 		public string Author
 		{
-			get => Type != SpeedrunNotificationType.Resource
-						? ContentText.Split(' ')[0]
-						: string.Empty;
+			get => (Type != SpeedrunNotificationType.Resource)
+						 ? ContentText.Split(' ')[0]
+						 : string.Empty;
 		}
 
 		public Task BuildGame()
 		{
 			Game = new SpeedrunGame(ParsedGame);
+			return Task.FromResult(0);
+		}
+
+		public Task BuildCache()
+		{
+			Cache = CreationDate + ContentLink + ContentText;
 			return Task.FromResult(0);
 		}
 

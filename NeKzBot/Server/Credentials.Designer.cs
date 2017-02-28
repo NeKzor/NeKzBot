@@ -25,7 +25,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string DiscordBotToken {
             get {
                 return ((string)(this["DiscordBotToken"]));
@@ -43,7 +43,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string DropboxToken {
             get {
                 return ((string)(this["DropboxToken"]));
@@ -52,7 +52,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE LINK HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string DropboxFolderQuery {
             get {
                 return ((string)(this["DropboxFolderQuery"]));
@@ -61,7 +61,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE ID HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string TwitchClientId {
             get {
                 return ((string)(this["TwitchClientId"]));
@@ -70,7 +70,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE ID HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string DiscordMainServerLinkId {
             get {
                 return ((string)(this["DiscordMainServerLinkId"]));
@@ -79,7 +79,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string SpeedruncomToken {
             get {
                 return ((string)(this["SpeedruncomToken"]));
@@ -88,7 +88,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE SOMETHING HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string GiveawayPrizeKey {
             get {
                 return ((string)(this["GiveawayPrizeKey"]));
@@ -106,7 +106,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE KEY HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string TwitterConsumerKey {
             get {
                 return ((string)(this["TwitterConsumerKey"]));
@@ -115,7 +115,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE SECRET HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string TwitterConsumerSecret {
             get {
                 return ((string)(this["TwitterConsumerSecret"]));
@@ -124,7 +124,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE TOKEN HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string TwitterAppToken {
             get {
                 return ((string)(this["TwitterAppToken"]));
@@ -133,7 +133,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PLACE SECRET HERE")]
+        [global::System.Configuration.DefaultSettingValueAttribute("PLACE YOUR SHT HERE")]
         public string TwitterAppTokenSecret {
             get {
                 return ((string)(this["TwitterAppTokenSecret"]));

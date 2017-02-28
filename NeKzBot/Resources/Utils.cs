@@ -1,24 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Reflection;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Server;
+using Discord.Commands;
 using NeKzBot.Classes;
 using NeKzBot.Classes.Discord;
+using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Resources
 {
 	public static class Utils
 	{
-		public static int CCIndex { get; private set; }
-		public static string CCGroup { get; private set; } = string.Empty;
+		public static int CBuilderIndex { get; private set; }
+		public static string CBuilderGroup { get; private set; } = string.Empty;
 		private static int _temp = -1;
 		private static readonly Random _rand = new Random(DateTime.Now.Millisecond);
 
@@ -81,36 +82,36 @@ namespace NeKzBot.Resources
 
 		#region Create Commands
 		// Create multiple commands from array
-		public static Task CommandCreator(Action act, int dim, string[,] str, bool hasaliases = false, string[] aliases = null)
+		public static Task CommandBuilder(Action act, int dim, string[,] str, bool hasaliases = false, string[] aliases = null)
 		{
 			if (hasaliases)
 			{
 				foreach (var item in aliases)   // Command has multiple aliases
 				{
-					CCGroup = item;
-					for (CCIndex = 0; CCIndex < str.GetLength(dim); CCIndex++)
+					CBuilderGroup = item;
+					for (CBuilderIndex = 0; CBuilderIndex < str.GetLength(dim); CBuilderIndex++)
 						act?.Invoke();
 				}
 			}
 			else
-				for (CCIndex = 0; CCIndex < str.GetLength(dim); CCIndex++)
+				for (CBuilderIndex = 0; CBuilderIndex < str.GetLength(dim); CBuilderIndex++)
 					act?.Invoke();
 			return Task.FromResult(0);
 		}
 
-		public static Task CommandCreator(Action act, int from, int to, bool hasaliases = false, string[] aliases = null)
+		public static Task CommandBuilder(Action act, int from, int to, bool hasaliases = false, string[] aliases = null)
 		{
 			if (hasaliases)
 			{
 				foreach (var item in aliases)
 				{
-					CCGroup = item;
-					for (CCIndex = from; CCIndex < to; CCIndex++)
+					CBuilderGroup = item;
+					for (CBuilderIndex = from; CBuilderIndex < to; CBuilderIndex++)
 						act?.Invoke();
 				}
 			}
 			else
-				for (CCIndex = from; CCIndex < to; CCIndex++)
+				for (CBuilderIndex = from; CBuilderIndex < to; CBuilderIndex++)
 					act?.Invoke();
 			return Task.FromResult(0);
 		}
@@ -198,8 +199,7 @@ namespace NeKzBot.Resources
 			var obj = Data.Manager[index].Data;
 			if (obj == null)
 				return DataError.DataMissing;
-			if ((obj.GetType() == typeof(string[,]))
-			|| (obj.GetType() == typeof(List<WebhookData>)))
+			if (obj.GetType() == typeof(string[,]))
 			{
 				if (await SearchArray(obj as string[,], 0, values[0], out _))
 					return DataError.NameAlreadyExists;
@@ -214,6 +214,16 @@ namespace NeKzBot.Resources
 				if (await SearchArray(obj as string[], values[0], out _))
 					return DataError.NameAlreadyExists;
 				data = (await ReadFromFileAsync(file) as string[]).ToList();
+			}
+			else if (obj.GetType() == typeof(List<WebhookData>))
+			{
+				if (await SearchInListClassPropertiesByName(obj as List<WebhookData>, "Id", values[0]) != -1)
+					return DataError.NameAlreadyExists;
+				var temp = await ReadFromFileAsync(file) as string[,];
+				if (temp.GetLength(1) != values.Count)
+					return DataError.InvalidDimensions;
+				data = temp.Cast<string>()
+						   .ToList();
 			}
 			else
 				return DataError.Unkown;
@@ -323,6 +333,8 @@ namespace NeKzBot.Resources
 			{
 				return DataError.InvalidStream;
 			}
+			if (!(await Data.ReloadAsync(index)))
+				return DataError.Reload;
 			return string.Empty;
 		}
 		#endregion
@@ -386,51 +398,75 @@ namespace NeKzBot.Resources
 		}
 
 		// Find command and return its description
-		public static async Task<string> FindDescriptionAsync(string msg, bool exact = false)
+		public static async Task<string> FindDescriptionAsync(string name)
 		{
-			var commands = Commands.CService.AllCommands;
-			var list = new List<string>();
-			var count = 0;
-			foreach (var command in commands)
+			if (string.IsNullOrEmpty(name))
+				return await GetDescriptionAsync(null);
+			foreach (var command in Commands.CService.AllCommands)
 			{
-				if (!(command.IsHidden))
-					count++;
-				var text = command.Text;
-				if (text.Split(' ').Length == 1)
-				{
-					if (command.Parameters.Any())
-					{
-						var temp = string.Empty;
-						foreach (var parameter in command.Parameters)
-							temp += $" <{parameter.Name}>";
-						list.Add(text + temp);
-					}
-					else
-						list.Add(text);
-				}
+				if ((name == command.Text)
+				|| (command.Aliases.Contains(name)))
+					return await GetDescriptionAsync(command);
 			}
+			return "This command does not exist.";
+		}
 
-			var output = (exact)
-							? string.Empty
-							: $"There are {count} ({commands.Count()}) commands you can use:\n\n{await ListToList(list, "`")}\n\nTry `{Configuration.Default.PrefixCmd}help <command>` for more information.";
-			foreach (var command in commands)
+		public static async Task<string> GetDescriptionAsync(Command cmd)
+		{
+			if (cmd != null)
 			{
-				if ((command.Text == msg)
-				|| (await SearchArray(command.Aliases?.ToArray(), msg)))
+				var output = $"`{cmd.Text}";
+
+				if (cmd.Parameters.Any())
 				{
-					output = command.Description;
-					if (command.Aliases.Any())
+					foreach (var parameter in cmd.Parameters)
 					{
-						output += "\nKnown aliases: ";
-						foreach (var alias in command.Aliases)
-							output += $"`{alias}`, ";
-						output = output.Substring(0, output.Length - 2);
+						if (parameter.Type == ParameterType.Multiple)
+							output += $" <{parameter.Name}> <etc.>";
+						if (parameter.Type == ParameterType.Optional)
+							output += $" ({parameter.Name})";
+						if (parameter.Type == ParameterType.Required)
+							output += $" <{parameter.Name}>";
+						if (parameter.Type == ParameterType.Unparsed)
+							output += $" <{parameter.Name} ... >";
 					}
-					break;
 				}
+				output += string.IsNullOrEmpty(cmd.Description)
+							   ? "`\n• No description."
+							   : $"`\n{cmd.Description}";
+
+				var aliases = "\n\n• Known aliases:";
+				if (cmd.Aliases.Any())
+					foreach (var alias in cmd.Aliases)
+						aliases += $" `{alias}`, ";
+				return await CutMessage((aliases != "\n\n• Known aliases:")
+												 ? output += aliases.Substring(0, aliases.Length - 2)
+												 : output);
 			}
-			// Cut the message, just to make sure
-			return await CutMessage(output);
+			else
+			{
+				var list = new List<string>();
+				var count = 0;
+				foreach (var command in Commands.CService.AllCommands)
+				{
+					if (!(command.IsHidden))
+						count++;
+					var name = command.Text;
+					if (name.Split(' ').Length == 1)
+					{
+						if (command.Parameters.Any())
+						{
+							var temp = string.Empty;
+							foreach (var parameter in command.Parameters)
+								temp += $" <{parameter.Name}>";
+							list.Add(name + temp);
+						}
+						else
+							list.Add(name);
+					}
+				}
+				return await CutMessage($"There are {count} ({Commands.CService.AllCommands.Count()}) commands in total:\n\n{await ListToList(list, "`")}\n\nTry `{Configuration.Default.PrefixCmd}help <command>` for more information.");
+			}
 		}
 		#endregion
 
@@ -529,9 +565,10 @@ namespace NeKzBot.Resources
 		public static Task<TimeSpan> GetUptime()
 			=> Task.FromResult(DateTime.Now - Process.GetCurrentProcess().StartTime);
 
-		// 1.0 has this as property :/
-		public static Task<string> FormatId(ulong id)
-			=> Task.FromResult(id.ToString("D4"));
+		public static Task<bool> IsLinux()
+			=> Task.FromResult(((int)Environment.OSVersion.Platform == 4)
+							|| ((int)Environment.OSVersion.Platform == 6)
+							|| ((int)Environment.OSVersion.Platform == 128));
 		#endregion
 	}
 }

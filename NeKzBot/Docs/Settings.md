@@ -24,6 +24,7 @@
 | StreamingRoleName | Application | Role name to give when a user stream on Twitch. |
 | WorldRecordRoleName | Application | Role name to give when a user has a world record. |
 | TwitterDescription | Application | Static Twitter description for the online-offline event updater. |
+| BotPermissions | Application | Integer of the permissions invite link value. Here's a nice [calculator](https://discordapi.com/permissions.html) for that. |
 
 ## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Credentials.settings)
 | Name | Description |

@@ -1,11 +1,11 @@
-﻿using System.IO;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
 //using NAudio.Wave;
-using NeKzBot.Server;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks
 {
@@ -35,7 +35,7 @@ namespace NeKzBot.Tasks
 			}
 		}
 
-		public static async Task PlayWithFFmpegAsync(ulong id, Channel channel, string file)
+		public static async Task PlayWithFFmpegAsync(ulong id, Channel cha, string file)
 		{
 			await Logger.SendAsync("Playing Audio With FFmpeg", LogColor.Audio);
 			if (IsPlaying)
@@ -44,13 +44,16 @@ namespace NeKzBot.Tasks
 
 			var aClient = default(IAudioClient);
 			var process = default(Process);
+			var path = (await Utils.IsLinux())
+								   ? Path.Combine(await Utils.GetPath(), Configuration.Default.AudioPath, file)
+								   : Path.Combine(Configuration.Default.AudioPath, file);
 			try
 			{
 				aClient = Bot.Client.GetServer(id).GetAudioClient();
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
-					Arguments = $"-i {Path.Combine(await Utils.GetPath(), Configuration.Default.AudioPath, file)} -f s16le -ar 48000 -ac 2 pipe:1",
+					Arguments = $"-i {path} -f s16le -ar 48000 -ac 2 pipe:1",
 					UseShellExecute = false,
 					RedirectStandardOutput = true
 				});
@@ -88,7 +91,7 @@ namespace NeKzBot.Tasks
 		}
 
 		#region UNUSED CODE
-		//public static async Task PlayWithNAudioAsync(ulong id, Channel channel, string file)
+		//public static async Task PlayWithNAudioAsync(ulong id, Channel cha, string file)
 		//{
 		//	await Logger.SendAsync("Playing Audio With NAudio", LogColor.Audio);
 		//	if (IsPlaying)

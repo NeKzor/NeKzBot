@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Discord;
 using TweetSharp;
-using NeKzBot.Server;
 using NeKzBot.Classes;
+using NeKzBot.Server;
 
 namespace NeKzBot.Resources
 {

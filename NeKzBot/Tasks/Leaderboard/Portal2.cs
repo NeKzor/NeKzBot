@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Leaderboard
 {
@@ -125,14 +125,14 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						entries.Add(new Portal2EntryUpdate()
 						{
-							ChannelMessage =  $"{title + map}*]**\n"
-											+ $"Time • **{time}**\n"
-											+ $"Player • **{player}**\n"
-											+ ranking
-											+ $"Date • **{date} (UTC)**"
-											+ $"{(demo == string.Empty ? demo : $"\nDemo • {demo}")}"
-											+ $"{(youtube == string.Empty ? youtube : $"\nVideo • {youtube}")}"
-											+ $"{(comment == string.Empty ? comment : $"\nComment • ***{comment}***")}",
+							ChannelMessage = $"{title + map}*]**\n"
+										   + $"Time • **{time}**\n"
+										   + $"Player • **{player}**\n"
+										   + ranking
+										   + $"Date • **{date} (UTC)**"
+										   + $"{(demo == string.Empty ? demo : $"\nDemo • {demo}")}"
+										   + $"{(youtube == string.Empty ? youtube : $"\nVideo • {youtube}")}"
+										   + $"{(comment == string.Empty ? comment : $"\nComment • ***{comment}***")}",
 							// Tweet
 							TweetMessage = await FormatMainTweetAsync($"New World Record in {map}\n{time} by {player}\n{date} (UTC)", demo, youtube),
 							// This will also detect player name changes (pls don't) and ties
@@ -274,14 +274,14 @@ namespace NeKzBot.Tasks.Leaderboard
 						? $"\nComment • ***{doc.DocumentNode.SelectNodes("//div[@class='cell comment']//i")[idx].Attributes["data-content"].Value}***"
 						: string.Empty;
 
-					return	  $"{await GetTitle(ranking) + map}*]**\n"
-							+ $"Player • **{player}**\n"
-							+ $"Time • **{time}**\n"
-							+ $"{await RankFromat(ranking)}"
-							+ $"Date • **{date}**\n"
-							+ demo
-							+ youtube
-							+ comment;
+					return $"{await GetTitle(ranking) + map}*]**\n"
+						 + $"Player • **{player}**\n"
+						 + $"Time • **{time}**\n"
+						 + $"{await RankFromat(ranking)}"
+						 + $"Date • **{date}**\n"
+						 + demo
+						 + youtube
+						 + comment;
 				}
 				catch
 				{

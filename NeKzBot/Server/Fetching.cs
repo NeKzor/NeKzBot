@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using System.Net.Http;
-using System.Collections.Generic;
 using NeKzBot.Classes;
 
 // TODO: replace webclient with httpclient
@@ -20,24 +20,24 @@ namespace NeKzBot.Server
 		public static async Task GetFileAsync(string uri, string path)
 			=> await (await CreateWebClient()).DownloadFileTaskAsync(new Uri(uri), path);
 
-		/// <summary>Downloads the wepbage as file and caches it as file.</summary>
+		/// <summary>Downloads the webpage as file and caches it as file.</summary>
 		/// <param name="uri">Web address to download from.</param>
 		/// <param name="key">Name of requester..</param>
 		public static async Task GetFileAndCacheAsync(string uri, string key)
 			=> await (await CreateWebClient()).DownloadFileTaskAsync(new Uri(uri), await Caching.CFile.GetPathAndSaveAsync(key));
 
-		/// <summary>Downloads the wepbage as string.</summary>
+		/// <summary>Downloads the webpage as string.</summary>
 		/// <param name="uri">Web address to download from.</param>
 		public static async Task<string> GetStringAsync(string uri)
 			=> await (await CreateWebClient()).DownloadStringTaskAsync(new Uri(uri));
 
-		/// <summary>Downloads the wepbage as string.</summary>
+		/// <summary>Downloads the webpage as string.</summary>
 		/// <param name="uri">Web address to download from.</param>
 		/// /// <param name="wc">Http header for the web client.</param>
 		public static async Task<string> GetStringAsync(string uri, WebHeaderCollection wc)
 			=> await (await CreateWebClient(wc)).DownloadStringTaskAsync(new Uri(uri));
 
-		/// <summary>Downloads the wepbage as HtmlDocument (HtmlAgilityPack).</summary>
+		/// <summary>Downloads the webpage as HtmlDocument (HtmlAgilityPack).</summary>
 		/// <param name="uri">Web address to download from.</param>
 		public static async Task<HtmlDocument> GetDocumentAsync(string uri)
 		{

@@ -60,3 +60,5 @@
 /NeKzBot/obj/Release/CoreCompileInputs.cache
 /NeKzBotSelfBot/Modules/Voice.cs
 /NeKzBotSelfBot/Modules/Unused.cs
+*.cache
+/NeKzBot/obj/Debug/NeKzBot.csprojResolveAssemblyReference.cache

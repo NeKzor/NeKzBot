@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using TweetSharp;
-using NeKzBot.Server;
 using NeKzBot.Classes;
-using NeKzBot.Resources;
-using NeKzBot.Internals;
 using NeKzBot.Classes.Discord;
+using NeKzBot.Internals;
+using NeKzBot.Resources;
+using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks.Leaderboard
@@ -30,7 +30,10 @@ namespace NeKzBot.Tasks.Leaderboard
 			public static async Task InitAsync()
 			{
 				await Logger.SendAsync("Initializing Portal2 AutoUpdater", LogColor.Init);
-				LeaderboardTwitterAccount = await Twitter.Account.CreateServiceAsync(Credentials.Default.TwitterConsumerKey, Credentials.Default.TwitterConsumerSecret, Credentials.Default.TwitterAppToken, Credentials.Default.TwitterAppTokenSecret);
+				LeaderboardTwitterAccount = await Twitter.Account.CreateServiceAsync(Credentials.Default.TwitterConsumerKey,
+																					 Credentials.Default.TwitterConsumerSecret,
+																					 Credentials.Default.TwitterAppToken,
+																					 Credentials.Default.TwitterAppTokenSecret);
 				_refreshWatch = new Stopwatch();
 				_cancelUpdateSource = new CancellationTokenSource();
 				_cancelToken = _cancelUpdateSource.Token;
@@ -172,7 +175,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			// Start auto updater again if it's dead, cancel it when it's alive
 			public static async Task<string> ToggleUpdateAsync()
 			{
-				await Logger.SendAsync("Portal2 Autoupdater Requested Change", LogColor.Leaderboard);
+				await Logger.SendAsync("Portal2 AutoUpdater Requested Change", LogColor.Leaderboard);
 				if ((_cancelUpdateSource.IsCancellationRequested)
 				|| (StartAsync().IsCompleted))
 				{
@@ -186,7 +189,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			// Cancel current wait and check for new entry now
 			public static async Task<string> RefreshNowAsync()
 			{
-				await Logger.SendAsync("Portal2 Autoupdater Requested Refresh", LogColor.Leaderboard);
+				await Logger.SendAsync("Portal2 AutoUpdater Requested Refresh", LogColor.Leaderboard);
 				if (!(_cancelUpdateSource.IsCancellationRequested)
 				&& !(StartAsync().IsCompleted))
 				{
@@ -208,7 +211,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			#endregion
 
 			#region SETTINGS
-			// Show when the the next entry check is
+			// Show when the next entry check is
 			public static Task<string> GetRefreshTime()
 			{
 				var min = Convert.ToInt16(Configuration.Default.RefreshTime) - _refreshWatch.Elapsed.Minutes;
@@ -224,7 +227,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			public static async Task<string> SetResfreshTimeAsync(string t)
 			{
 				if (!(await Utils.ValidateString(t, "^[1-9]", 4)))
-					return "Invalid paramter. Use numbers from 1-9 only.";
+					return "Invalid parameter. Use numbers from 1-9 only.";
 				var time = Convert.ToInt16(t);
 				if (time > 1440)
 					return "Invalid value. Time is in minutes.";
@@ -259,7 +262,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					Configuration.Default.Save();
 					return Task.FromResult("Channel won't update anymore.");
 				}
-				return Task.FromResult("Invalid state. Try one of these `toggle`, `true`, `false`");
+				return Task.FromResult("Invalid state. Try one of these `toggle`, `true`, `false`.");
 			}
 
 			// Set board parameter after /changelog (example: ?wr=1)

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dropbox.Api;
 using Dropbox.Api.Files;
-using NeKzBot.Server;
-using NeKzBot.Resources;
 using Dropbox.Api.Sharing;
+using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Classes
 {
@@ -17,7 +17,7 @@ namespace NeKzBot.Classes
 
 		public static async Task InitAsync()
 		{
-			await Logger.SendAsync("Initialazing Dropbox Client", LogColor.Init);
+			await Logger.SendAsync("Initializing Dropbox Client", LogColor.Init);
 			_clientConfig = new DropboxClientConfig($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", 3);
 			_client = new DropboxClient(Credentials.Default.DropboxToken, _clientConfig);
 		}

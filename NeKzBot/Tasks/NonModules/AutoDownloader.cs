@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Server;
 using NeKzBot.Classes;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.NonModules
 {

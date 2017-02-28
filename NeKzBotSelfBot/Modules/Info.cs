@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Modules
 {
@@ -397,7 +397,7 @@ namespace NeKzBot.Modules
 			.AddField(field =>
 			{
 				field.IsInline = true;
-				field.Name = "Postion";
+				field.Name = "Position";
 				field.Value = channel.Position.ToString();
 			})
 			.AddField(field =>
@@ -493,9 +493,9 @@ namespace NeKzBot.Modules
 			{
 				field.IsInline = true;
 				field.Name = "Is Bot?";
-				field.Value = user.IsBot
-									? "Yes"
-									: "No";
+				field.Value = (user.IsBot)
+								   ? "Yes"
+								   : "No";
 			});
 
 			if (user.Guild.Id == Context.Guild?.Id)

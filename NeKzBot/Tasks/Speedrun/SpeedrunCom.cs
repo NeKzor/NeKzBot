@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Net;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using SpeedrunComSharp;
-using NeKzBot.Server;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Speedrun
 {
@@ -78,7 +79,7 @@ namespace NeKzBot.Tasks.Speedrun
 				var sdate = (wr.DateSubmitted == null)
 											  ? string.Empty
 											  : $"Submitted on {wr.DateSubmitted.Value.Date.ToString("dd.MM.yyyy")}\n";
-				// Verfied status
+				// Verified status
 				var status = string.Empty;
 				if ((wr.Status.Type == RunStatusType.Verified)
 				&& (game.Ruleset.RequiresVerification))
@@ -88,7 +89,7 @@ namespace NeKzBot.Tasks.Speedrun
 													  : " " + wr.Status.VerifyDate.Value.Date.ToString("dd.MM.yyyy");
 					var examiner = (wr.Status.ExaminerUserID == null)
 															 ? string.Empty
-															 : $"Verfied by {wr.Status.Examiner.Name}";
+															 : $"Verified by {wr.Status.Examiner.Name}";
 					status = examiner + vdate;
 				}
 				var comment = (string.IsNullOrEmpty(wr.Comment))
@@ -274,17 +275,17 @@ namespace NeKzBot.Tasks.Speedrun
 				var showms = game.Ruleset.ShowMilliseconds;
 
 				return Task.FromResult($"**[Game Info - *{name}*]**\n"
-									+ $"**Id** • {id}\n"
-									+ $"**Abbreviation** • {abbr}\n"
-									+ cdate
-									+ $"**Release Date** • {rdate}\n"
-									+ $"**Moderator Count** • {mods}\n"
-									+ $"**Is Romhack?** • {isrom}\n"
-									+ $"**Default Timing Method** • {deftiming}\n"
-									+ $"**Emulators Allowed?** • {emus}\n"
-									+ $"**Requires Verification?** • {verification}\n"
-									+ $"**Requires Video?** • {vproof}\n"
-									+ $"**Show Milliseconds?** • {showms}");
+									 + $"**Id** • {id}\n"
+									 + $"**Abbreviation** • {abbr}\n"
+									 + cdate
+									 + $"**Release Date** • {rdate}\n"
+									 + $"**Moderator Count** • {mods}\n"
+									 + $"**Is Rom Hack?** • {isrom}\n"
+									 + $"**Default Timing Method** • {deftiming}\n"
+									 + $"**Emulators Allowed?** • {emus}\n"
+									 + $"**Requires Verification?** • {verification}\n"
+									 + $"**Requires Video?** • {vproof}\n"
+									 + $"**Show Milliseconds?** • {showms}");
 			}
 			catch
 			{
@@ -401,7 +402,7 @@ namespace NeKzBot.Tasks.Speedrun
 				else if (string.Equals(scount, "x", StringComparison.CurrentCultureIgnoreCase))
 					scount = _maxnfcount.ToString();
 				else if (!(new Regex("^[1-9]").IsMatch(scount)))
-					return "Invalid notifcation count. Use numbers 1-9 only.";
+					return "Invalid notification count. Use numbers 1-9 only.";
 				nftype = nftype ?? "any";
 
 				// Web request
@@ -410,7 +411,7 @@ namespace NeKzBot.Tasks.Speedrun
 					return null;
 
 				// Read
-				dynamic api = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+				dynamic api = JsonConvert.DeserializeObject(json);
 				if (string.IsNullOrEmpty(api?.ToString()))
 					return null;
 
@@ -419,13 +420,13 @@ namespace NeKzBot.Tasks.Speedrun
 				var count = Convert.ToInt16(scount);
 				for (int i = 0; i < count; i++)
 				{
-					var item = api.data[i];
-					//var id = item.id.ToString();
-					var created = item.created.ToString();
-					var status = item.status.ToString();
-					var text = item.text.ToString();
-					var type = item.item.rel.ToString();
-					//var url = item.item.uri.ToString();
+					var data = api.data[i];
+					var id = data?.id?.ToString();
+					var created = data?.created?.ToString() ?? string.Empty;
+					var status = data?.status?.ToString() ?? string.Empty;
+					var text = data?.text?.ToString() ?? string.Empty;
+					var type = data?.item?.rel.ToString() ?? string.Empty;
+					var url = data?.item?.uri?.ToString() ?? string.Empty;
 
 					// Filter
 					if ((nftype == "any")
@@ -454,37 +455,39 @@ namespace NeKzBot.Tasks.Speedrun
 					return null;
 
 				// Read json string
-				dynamic api = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+				dynamic api = JsonConvert.DeserializeObject(json);
 				if (string.IsNullOrEmpty(api?.ToString()))
 					return null;
 
 				// Parse data
 				var updates = new List<SpeedrunNotification>();
-				foreach (var item in api.data)
+				foreach (var data in api.data)
 				{
 					if (updates.Count == count)
 						break;
 
 					var notification = new SpeedrunNotification()
 					{
-						CreationDate = item.created.ToString(),
-						ContentText = item.text.ToString(),
-						Type = (SpeedrunNotificationType)item.item.rel,
-						ContentLink = item.item.uri.ToString()
+						CreationDate = data?.created.ToString() ?? string.Empty,
+						ContentText = data?.text.ToString() ?? string.Empty,
+						Type = (SpeedrunNotificationType)data?.item?.rel,
+						ContentLink = data?.item?.uri?.ToString() ?? string.Empty
 					};
-
-					// Eh, blame the guy who designed the website/api :c
-					await notification.BuildGame();
-					var game = _client.Games.SearchGame(notification.Game.Name);
-					if (game != null)
-					{
-						notification.Game.Link = game.WebLink.AbsoluteUri;
-						notification.Game.CoverLink = game.Assets.CoverSmall.Uri.AbsoluteUri;
-					}
 
 					// Filtering
 					if (notification.Type != SpeedrunNotificationType.Post)
+					{
+						// Eh, blame the guy who designed the website/api :c
+						await notification.BuildGame();
+						var game = _client.Games.SearchGame(notification.Game.Name);
+						if (game != null)
+						{
+							notification.Game.Link = game?.WebLink?.AbsoluteUri ?? string.Empty;
+							notification.Game.CoverLink = game?.Assets?.CoverSmall?.Uri?.AbsoluteUri ?? string.Empty;
+						}
+						await notification.BuildCache();
 						updates.Add(notification);
+					}
 				}
 				return updates;
 			}

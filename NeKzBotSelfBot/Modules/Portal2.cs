@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Discord;
 using Discord.Commands;
-using NeKzBot.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
+using NeKzBot.Tasks;
 
 namespace NeKzBot.Modules
 {
@@ -74,7 +74,7 @@ namespace NeKzBot.Modules
 				var duration = await Utils.GetDuration(DateTime.ParseExact(entry.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 				field.Value = (duration != string.Empty)
 										? duration
-										: "Unkown.";
+										: "Unknown.";
 			});
 
 			if ((entry.Demo != string.Empty)
@@ -286,7 +286,7 @@ namespace NeKzBot.Modules
 			}));
 		}
 
-		// This removes redundance
+		// Removing redundancy
 		private async Task GetLatestMapEntry(string url, IUserMessage message)
 		{
 			var entry = await Leaderboard.GetLatestEntryAsync(url);
@@ -335,7 +335,7 @@ namespace NeKzBot.Modules
 				var duration = await Utils.GetDuration(DateTime.ParseExact(entry.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 				field.Value = (duration != string.Empty)
 										? duration
-										: "Unkown.";
+										: "Unknown.";
 			});
 
 			if ((entry.Demo != string.Empty)
