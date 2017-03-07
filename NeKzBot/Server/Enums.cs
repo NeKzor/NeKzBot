@@ -4,7 +4,7 @@ namespace NeKzBot.Server
 {
 	public enum LogColor
 	{
-		Audio = ConsoleColor.DarkGray,
+		Audio = ConsoleColor.DarkGreen,
 		Caching = ConsoleColor.Red,
 		Default = ConsoleColor.White,
 		Dropbox = ConsoleColor.Blue,
@@ -15,6 +15,17 @@ namespace NeKzBot.Server
 		Speedrun = ConsoleColor.DarkRed,
 		Twitch = ConsoleColor.DarkMagenta,
 		Twitter = ConsoleColor.Green,
-		Watch = ConsoleColor.DarkGray
+		Watch = ConsoleColor.Yellow
+	}
+
+	/// <summary>Units of time.</summary>
+	public enum Time
+	{
+		Days,
+		Hours,
+		Minutes,
+		Seconds,
+		Milliseconds,
+		Ticks
 	}
 }

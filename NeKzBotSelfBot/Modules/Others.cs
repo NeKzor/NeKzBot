@@ -39,7 +39,7 @@ namespace NeKzBot.Modules
 				ImageUrl = workshopitem.ItemImage,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by steamcommunity.com",
+					Text = "steamcommunity.com",
 					IconUrl = "https://steamcommunity.com/favicon.ico"
 				}
 			});
@@ -67,7 +67,7 @@ namespace NeKzBot.Modules
 				ImageUrl = stream.PreviewLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by twitch.tv",
+					Text = "twitch.tv",
 					IconUrl = "https://www.twitch.tv/favicon.ico"
 				}
 			});
@@ -95,7 +95,7 @@ namespace NeKzBot.Modules
 				Url = $"https://google.com?q={query}",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by google.com",
+					Text = "google.com",
 					IconUrl = "https://www.google.at/images/branding/product/ico/googleg_lodp.ico"
 				}
 			}

@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Classes;
+using NeKzBot.Extensions;
 using NeKzBot.Modules.Private.MainServer;
+using NeKzBot.Modules.Private.Owner;
 using NeKzBot.Modules.Public;
 using NeKzBot.Modules.Public.Others;
+using NeKzBot.Modules.Public.Vip;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
@@ -19,6 +21,18 @@ namespace NeKzBot
 	{
 		public static DiscordClient Client { get; private set; }
 
+		public static async Task SendAsync(Request req, CustomMessage msg)
+		{
+			try
+			{
+				await Client.ClientAPI.Send(new RequestExtension<string>(req, msg));
+			}
+			catch (Exception e)
+			{
+				await Logger.SendAsync("Bot.SendAsync Error", e);
+			}
+		}
+
 		private static void OnExit(object _, EventArgs __)
 			=> Task.WaitAll(Logger.SendAsync("Bot Shutdown...", LogColor.Default),
 							Twitter.UpdateDescriptionAsync(Portal2.AutoUpdater.LeaderboardTwitterAccount,
@@ -27,10 +41,10 @@ namespace NeKzBot
 		public async Task StartAsync()
 		{
 			// Do things on exit
-			if (Debugger.IsAttached)
-				Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
-			else
+			if (await Utils.IsLinux())
 				AppDomain.CurrentDomain.ProcessExit += OnExit;
+			else
+				Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
 
 			// Start
 			Console.Title = $"{Configuration.Default.AppName} v{Configuration.Default.AppVersion} - Discord Server Bot";
@@ -86,12 +100,10 @@ namespace NeKzBot
 			{
 				await Logger.SendAsync("Loading Modules", LogColor.Default);
 				// Private
-				await Exclusive.LoadAsync();
-				await Giveaway.LoadAsync();
 				await Admin.LoadAsync();
 				await DataBase.LoadAsync();
 				await Debugging.LoadAsync();
-				await Subscription.LoadAsync();
+				await Giveaway.LoadAsync();
 				// Public
 				await Help.LoadAsync();
 				await Info.LoadAsync();
@@ -103,6 +115,7 @@ namespace NeKzBot
 				await RaspberryPi.LoadAsync();
 				await Resource.LoadAsync();
 				await Rest.LoadAsync();
+				await Subscription.LoadAsync();
 			}
 			catch (Exception e)
 			{
@@ -119,7 +132,7 @@ namespace NeKzBot
 					await Logger.SendAsync("Connecting", LogColor.Default);
 					await Client.Connect(Credentials.Default.DiscordBotToken, TokenType.Bot);
 					await Logger.SendAsync("Connected", LogColor.Default);
-					Client.SetGame(await Utils.RNGAsync(Data.RandomGames) as string);
+					Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string);
 					await LoadTasksAndWaitAsync();
 				});
 			}
@@ -132,17 +145,11 @@ namespace NeKzBot
 		private static async Task LoadTasksAndWaitAsync()
 		{
 			await Logger.SendAsync("Loading Tasks", LogColor.Default);
-			Task.WaitAll(
-				// Leaderboard
-				Portal2.Cache.ResetCacheAsync(),
-				Portal2.AutoUpdater.StartAsync(),
-				// Game
-				Giveaway.ResetAsync(),
-				// SpeedrunCom
-				SpeedrunCom.AutoNotification.StartAsync(),
-				// TwitchTv
-				Twitch.StartAsync()
-			);
+			Task.WaitAll(Giveaway.ResetAsync(),
+						 Twitch.StartAsync(),
+						 Portal2.Cache.ResetAsync(),
+						 Portal2.AutoUpdater.StartAsync(),
+						 SpeedrunCom.AutoNotification.StartAsync());
 			await Task.Delay(-1);
 		}
 	}

@@ -6,8 +6,8 @@ namespace NeKzBot.Classes
 	{
 		public string Name { get; set; }
 		public string ChallengeModeName { get; set; }
-		public string BestTimeID { get; set; }
-		public string BestPortalsID { get; set; }
+		public string BestTimeId { get; set; }
+		public string BestPortalsId { get; set; }
 		public string ThreeLetterCode { get; set; }
 		public string ElevatorTiming { get; set; }
 	}
@@ -16,7 +16,7 @@ namespace NeKzBot.Classes
 	{
 		public List<Portal2Entry> Entries { get; set; }
 		public string MapName { get; set; }
-		public string MapID { get; set; }
+		public string MapId { get; set; }
 		public string MapPreview { get; set; }
 	}
 
@@ -53,6 +53,6 @@ namespace NeKzBot.Classes
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
-		public string MapID { get; set; }
+		public string MapId { get; set; }
 	}
 }

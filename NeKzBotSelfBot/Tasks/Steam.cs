@@ -68,7 +68,7 @@ namespace NeKzBot.Tasks
 			}
 			catch (Exception e)
 			{
-				await Logger.SendAsync("Steam.WorkshopAsync Error", e);
+				await Logger.SendAsync("Steam.GetSteamWorkshopAsync Error", e);
 			}
 			return null;
 		}

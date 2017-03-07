@@ -36,7 +36,6 @@ namespace NeKzBot.Resources
 				new InternalData("twitch", true, true, _fileNameTwitchStreamers, TwitchStreamers),
 				new InternalData("scripts", false, false, _fileNameScriptFiles, ScriptFiles),
 				new InternalData("memes", true, true, _fileNameMemeCommands, MemeCommands),
-				new InternalData("twitch", true, true, _fileNameTwitchStreamers, TwitchStreamers),
 				new InternalData("tools", true, true, _fileNameToolCommands, ToolCommands),
 				new InternalData("links", true, true, _fileNameLinkCommands, LinkCommands),
 				new InternalData("runs", true, true, _fileNameProjectNames, ProjectNames),
@@ -45,8 +44,11 @@ namespace NeKzBot.Resources
 				new InternalData("sounds", false, false, _fileNameSoundNames, SoundNames),
 				new InternalData("exploits", true, true, _fileNameP2Exploits, Portal2Exploits),
 				new InternalData("p2hook", true, true, _fileNameP2Subscribers, P2Subscribers),
-				new InternalData("srcomhook", true, true, _fileNameSpeedrunComSubscribers, SpeedrunComSubscribers),
-				new InternalData("twtvhook", true, true, _fileNameTwitchTvSubscribers, TwitchTvSubscribers)
+				new InternalData("srcomsourcehook", true, true, _fileNameSpeedrunComSourceSubscribers, SpeedrunComSourceSubscribers),
+				new InternalData("twtvhook", true, true, _fileNameTwitchTvSubscribers, TwitchTvSubscribers),
+				new InternalData("vip", true, true, _fileNameVipData, VipGuilds),
+				new InternalData("p2cvars", true, true, _fileNamePortal2Cvars, Portal2Cvars),
+				new InternalData("srcomportal2hook", true, true, _fileNameSpeedrunComSourceSubscribers, SpeedrunComPortal2Subscribers)
 			};
 		}
 

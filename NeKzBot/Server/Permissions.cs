@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using System.Linq;
+using Discord;
 using Discord.Commands;
 using NeKzBot.Resources;
 
@@ -11,7 +12,15 @@ namespace NeKzBot.Server
 		{
 			if (usr.Id == Credentials.Default.DiscordBotOwnerId)
 				return true;
-			cha.SendMessage("You are not allowed to execute this command.");
+			cha.SendMessage("Only the bot owner is allowed to execute this command.");
+			return false;
+		}
+
+		public static bool GuildOwnerOnly(Command _, User usr, Channel cha)
+		{
+			if (usr.Id == usr.Server.Owner.Id)
+				return true;
+			cha.SendMessage("Only the server owner is allowed to execute this command.");
 			return false;
 		}
 
@@ -19,7 +28,15 @@ namespace NeKzBot.Server
 		{
 			if (cha.Server.Id == Credentials.Default.DiscordMainServerId)
 				return true;
-			cha.SendMessage("This command only works on the main server.");
+			cha.SendMessage("This command only works on the developer mode.");
+			return false;
+		}
+
+		public static bool VipGuildsOnly(Command _, User __, Channel cha)
+		{
+			if (Data.VipGuilds.Contains(cha.Server.Id.ToString()))
+				return true;
+			cha.SendMessage("This command only works for VIP servers.");
 			return false;
 		}
 

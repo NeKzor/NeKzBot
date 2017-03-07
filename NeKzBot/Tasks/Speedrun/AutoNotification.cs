@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
-using NeKzBot.Classes.Discord;
+using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -18,6 +18,7 @@ namespace NeKzBot.Tasks.Speedrun
 			public static InternalWatch Watch { get; } = new InternalWatch();
 			private static uint _notificationCount;
 			private static string _cacheKey;
+			private static readonly string _webhookavatar = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png";	// Should make a static link instead because this might break once...
 
 			public static async Task InitAsync()
 			{
@@ -65,14 +66,28 @@ namespace NeKzBot.Tasks.Speedrun
 								nfstosend.Reverse();
 								foreach (var notification in nfstosend)
 								{
-									foreach (var item in Data.SpeedrunComSubscribers)
+									foreach (var item in Data.SpeedrunComSourceSubscribers)
 									{
 										await WebhookService.ExecuteWebhookAsync(item, new Webhook
 										{
-											UserName = item.UserName,
-											AvatarUrl = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png",
+											UserName = "SpeedrunCom",
+											AvatarUrl = _webhookavatar,
 											Embeds = new Embed[] { await CreateEmbed(notification) }
 										});
+									}
+									foreach (var item in Data.SpeedrunComPortal2Subscribers)
+									{
+										// I really hope API v2 is better :s
+										if ((notification.Game.Name.Contains("Portal 2"))		// Should include Aperture Tag too
+										|| (notification.Game.Name.Contains("Portal Stories")))	// Rip other game mods
+										{
+											await WebhookService.ExecuteWebhookAsync(item, new Webhook
+											{
+												UserName = "SpeedrunCom",
+												AvatarUrl = _webhookavatar,
+												Embeds = new Embed[] { await CreateEmbed(notification) }
+											});
+										}
 									}
 								}
 								// Save cache
@@ -81,7 +96,8 @@ namespace NeKzBot.Tasks.Speedrun
 								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
 							}
 						}
-						await Task.Delay((1 * 60000) - await Watch.GetElapsedTimeAsync(message: "Speedrun.AutoNotification.StartAsync Delay Took -> "));   // Check in about every minute (max speed request is 100 per min tho)
+						// Check every minute (max speed request is 100 per min tho)
+						await Task.Delay((1 * 60000) - await Watch.GetElapsedTime(debugmsg: "Speedrun.AutoNotification.StartAsync Delay Took -> "));
 						await Watch.RestartAsync();
 					}
 				}
@@ -97,14 +113,14 @@ namespace NeKzBot.Tasks.Speedrun
 			{
 				return Task.FromResult(new Embed
 				{
-					Author = new EmbedAuthor(nf.Author, $"https://www.speedrun.com/{nf.Author}", $"https://www.speedrun.com/themes/user/{nf.Author}/image.png"),
+					Author = new EmbedAuthor(nf.Author.Name, $"https://www.speedrun.com/{nf.Author}", $"https://www.speedrun.com/themes/user/{nf.Author}/image.png"),
 					Title = "Latest Notification",
 					Description = nf.FormattedText,
 					Url = nf.ContentLink,
 					Color = Data.SpeedruncomColor.RawValue,
 					Thumbnail = new EmbedThumbnail(nf.Game.CoverLink),
-					Timestamp = DateTime.UtcNow.ToString("s"),  // Close enough
-					Footer = new EmbedFooter("speedrun.com", "https://www.speedrun.com/themes/default/favicon.png")
+					Timestamp = DateTime.UtcNow.ToString("s"),
+					Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl)
 				});
 			}
 		}

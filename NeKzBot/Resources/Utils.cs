@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using NeKzBot.Classes;
-using NeKzBot.Classes.Discord;
+using NeKzBot.Extensions;
 using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
@@ -40,6 +40,7 @@ namespace NeKzBot.Resources
 			for (index = 0; index < searchin.GetLength(0); index++)
 				if (tosearch.ToLower().Replace(" ", string.Empty) == searchin[index, dimension].ToString().ToLower().Replace(" ", string.Empty))
 					return Task.FromResult(true);
+			index = -1;
 			return Task.FromResult(false);
 		}
 
@@ -55,12 +56,12 @@ namespace NeKzBot.Resources
 
 		#region To List
 		// Turn the array/list dimension into a list
-		public static Task<string> ArrayToList(string[,] s, int d, string formatting = "", string delimiter = ", ")
+		public static Task<string> ArrayToList(string[,] s, int d, string formatting = "", string delimiter = ", ", string list = "", int customsub = 0)
 		{
 			var output = string.Empty;
 			for (int i = 0; i < s.GetLength(0); i++)
-				output += formatting + s[i, d] + formatting + delimiter;
-			return Task.FromResult(output.Substring(0, output.Length - delimiter.Length));
+				output += list + formatting + s[i, d] + formatting + delimiter;
+			return Task.FromResult(output.Substring(0, output.Length - ((customsub == 0) ? delimiter.Length : customsub)));
 		}
 
 		public static Task<string> ArrayToList(string[] s, string formatting = "", string delimiter = ", ", string list = "")
@@ -118,32 +119,32 @@ namespace NeKzBot.Resources
 		#endregion
 
 		#region Random Number Generation
-		public static Task<int> RNG(int from, int to)
+		public static Task<int> Rng(int from, int to)
 		{
 			var numb = default(int);
 			lock (new object())
 			{
 				do
 					numb = _rand.Next(from, to);
-				while ((numb == _temp) || (numb % _luckynumber == 0));
+				while ((numb == _temp) || ((numb != 0) && numb % _luckynumber == 0));
 			}
 			return Task.FromResult(_temp = numb);
 		}
 
-		public static async Task<int> RNGAsync(int to)
-			=> await RNG(0, to);
+		public static async Task<int> RngAsync(int to)
+			=> await Rng(0, to);
 
-		public static async Task<object> RNGAsync(object[] array)
-			=> array[await RNG(0, array.Length)];
+		public static async Task<object> RngAsync(object[] array)
+			=> array[await Rng(0, array.Length)];
 
-		public static async Task<object> RNGAsync(object[,] array, int index = 0)
-			=> array[await RNG(0, array.GetLength(0)), index];
+		public static async Task<object> RngAsync(object[,] array, int index = 0)
+			=> array[await Rng(0, array.GetLength(0)), index];
 
-		public static async Task<string> RNGStringAsync(params string[] s)
-			=> s[await RNG(0, s.Length)];
+		public static async Task<string> RngStringAsync(params string[] s)
+			=> s[await Rng(0, s.Length)];
 
-		public static async Task<string> RNGStringAsync(List<string> s)
-			=> s[await RNG(0, s.Count)];
+		public static async Task<string> RngStringAsync(List<string> s)
+			=> s[await Rng(0, s.Count)];
 		#endregion
 
 		#region DATA I/O
@@ -226,7 +227,7 @@ namespace NeKzBot.Resources
 						   .ToList();
 			}
 			else
-				return DataError.Unkown;
+				return DataError.Unknown;
 
 			// Add new data
 			foreach (var item in values)
@@ -238,7 +239,7 @@ namespace NeKzBot.Resources
 				using (var fs = new FileStream(filepath, FileMode.Create))
 				using (var sw = new StreamWriter(fs))
 				{
-					for (int i = 0; i < data.Count; i+= values.Count)
+					for (int i = 0; i < data.Count; i += values.Count)
 					{
 						for (int j = 0; j < values.Count; j++)
 						{
@@ -306,7 +307,7 @@ namespace NeKzBot.Resources
 					return DataError.NameNotFound;
 			}
 			else
-				return DataError.Unkown;
+				return DataError.Unknown;
 
 			for (int i = 0; i < dimensions; i++)
 				ls.RemoveAt(foundindex * dimensions);
@@ -364,7 +365,7 @@ namespace NeKzBot.Resources
 		#region Discord
 		// Find channel
 		public static Task<Channel> FindTextChannelByName(string channelName, Discord.Server guild = null)
-			=> Task.FromResult((guild == null
+			=> Task.FromResult(((guild == null)
 									  ? Bot.Client?.Servers?.FirstOrDefault(server => server.Id == Credentials.Default.DiscordMainServerId)
 									  : Bot.Client?.Servers?.FirstOrDefault(server => server.Name == guild.Name))?.TextChannels?
 															.FirstOrDefault(channel => channel.Name == channelName));
@@ -503,7 +504,7 @@ namespace NeKzBot.Resources
 			return Task.FromResult(size.ToString());
 		}
 
-		public static async Task<string> RISAsync(string s)
+		public static async Task<string> RisAsync(string s)
 		{
 			var output = string.Empty;
 			var numbers = new string[] { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
@@ -562,6 +563,11 @@ namespace NeKzBot.Resources
 											? text.Substring(0, (int)DiscordConstants.MaximumCharsPerMessage)
 											: text.Substring(0, text.Length - minus));
 
+		public static Task<string> CutMessage(string text, int limit, string append)
+			=> Task.FromResult((text.Length > limit)
+										   ? text.Substring(0, limit) + append
+										   : text.Substring(0, text.Length));
+
 		public static Task<TimeSpan> GetUptime()
 			=> Task.FromResult(DateTime.Now - Process.GetCurrentProcess().StartTime);
 
@@ -569,6 +575,30 @@ namespace NeKzBot.Resources
 			=> Task.FromResult(((int)Environment.OSVersion.Platform == 4)
 							|| ((int)Environment.OSVersion.Platform == 6)
 							|| ((int)Environment.OSVersion.Platform == 128));
+
+		public static Task<string> GetDuration(DateTime time)
+		{
+			var duration = DateTime.UtcNow - time;
+			var output = (duration.Days > 0)
+										? $"{duration.Days} Day{(duration.Days == 1 ? string.Empty : "s")} "
+										: string.Empty;
+			output += (duration.Hours > 0)
+									  ? $"{duration.Hours} Hour{(duration.Hours == 1 ? string.Empty : "s")} "
+									  : string.Empty;
+			output += (duration.Minutes > 0)
+										? $"{duration.Minutes} Minute{(duration.Minutes == 1 ? string.Empty : "s")} "
+										: string.Empty;
+			output += (duration.Seconds > 0)
+										? $"{duration.Seconds} Second{(duration.Seconds == 1 ? string.Empty : "s")}"
+										: string.Empty;
+			output += ((duration.Days > 0)
+			&& (duration.TotalDays > 365))
+								   ? $" (about {Math.Round((decimal)duration.TotalDays / 365, 1)} Year{(Math.Round((decimal)duration.TotalDays / 365, 1) == (decimal)1.0 ? string.Empty : "s")})"
+								   : string.Empty;
+			return Task.FromResult((output != string.Empty)
+										   ? output
+										   : "_Unknown._");
+		}
 		#endregion
 	}
 }

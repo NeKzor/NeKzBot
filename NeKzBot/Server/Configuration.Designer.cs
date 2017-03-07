@@ -34,7 +34,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.4.1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.5.0")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -79,18 +79,6 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("20")]
-        public uint RefreshTime {
-            get {
-                return ((uint)(this["RefreshTime"]));
-            }
-            set {
-                this["RefreshTime"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("?wr=1")]
         public string BoardParameter {
             get {
@@ -101,36 +89,12 @@ namespace NeKzBot.Server {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool AutoUpdate {
-            get {
-                return ((bool)(this["AutoUpdate"]));
-            }
-            set {
-                this["AutoUpdate"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("69")]
         public string GiveawayCode {
             get {
                 return ((string)(this["GiveawayCode"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("86400000")]
-        public uint GiveawayResetTime {
-            get {
-                return ((uint)(this["GiveawayResetTime"]));
-            }
-            set {
-                this["GiveawayResetTime"] = value;
             }
         }
         
@@ -235,7 +199,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("540199937")]
+        [global::System.Configuration.DefaultSettingValueAttribute("540068865")]
         public int BotPermissions {
             get {
                 return ((int)(this["BotPermissions"]));

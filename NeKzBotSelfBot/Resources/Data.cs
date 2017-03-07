@@ -37,8 +37,8 @@ namespace NeKzBot.Resources
 			{
 				Portal2Maps.Add(new Portal2Map()
 				{
-					BestTimeID = item[0],
-					BestPortalsID = item[1],
+					BestTimeId = item[0],
+					BestPortalsId = item[1],
 					ChallengeModeName = item[2],
 					Name = item[3],
 					ElevatorTiming = item[4],

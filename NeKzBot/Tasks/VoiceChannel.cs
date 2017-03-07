@@ -1,9 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
-//using NAudio.Wave;
+using NeKzBot.Classes;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
@@ -11,49 +14,69 @@ namespace NeKzBot.Tasks
 {
 	public static class VoiceChannel
 	{
-		public static bool Connected { get; private set; } = false;		// Only play when in VC
-		public static bool IsPlaying { get; private set; } = false;		// Prevent double playing
-		public static bool ShouldStop { get; private set; } = false;	// Stop music, needed when playing long audio tracks
+		private static readonly ConcurrentDictionary<ulong, InternalAudio> _audioClients = new ConcurrentDictionary<ulong, InternalAudio>();
 
-		public static async Task ConnectAsync(Channel channel)
+		public static async Task<string> ConnectAsync(Discord.Server guild, Channel vchannel)
 		{
-			await Logger.SendAsync("Joining Voice Channel", LogColor.Audio);
-			if (!(Connected))
+			if (_audioClients.TryGetValue(guild.Id, out var audio))
 			{
-				await Bot.Client.GetService<AudioService>().Join(channel);
-				Connected = true;
+				if (!(audio.Connected))
+				{
+					await Bot.Client.GetService<AudioService>().Join(vchannel);
+					audio.Connected = true;
+					if (_audioClients.TryUpdate(guild.Id, audio, audio))
+						return AudioError.None;
+
+					await Logger.SendAsync($"Joined Voice Chanel ({guild.Name})(ID {guild.Id})", LogColor.Audio);
+					return AudioError.Generic;
+				}
+				return AudioError.AlreadyConnected;
 			}
+			if (_audioClients.TryAdd(guild.Id, new InternalAudio(await Bot.Client.GetService<AudioService>().Join(vchannel)) { Connected = true }))
+				return AudioError.None;
+			return AudioError.Generic;
 		}
 
-		public static async Task DisconnectAsync(ulong id)
+		public static async Task<bool> DisconnectAsync(Discord.Server guild)
 		{
 			await Logger.SendAsync("Leaving Voice Channel", LogColor.Audio);
-			if (Connected)
+			if (_audioClients.TryGetValue(guild.Id, out var audio))
 			{
-				await Bot.Client.GetServer(id).GetAudioClient().Disconnect();
-				Connected = false;
+				await audio.AudioClient.Disconnect();
+				await Logger.SendAsync($"Left Voice Chanel ({guild.Name})(ID {guild.Id})", LogColor.Audio);
+				return _audioClients.TryRemove(guild.Id, out var _);
 			}
+			return false;
 		}
 
-		public static async Task PlayWithFFmpegAsync(ulong id, Channel cha, string file)
+		public static async Task<string> PlayAsync(ulong guildid, string file)
 		{
-			await Logger.SendAsync("Playing Audio With FFmpeg", LogColor.Audio);
-			if (IsPlaying)
-				return;
-			IsPlaying = true;
+			// Get audio client if there's one (only possible if bot connected to a channel)
+			var client = default(IAudioClient);
+			if (!(_audioClients.TryGetValue(guildid, out var audio)))
+				return AudioError.BotNotConneted;
+			client = audio.AudioClient;
 
-			var aClient = default(IAudioClient);
+			// Change status into playing
+			if (audio.IsPlaying)
+				return AudioError.AlreadyPlaying;
+			audio.IsPlaying = true;
+			if (!(_audioClients.TryUpdate(guildid, audio, audio)))
+				return AudioError.Generic;
+
 			var process = default(Process);
 			var path = (await Utils.IsLinux())
 								   ? Path.Combine(await Utils.GetPath(), Configuration.Default.AudioPath, file)
 								   : Path.Combine(Configuration.Default.AudioPath, file);
+			if (!(File.Exists(path)))
+				return AudioError.FileMissing;
+
 			try
 			{
-				aClient = Bot.Client.GetServer(id).GetAudioClient();
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
-					Arguments = $"-i {path} -f s16le -ar 48000 -ac 2 pipe:1",
+					Arguments = $"-i {path} -f s16le -ar 48000 -ac 2 pipe:1 -hide_banner -loglevel panic",
 					UseShellExecute = false,
 					RedirectStandardOutput = true
 				});
@@ -61,71 +84,60 @@ namespace NeKzBot.Tasks
 
 				var buffer = new byte[3840];
 				var byteCount = default(int);
-				while (!(process.HasExited) && !(ShouldStop))
+				while (!(process.HasExited) && !(audio.ShouldStop))
 				{
 					byteCount = process.StandardOutput.BaseStream.Read(buffer, 0, buffer.Length);
 					if (byteCount == 0)
 						break;
-					aClient.Send(buffer, 0, byteCount);
+					client.Send(buffer, 0, byteCount);
+
+					// Check if user wants to stop audio stream, so update the audio status
+					if (_audioClients.TryGetValue(guildid, out var temp))
+						audio = temp;
+					else
+						return AudioError.Generic;
 				}
 			}
 			catch
 			{
-				await Logger.SendAsync("Audio.PlayWithFFmpegAsync Error", LogColor.Error);
+				await Logger.SendAsync("VoiceChannel.PlayAsync Error", LogColor.Error);
 			}
-			finally
-			{
-				if (!(process.HasExited))
-					process.Close();
-				IsPlaying = false;
-				ShouldStop = false;
-			}
+
+			if (!(process.HasExited))
+				process.Close();
+
+			// Save
+			audio.IsPlaying = false;
+			audio.ShouldStop = false;
+			if (!(_audioClients.TryUpdate(guildid, audio, audio)))
+				return AudioError.Generic;
+			return AudioError.None;
 		}
 
-		public static Task StopAudio()
+		public static Task<bool> StopAudio(ulong guildid)
 		{
-			ShouldStop = (IsPlaying)
-							? true
-							: ShouldStop;
-			return Task.FromResult(0);
+			if (_audioClients.TryGetValue(guildid, out var audio))
+			{
+				audio.ShouldStop = (audio.IsPlaying)
+										 ? true
+										 : audio.ShouldStop;
+				return Task.FromResult(_audioClients.TryUpdate(guildid, audio, audio));
+			}
+			return Task.FromResult(false);
 		}
 
-		#region UNUSED CODE
-		//public static async Task PlayWithNAudioAsync(ulong id, Channel cha, string file)
-		//{
-		//	await Logger.SendAsync("Playing Audio With NAudio", LogColor.Audio);
-		//	if (IsPlaying)
-		//		return;
-		//	IsPlaying = true;
+		public static Task<string> ConnectionCheck(Discord.Server guild, User requester)
+		{
+			var botchannel = guild.Users.FirstOrDefault(user => user.Id == Bot.Client.CurrentUser.Id)?.VoiceChannel;
+			var userchannel = requester.VoiceChannel;
 
-		//	var aClient = default(IAudioClient);
-		//	try
-		//	{
-		//		aClient = Bot.Client.GetServer(id).GetAudioClient();
-		//		var OutFormat = new WaveFormat(48000, 16, Bot.Client.GetService<AudioService>().Config.Channels);
-		//		using (var MP3Reader = new AudioFileReader(Path.Combine(await Utils.GetPath(), Configuration.Default.AudioPath, file)))
-		//		using (var resampler = new MediaFoundationResampler(MP3Reader, OutFormat))
-		//		{
-		//			resampler.ResamplerQuality = 30;
-		//			var blockSize = OutFormat.AverageBytesPerSecond / 50;
-		//			var buffer = new byte[blockSize];
-		//			var byteCount = default(int);
-		//			while (((byteCount = resampler.Read(buffer, 0, blockSize)) > 0) && !(ShouldStop))
-		//			{
-		//				if (byteCount < blockSize)
-		//					for (int i = byteCount; i < blockSize; i++)
-		//						buffer[i] = 0;
-		//				aClient.Send(buffer, 0, blockSize);
-		//			}
-		//		}
-		//	}
-		//	catch
-		//	{
-		//		await Logger.SendAsync("Audio.PlayWithNAudioAsync Error", LogColor.Error);
-		//	}
-		//	IsPlaying = false;
-		//	ShouldStop = false;
-		//}
-		#endregion
+			if (botchannel == null)
+				return Task.FromResult(AudioError.BotNotConneted);
+			if (userchannel == null)
+				return Task.FromResult(AudioError.InvalidRequest);
+			if (botchannel != userchannel)
+				return Task.FromResult(AudioError.WrongChannel);
+			return Task.FromResult(AudioError.None);
+		}
 	}
 }

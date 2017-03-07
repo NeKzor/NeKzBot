@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Compat.Web;
 using System.Linq;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using NeKzBot.Classes;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -12,9 +14,9 @@ namespace NeKzBot.Tasks.Leaderboard
 	{
 		private const int _maxytid = 11;     // Maximum length of a YouTube id
 
-		public static async Task<string> GetLatestEntryAsync(string url)
+		public static async Task<Portal2Entry> GetLatestEntryAsync(string url)
 		{
-			var doc = await Cache.GetCacheAsync(url);
+			var doc = await Cache.GetAsync(url);
 			if (doc != null)
 			{
 				try
@@ -23,7 +25,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					var map = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
 					var ranking = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
 					var time = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
-					var player = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='boardname']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+					var player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode($"{root}//div[@class='boardname']//a")?.FirstChild?.InnerHtml) ?? string.Empty;
 					var date = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='entry']//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
 
 					if (new List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
@@ -35,32 +37,29 @@ namespace NeKzBot.Tasks.Leaderboard
 					// Only add when it exists
 					var demo = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='demo-url']").Descendants("a")
 						.Any())
-						? $"\nDemo • http://board.iverb.me{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='demo-url']//a").Attributes["href"].Value}"
+						? $"http://board.iverb.me{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='demo-url']//a").Attributes["href"].Value}"
 						: string.Empty;
 					var youtube = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='youtube']").Descendants("i")
 						.Any())
-						? $"\nVideo • http://youtu.be/{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='youtube']//i").Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
+						? $"http://youtu.be/{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='youtube']//i").Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
 						: string.Empty;
 					var comment = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='comment']").Descendants("i")
 						.Any())
-						? $"\nComment • ***{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='comment']//i").Attributes["data-content"].Value}***"
+						? HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode($"{root}//div[@class='comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
 
-					ranking = (ranking == "1")
-									   ? string.Empty
-									   : $"Rank • {await TopTenFormat(ranking, true)}\n";
-					var title = (ranking == string.Empty)
-										 ? "**[World Record - *"
-										 : "**[Entry - *";
-
-					return	  $"{title + map}*]**\n"
-							+ $"Time • **{time}**\n"
-							+ $"Player • **{player}**\n"
-							+ ranking
-							+ $"Date • **{date}**"
-							+ demo
-							+ youtube
-							+ comment;
+					return new Portal2Entry
+					{
+						Comment = comment,
+						YouTube = youtube,
+						Demo = demo,
+						Date = date,
+						Map = map,
+						MapId = map,
+						Player = await GetUserStatsAsync($"https://board.iverb.me/profile/{player}"), // This makes it slower :c
+						Ranking = ranking,
+						Time = time
+					};
 				}
 				catch (Exception e)
 				{
@@ -68,14 +67,14 @@ namespace NeKzBot.Tasks.Leaderboard
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
 				}
 			}
-			return "**Error**";
+			return null;
 		}
 
 		public static async Task<List<Portal2EntryUpdate>> GetEntryUpdateAsync(string url, uint count)
 		{
 			await Logger.SendAsync("Portal 2 Entry Update Request", LogColor.Leaderboard);
 
-			var doc = await Cache.GetCacheAsync(url, true);
+			var doc = await Cache.GetAsync(url, true);
 			if (doc != null)
 			{
 				try
@@ -83,11 +82,11 @@ namespace NeKzBot.Tasks.Leaderboard
 					var entries = new List<Portal2EntryUpdate>();
 					for (int i = 0; i < count; i++)
 					{
-						var node = HtmlAgilityPack.HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div[@class='entry']")[i].InnerHtml);
+						var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div[@class='entry']")[i].InnerHtml);
 						var map = node.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
 						var ranking = node.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
 						var time = node.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
-						var player = node.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+						var player = HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml) ?? string.Empty;
 						var date = node.SelectSingleNode("//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
 
 						if (new List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
@@ -107,16 +106,8 @@ namespace NeKzBot.Tasks.Leaderboard
 							: string.Empty;
 						var comment = (node.SelectSingleNode("//div[@class='comment']").Descendants("i")
 							.Any())
-							? node.SelectSingleNode("//div[@class='comment']//i").Attributes["data-content"].Value
+							? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='comment']//i").Attributes["data-content"].Value)
 							: string.Empty;
-
-						// Might change this to wr only (it's currently possible to change the board parameter)
-						ranking = (ranking == "1")
-										   ? string.Empty
-										   : $"Rank • {await TopTenFormat(ranking, true)}\n";
-						var title = (ranking == string.Empty)
-											 ? "**[New World Record - *"
-											 : "**[New Entry - *";
 
 						var temp = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
 						var mapid = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length);
@@ -125,41 +116,32 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						entries.Add(new Portal2EntryUpdate()
 						{
-							ChannelMessage = $"{title + map}*]**\n"
-										   + $"Time • **{time}**\n"
-										   + $"Player • **{player}**\n"
-										   + ranking
-										   + $"Date • **{date} (UTC)**"
-										   + $"{(demo == string.Empty ? demo : $"\nDemo • {demo}")}"
-										   + $"{(youtube == string.Empty ? youtube : $"\nVideo • {youtube}")}"
-										   + $"{(comment == string.Empty ? comment : $"\nComment • ***{comment}***")}",
-							// Tweet
-							TweetMessage = await FormatMainTweetAsync($"New World Record in {map}\n{time} by {player}\n{date} (UTC)", demo, youtube),
-							// This will also detect player name changes (pls don't) and ties
-							CacheFormat = map + time + player,
-							// Others
-							TweetCache = new Portal2EntryUpdate.Cache()
-							{
-								Location = player,
-								CommentMessage = await FormatReplyTweetAsync(player, comment)
-							},
 							// Webhooks <3
-							Global = new Portal2Entry
+							Entry = new Portal2Entry
 							{
 								Comment = comment,
 								Date = date,
 								Demo = demo,
 								Map = map,
-								MapID = mapid,
+								MapId = mapid,
 								Player = new Portal2User
 								{
 									Name = player,
-									ProfileLink = profile,
+									SteamLink = profile,
 									SteamAvatar = avatar
 								},
 								Ranking = ranking,
 								Time = time,
 								YouTube = youtube
+							},
+							// This will also detect player name changes (pls don't) and ties
+							CacheFormat = $"{map}{time}{player}",
+							// Tweet
+							Tweet = new Portal2TweetUpdate
+							{
+								Message =  await FormatMainTweetAsync($"New World Record in {map}\n{time} by {player}\n{date} (UTC)", demo, youtube),
+								Location = player,
+								CommentMessage = await FormatReplyTweetAsync(player, comment)
 							}
 						});
 					}
@@ -174,76 +156,69 @@ namespace NeKzBot.Tasks.Leaderboard
 			return null;
 		}
 
-		public static async Task<string> GetUserStatsAsync(string url)
+		public static async Task<Portal2User> GetUserStatsAsync(string url)
 		{
-			var doc = await Cache.GetCacheAsync(url);
-			if (doc != null)
+			var doc = await Cache.GetAsync(url);
+			if ((doc != null)
+			&& !((bool)(doc?.DocumentNode.Descendants("div").Any(node => node.GetAttributeValue("class", string.Empty) == "user-noexist"))))
 			{
-				if (doc.DocumentNode.Descendants("div").Any(node => node.GetAttributeValue("class", string.Empty) == "user-noexist"))
-					return "Player profile doesn't exist.";
-
 				try
 				{
-					// Nickname of profile
-					var player = doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml;
-
-					// Ranking + average ranking
-					var sprank = doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml;
-					var cooprank = doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml;
-					var rank = doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml;
-					var spaverage = doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty);
-					var coopaverage = doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty);
-					var average = doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty);
-
-					// WR count
-					var spwrs = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml;
-					var coopwrs = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml;
-					var wrs = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml;
-
-					// Only show when player has at least one wr
-					var fastpeopleonly = "\n__*World Records*__";
-					if (spwrs != "0")
-						fastpeopleonly += $"\nSingle Player • **{spwrs}** :trophy:";
-					if (coopwrs != "0")
-						fastpeopleonly += $"\nCooperative • **{coopwrs}** :trophy:";
-					if (wrs != "0")
-						fastpeopleonly += $"\nOverall • **{wrs}** :trophy:";
-					else
-						fastpeopleonly = string.Empty;
-
-					return	  $"**[Global Statistics - *{player}*]**\n__*Ranking*__\n"
-							+ $"Single Player • {await TopTenFormat(sprank)}\n"
-							+ $"	(Average • {await AddDecimalPlace(spaverage)})\n"
-							+ $"Cooperative • {await TopTenFormat(cooprank)}\n"
-							+ $"	(Average • {await AddDecimalPlace(coopaverage)})\n"
-							+ $"Overall • {await TopTenFormat(rank)}\n"
-							+ $"	(Average • {await AddDecimalPlace(average)})"
-							+ fastpeopleonly;
+					return new Portal2User()
+					{
+						SteamLink = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value,
+						SteamAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value,
+						BestPlaceMap = (doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span")[0].Descendants("a")
+							.Any())
+							? doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span//a")[0].FirstChild.InnerHtml
+							: "too many.",
+						WorstPlaceMap = (doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span//a")?
+							.Count() == 2)
+							? doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span//a")[1].FirstChild.InnerHtml
+							: (doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span//a")?
+								.Count() == 1)
+								? doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span//a")[0].FirstChild.InnerHtml
+								: "too many.",
+						BestPlaceRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml),
+						WorstPlaceRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml),
+						Name = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml),
+						SinglePlayerRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml),
+						CooperativeRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml),
+						OverallRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml),
+						AverageSinglePlayerRank = await AddDecimalPlace(doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						AverageCooperativeRank = await AddDecimalPlace(doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						AverageOverallRank = await AddDecimalPlace(doc.DocumentNode.SelectNodes("//div[@class='block-container average']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						SinglePlayerPoints = await FormatPoints(doc.DocumentNode.SelectNodes("//div[@class='block-container points']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						CooperativePoints = await FormatPoints(doc.DocumentNode.SelectNodes("//div[@class='block-container points']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						OverallPoints = await FormatPoints(doc.DocumentNode.SelectNodes("//div[@class='block-container points']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml.Replace(" ", string.Empty).Replace("\n", string.Empty)),
+						SinglePlayerWorldRecords = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml,
+						CooperativeWorldRecords = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml,
+						OverallWorldRecords = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml
+					};
 				}
-				catch
+				catch (Exception e)
 				{
-					await Logger.SendAsync("Portal.GetUserStatsAsync Error", LogColor.Error);
-					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
+					await Logger.SendAsync("Leaderboard.GetUserStatsAsync Error", e);
 				}
 			}
-			return "**Error**";
+			return null;
 		}
 
-		public static async Task<string> GetUserRankAsync(string url, int index)
+		public static async Task<Portal2Entry> GetUserRankAsync(string url, int index)
 		{
 			// Check if map has a leaderboard
 			var mapid = Data.Portal2Maps[index, 0];
 			if (mapid == string.Empty)
-				return "Map is not supported.";
+				return null;	// "Map is not supported.";
 
-			var doc = await Cache.GetCacheAsync(url);
+			var doc = await Cache.GetAsync(url);
 			if (doc != null)
 			{
 				try
 				{
 					// Check if profile is actually a Portal 2 challenge mode runner
-					if (doc.DocumentNode.Descendants("div").Any(node => node.GetAttributeValue("class", string.Empty) == "user-noexist"))
-						return "Player profile doesn't exist.";
+					if (doc.DocumentNode.Descendants("div").Any(n => n.GetAttributeValue("class", string.Empty) == "user-noexist"))
+						return null;	// "Player profile doesn't exist.";
 
 					// First get all maps
 					var maps = doc.DocumentNode.SelectNodes("//div[@class='cell title']//a");
@@ -255,33 +230,53 @@ namespace NeKzBot.Tasks.Leaderboard
 						if (maps[idx].Attributes["href"].Value == "/chamber/" + mapid)
 							break;
 
-					var player = doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml;
-					var ranking = doc.DocumentNode.SelectNodes("//div[@class='cell rank']")[idx].FirstChild.InnerHtml;
-					var time = doc.DocumentNode.SelectNodes("//a[@class='cell score']")[idx].FirstChild.InnerHtml.Replace("\n", string.Empty).Replace(" ", string.Empty);
-					var date = doc.DocumentNode.SelectNodes("//div[@class='chamberScoreInfo']")[idx].Attributes["date"].Value;
+					var player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml);
+					// This should fix it
+					var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='chamberScoreInfo']")[idx].InnerHtml);
+					var ranking = node.SelectSingleNode("//div[@class='cell rank']").FirstChild.InnerHtml;
+
+					// Check if the rank doesn't exist
+					if (ranking == "-")
+						return null; // "Player doesn't have a ranking for this map.";
+
+					var time = node.SelectSingleNode("//a[@class='cell score']").FirstChild.InnerHtml.Replace("\n", string.Empty).Replace(" ", string.Empty);
+					// Difference shouldn't exist since everything is UTC, parsing this one because the new created node doesn't come with the date attribute
+					var date = node.SelectSingleNode("//div[@class='cell dateDifferenceColor']").Attributes["date"].Value;
 
 					// Only add when it exists
-					var demo = (doc.DocumentNode.SelectNodes("//div[@class='cell demo-url']//a")[idx].Attributes["style"]
+					var demo = (node.SelectSingleNode("//div[@class='cell demo-url']//a").Attributes["style"]
 						== null)
-						? $"\nDemo • http://board.iverb.me{doc.DocumentNode.SelectNodes("//div[@class='cell demo-url']//a")[idx].Attributes["href"].Value}"
+						? $"http://board.iverb.me{node.SelectSingleNode("//div[@class='cell demo-url']//a").Attributes["href"].Value}"
 						: string.Empty;
-					var youtube = (doc.DocumentNode.SelectNodes("//div[@class='cell youtube']//i")[idx].Attributes["onclick"]
+					var youtube = (node.SelectSingleNode("//div[@class='cell youtube']//i").Attributes["onclick"]
 						!= null)
-						? $"\nVideo • http://youtu.be/{doc.DocumentNode.SelectNodes("//div[@class='cell youtube']//i")[idx].Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
+						? $"http://youtu.be/{node.SelectSingleNode("//div[@class='cell youtube']//i").Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
 						: string.Empty;
-					var comment = (doc.DocumentNode.SelectNodes("//div[@class='cell comment']//i")[idx].Attributes["data-content"].Value
+					var comment = (node.SelectSingleNode("//div[@class='cell comment']//i").Attributes["data-content"].Value
 						!= string.Empty)
-						? $"\nComment • ***{doc.DocumentNode.SelectNodes("//div[@class='cell comment']//i")[idx].Attributes["data-content"].Value}***"
+						? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='cell comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
 
-					return $"{await GetTitle(ranking) + map}*]**\n"
-						 + $"Player • **{player}**\n"
-						 + $"Time • **{time}**\n"
-						 + $"{await RankFromat(ranking)}"
-						 + $"Date • **{date}**\n"
-						 + demo
-						 + youtube
-						 + comment;
+					var steamlink = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
+					var steamavatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value;
+
+					return new Portal2Entry
+					{
+						Player = new Portal2User
+						{
+							Name = player,
+							SteamLink = steamlink,
+							SteamAvatar = steamavatar
+						},
+						Date = date,
+						Map = map,
+						MapId = mapid,
+						Ranking = ranking,
+						Time = time,
+						Demo = demo,
+						YouTube = youtube,
+						Comment = comment
+					};
 				}
 				catch
 				{
@@ -289,12 +284,12 @@ namespace NeKzBot.Tasks.Leaderboard
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
 				}
 			}
-			return "**Error**";
+			return null;
 		}
 
 		public static async Task<bool> CheckIfUserHasWorldRecordAsync(string url)
 		{
-			var doc = await Cache.GetCacheAsync(url);
+			var doc = await Cache.GetAsync(url);
 			if (doc != null)
 			{
 				try
@@ -312,50 +307,47 @@ namespace NeKzBot.Tasks.Leaderboard
 
 		private static Task<string> RankFromat(string s)
 		{
-			var output = $"Rank • **{s}th**\n";
+			var output = $"Rank • **{s}th**";
 			if (Convert.ToInt16(s) > 10)
-				output = $"Rank • **#{s}**\n";
+				output = $"Rank • **#{s}**";
 			else if (s == "1")
 				output = string.Empty;  // Trophy maybe?
 			else if (s == "2")
-				output = "Rank • **2nd**\n";
+				output = "Rank • **2nd**";
 			else if (s == "3")
-				output = "Rank • **3rd**\n";
-			return Task.FromResult(output);
-		}
-
-		private static Task<string> GetTitle(string s)
-		{
-			var output = "**[Top 10 - *";
-			if (Convert.ToInt16(s) > 10)
-				output = "**[Personal Best - *";
-			if (s == "1")
-				output = "**[World Record - *";
-			return Task.FromResult(output);
-		}
-
-		private static Task<string> TopTenFormat(string r, bool allbold = false)
-		{
-			var output = $"**{r}th**";
-			if (Convert.ToInt16(r) > 10)
-			{
-				output = (allbold)
-							? $"**#{r}**"
-							: $"#{r}";
-			}
-			else if (r == "1")
-				output = "**1st** :trophy:";
-			else if (r == "2")
-				output = "**2nd**";
-			else if (r == "3")
-				output = "**3rd**";
+				output = "Rank • **3rd**";
 			return Task.FromResult(output);
 		}
 
 		private static Task<string> AddDecimalPlace(string s)
-			=> Task.FromResult(s.Contains(".")
-								? s
-								: $"{s}.0");
+			=> Task.FromResult((s.Contains(".")
+							|| (s == "NO"))
+								  ? s
+								  : $"{s}.0");
+
+		private static Task<string> FormatRank(string s)
+		{
+			if (s == "NO")
+				return Task.FromResult(s);
+
+			var output = $"{s}th";
+			if ((s == "11")
+			|| (s == "12")
+			|| (s == "13"))
+				return Task.FromResult(output);
+			else if (s[s.Length - 1] == '1')
+				output = $"{s}st";
+			else if (s[s.Length - 1] == '2')
+				output = $"{s}nd";
+			else if (s[s.Length - 1] == '3')
+				output = $"{s}rd";
+			return Task.FromResult(output);
+		}
+
+		private static Task<string> FormatPoints(string s)
+			=> Task.FromResult((s != "0")
+								  ? int.Parse(s).ToString("#,###,###.##")
+								  : s);
 
 		private static async Task<string> FormatMainTweetAsync(string msg, params string[] stuff)
 		{

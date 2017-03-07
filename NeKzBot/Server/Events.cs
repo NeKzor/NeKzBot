@@ -15,82 +15,84 @@ namespace NeKzBot.Server
 
 		public static async Task OnReceiveAsync(MessageEventArgs msg)
 		{
-			if (!(msg.User.IsBot))
+			if (!((bool)(msg.User?.IsBot))
+			&& (Data.VipGuilds.Contains(msg.Server?.Id.ToString())))
 			{
 				try
 				{
 					if (!(await Steam.CheckWorkshopAsync(msg)))
 						if (!(await DemoTools.CheckTickCalculatorAsync(msg)))
 							if (!(await DemoTools.CheckStartdemosGeneratorAsync(msg)))
-								// Server exclusive
+								// Dev server only
 								if (msg.Server?.Id == Credentials.Default.DiscordMainServerId)
 									await AutoDownloader.CheckDropboxAsync(msg);
 				}
 				catch (Exception e)
 				{
-					await Logger.SendToChannelAsync("MessageReceived Error", e);
+					await Logger.SendToChannelAsync("OnReceiveAsync Error", e);
 				}
 			}
 		}
 
 		public static async Task OnJoinedServerAsync(ServerEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} joined a server.\nName • {e.Server.Name} (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{e.Server.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server.Owner.Id})");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} joined a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnLeftServerAsync(ServerEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} left a server.\nName • {e.Server.Name} (ID {e.Server.Id})\nOwner • {(e.Server.Owner?.Name != null ? $"*{e.Server.Owner.Name}#{e.Server.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server.Owner.Id})");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} left a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserBannedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has been banned from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been banned from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserUnbannedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has been unbanned from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been unbanned from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserJoinedAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) joined the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) joined the server.");
 
-			// Give new user a world record role if he has one on speedrun.com
-			if (!(e.User.IsBot))
+			// Give new user a world record role if he has one on speedrun.com or on board.iverb.me
+			if (!((bool)(e?.User?.IsBot))
+			&& (e?.Server?.Id == Credentials.Default.DiscordMainServerId))
 			{
-				if (!(e.Server.FindRoles(Configuration.Default.WorldRecordRoleName).Any()))
-					await e.Server.CreateRole(Configuration.Default.WorldRecordRoleName, color: new Color(34, 126, 230));
-				var role = e.Server.FindRoles(Configuration.Default.WorldRecordRoleName)?.FirstOrDefault();
+				if (!((bool)(e.Server?.FindRoles(Configuration.Default.WorldRecordRoleName).Any())))
+					await e.Server?.CreateRole(Configuration.Default.WorldRecordRoleName, color: new Color(34, 126, 230));
+				var role = e.Server?.FindRoles(Configuration.Default.WorldRecordRoleName)?.FirstOrDefault();
 				if (role != null)
 				{
 					// Not sure how that can happen since the user joins for the first time but whatever
-					if (e.User.HasRole(role))
+					if ((bool)e.User?.HasRole(role))
 						return;
 
-					if (await SpeedrunCom.PlayerHasWorldRecord(e.User.Name) == "Yes.")
-						await e.User.AddRoles(role);
-					else if (await Portal2.CheckIfUserHasWorldRecordAsync($"https://board.iverb.me/changelog?boardName={e.User.Name}&wr=1"))
-						await e.User.AddRoles(role);
+					if (await SpeedrunCom.PlayerHasWorldRecord(e.User?.Name) == "Yes.")
+						await e.User?.AddRoles(role);
+					else if (await Portal2.CheckIfUserHasWorldRecordAsync($"https://board.iverb.me/changelog?boardName={e.User?.Name}&wr=1"))
+						await e.User?.AddRoles(role);
 					// Nickname should also not exist, what am I doing...
-					else if ((e.User.Nickname != null)
-					&& (e.User.Name != e.User.Nickname))
+					else if ((e.User?.Nickname != null)
+					&& (e.User?.Name != e.User?.Nickname))
 					{
-						if (await SpeedrunCom.PlayerHasWorldRecord(e.User.Nickname) == "Yes.")
-							await e.User.AddRoles(role);
-						else if (await Portal2.CheckIfUserHasWorldRecordAsync($"https://board.iverb.me/changelog?boardName={e.User.Nickname}&wr=1"))
-							await e.User.AddRoles(role);
+						if (await SpeedrunCom.PlayerHasWorldRecord(e.User?.Nickname) == "Yes.")
+							await e.User?.AddRoles(role);
+						else if (await Portal2.CheckIfUserHasWorldRecordAsync($"https://board.iverb.me/changelog?boardName={e.User?.Nickname}&wr=1"))
+							await e.User?.AddRoles(role);
 						else
 							return;
 					}
 					else
 						return;
-					await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
+					await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
 				}
 			}
 			await Task.Delay(_ratelimit);
@@ -98,13 +100,14 @@ namespace NeKzBot.Server
 
 		public static async Task OnUserLeftAsync(UserEventArgs e)
 		{
-			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) left or was kicked from the server.");
+			await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) left or was kicked from the server.");
 			await Task.Delay(_ratelimit);
 		}
 
 		public static async Task OnUserUpdatedAsync(UserUpdatedEventArgs e)
 		{
-			if (!(e.After.IsBot))
+			if (!(e.After.IsBot)
+			&& (e.Server?.Id == Credentials.Default.DiscordMainServerId))
 			{
 				if (e.After.CurrentGame == null)
 					return;
@@ -119,9 +122,9 @@ namespace NeKzBot.Server
 					&& (Data.Manager[index].WrittingAllowed)
 					&& !(await Utils.SearchArray(Data.Manager[index].Data as string[], channel)))
 					{
-						if (!(e.Server.FindRoles(Configuration.Default.StreamingRoleName).Any()))
-							await e.Server.CreateRole(Configuration.Default.StreamingRoleName, color: Data.TwitchColor);
-						var role = e.Server.FindRoles(Configuration.Default.StreamingRoleName)?.FirstOrDefault();
+						if (!((bool)(e.Server?.FindRoles(Configuration.Default.StreamingRoleName).Any())))
+							await e.Server?.CreateRole(Configuration.Default.StreamingRoleName, color: Data.TwitchColor);
+						var role = e.Server?.FindRoles(Configuration.Default.StreamingRoleName)?.FirstOrDefault();
 						if (role == null)
 							return;
 						if (e.After.HasRole(role))

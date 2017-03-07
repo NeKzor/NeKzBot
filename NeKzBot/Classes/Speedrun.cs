@@ -14,8 +14,32 @@ namespace NeKzBot.Classes
 	public sealed class SpeedrunPlayerProfile
 	{
 		public List<SpeedrunPlayerPersonalBest> PersonalBests { get; set; }
-		public string PlayerName { get; set; }
-		public string PlayerLocation { get; set; }
+		public string Name { get; set; }
+		public string Id { get; set; }
+		public string CountryCode { get; set; }
+		public string Location
+		{
+			get => (CountryCode != string.Empty) ? $" :flag_{CountryCode}:" : string.Empty;
+			set { }
+		}
+		public string Region { get; set; }
+		public int Mods { get; set; }
+		public string Role { get; set; }
+		public int Runs { get; set; }
+		public string SignUpDate
+		{
+			get => SignUpDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+			set { }
+		}
+		public DateTime SignUpDateTime { get; set; }
+		public string YouTubeLink { get; set; }
+		public string TwitchLink { get; set; }
+		public string TwitterLink { get; set; }
+		public string WebsiteLink { get; set; }
+		public string PlayerLink
+			=> $"https://speedrun.com/{Name}";
+		public string PlayerAvatar
+			=> $"https://speedrun.com/themes/user/{Name}/image.png";
 	}
 
 	public sealed class SpeedrunGameRules
@@ -33,12 +57,13 @@ namespace NeKzBot.Classes
 		public SpeedrunNotificationType Type { get; set; }
 		public SpeedrunGame Game { get; private set; }
 		public string Cache { get; private set; }
+		public SpeedrunNotificationStatus Status { get; set; }
 
-		public string Author
+		public SpeedrunPlayerProfile Author
 		{
-			get => (Type != SpeedrunNotificationType.Resource)
-						 ? ContentText.Split(' ')[0]
-						 : string.Empty;
+			get =>  (Type != SpeedrunNotificationType.Resource)
+						 ? new SpeedrunPlayerProfile { Name = ContentText.Split(' ')[0] }
+						 : null;
 		}
 
 		public Task BuildGame()
@@ -59,6 +84,7 @@ namespace NeKzBot.Classes
 			{
 				try
 				{
+					// TODO: parse notification type "guide"
 					if (Type == SpeedrunNotificationType.Thread)
 						return $"Posted a new thread:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length, ContentText.Length - ContentText.IndexOf(" forum: ") - " forum: ".Length)}]({ContentLink})_";
 					if (Type == SpeedrunNotificationType.Post)
@@ -116,24 +142,39 @@ namespace NeKzBot.Classes
 
 	public class SpeedrunWorldRecord
 	{
+		public SpeedrunPlayerProfile Player { get; set; }
 		public SpeedrunGame Game { get; set; }
 		public string CategoryName { get; set; }
-		public string EntryTime { get; set; }
-		public string PlayerName { get; set; }
-		public string PlayerCountry { get; set; }
-		public string EntryVideo { get; set; }
 		public string Platform { get; set; }
+		public string EntryVideo { get; set; }
+		public string EntryTime { get; set; }
 		public string EntryDate { get; set; }
 		public string EntryStatus { get; set; }
-		public string PlayerComment { get; set; }
+		public string EntryComment { get; set; }
 		public DateTimeOffset EntryDateTime { get; set; }
 	}
 
 	public class SpeedrunGame
 	{
 		public string Name { get; set; }
+		public string Id { get; set; }
 		public string Link { get; set; }
 		public string CoverLink { get; set; }
+		public string Abbreviation { get; set; }
+		public int? ReleaseDate { get; set; }
+		public string CreationDate
+		{
+			get => (CreationDateTime != null) ? CreationDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown" : "Unknown";
+			set { }
+		}
+		public DateTime? CreationDateTime { get; set; }
+		public List<SpeedrunPlayerProfile> Moderators { get; set; }
+		public bool IsRom { get; set; }
+		public string DefaultTimingMethod { get; set; }
+		public bool EmulatorsAllowed { get; set; }
+		public bool RequiresVerification { get; set; }
+		public bool RequiresVideoProof { get; set; }
+		public bool ShowMilliseconds { get; set; }
 
 		public SpeedrunGame()
 		{
@@ -155,7 +196,8 @@ namespace NeKzBot.Classes
 		Run,
 		Game,
 		Guide,
-		Resource
+		Resource,
+		Any			// Custom type
 	}
 
 	public enum SpeedrunNotificationStatus

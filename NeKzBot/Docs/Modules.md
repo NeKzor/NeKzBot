@@ -55,6 +55,8 @@ Portal 2 challenge mode data is from [board.iverb.me](https://board.iverb.me).
 * Get own ranking of a map
 * Get profile statistics of a player or return the map ranking of a player
 * Show when the automatic leaderboard updater checks for a new update
+* Compare profiles of players
+* Compare the ranking of players on a specific map
 
 Requires to be the bot owner:
 * Change the task delay of the auto updater

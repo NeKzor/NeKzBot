@@ -19,8 +19,10 @@ namespace NeKzBot.Modules.Public.Others
 		{
 			CService.CreateCommand(Data.MemeCommands[i, 0])
 					.Description(Data.MemeCommands[i, 1])
+					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
+						// 0 command, 1 description, 2 picture, 3 text
 						await e.Channel.SendIsTyping();
 						// Text only
 						if (Data.MemeCommands[i, 2] == string.Empty)
@@ -31,7 +33,7 @@ namespace NeKzBot.Modules.Public.Others
 						// File and text
 						else
 						{
-							await e.Channel.SendMessage($"**{Data.MemeCommands[i, 1]}**");
+							await e.Channel.SendMessage($"**{Data.MemeCommands[i, 3]}**");
 							await Task.Delay(333);
 							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/pics/{Data.MemeCommands[i, 2]}");
 						}
@@ -43,6 +45,7 @@ namespace NeKzBot.Modules.Public.Others
 		{
 			CService.CreateCommand(Data.ToolCommands[i, 0])
 					.Description(Data.ToolCommands[i, 1])
+					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -69,6 +72,7 @@ namespace NeKzBot.Modules.Public.Others
 			{
 				GBuilder.CreateCommand(Data.QuoteNames[i, 0])
 						.Description("Could be true or not.")
+						.AddCheck(Permissions.VipGuildsOnly)
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();

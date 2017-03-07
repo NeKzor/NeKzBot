@@ -11,7 +11,7 @@ namespace NeKzBot.Tasks.NonModules
 		private static string _cacheKey;
 
 		private const int _maxfilesperfolder = 20;
-		private const int _maxfilesize = 5000 * 1024;	// 5KB
+		private const int _maxfilesize = 5000 * 1024;   // 5KB
 
 		// Upload to Dropbox.com
 		public static async Task<bool> CheckDropboxAsync(MessageEventArgs args)

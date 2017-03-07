@@ -87,7 +87,7 @@ namespace NeKzBot.Modules
 				Author = new EmbedAuthorBuilder
 				{
 					Name = msg.Author.Username,
-					IconUrl = msg.Author.AvatarUrl
+					IconUrl = msg.Author.GetAvatarUrl()
 				},
 				Color = await Utils.GetUserColor(await Context.Guild.GetUserAsync(msg.Author.Id), Context.Guild),
 				Timestamp = msg.Timestamp

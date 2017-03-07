@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SpeedrunComSharp;
 using NeKzBot.Classes;
-using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Speedrun
@@ -37,159 +35,164 @@ namespace NeKzBot.Tasks.Speedrun
 				await Logger.SendAsync("Invalid Token", LogColor.Error);
 		}
 
-		public static async Task<string> GetGameWorldRecordAsync(string gamename)
+		public static async Task<SpeedrunWorldRecord> GetGameWorldRecordAsync(string gamename)
 		{
 			var game = _client.Games.SearchGame(gamename);
-			if (game == null)
-				return "Unknown game.";
-
-			var anyPercent = default(Category);
-			try
+			if (game != null)
 			{
-				anyPercent = game.Categories.FirstOrDefault(category => (category.Type == CategoryType.PerGame) && (category.Runs.Any()));
-			}
-			catch
-			{
-				return "**Failed** to find the world record.\n• Game might have a level leaderboard instead.\n• Game doesn't have a world record yet.";
-			}
-
-			try
-			{
-				var wr = anyPercent.WorldRecord;
-				var name = game.Name;
-				var category = wr.Category.Name;
-				// Time
-				var time = wr.Times.Primary.Value;
-				// Player stats
-				var player = wr.Player.Name;
-				var country = string.Empty;
-				if (wr.Player.IsUser)
+				var wr = game.Categories.FirstOrDefault(category => (category.Type == CategoryType.PerGame) && (category.Runs.Any()))?.WorldRecord;
+				if (wr == null)
 				{
-					country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-					if (country != string.Empty)
-						country = $" :flag_{country}:";
+					await Logger.SendAsync("SpeedrunCom.GetGameWorldRecordAsync Category Error", LogColor.Error);
+					return new SpeedrunWorldRecord();
 				}
-				// Proof
-				var video = $"{wr.Videos.Links.FirstOrDefault().OriginalString}\n";
-				// Stats
-				var platform = wr.Platform.Name;
-				var date = (wr.Date == null)
-									? string.Empty
-									: $" on {wr.Date.Value.Date.ToString("dd.MM.yyyy")}";
-				var sdate = (wr.DateSubmitted == null)
-											  ? string.Empty
-											  : $"Submitted on {wr.DateSubmitted.Value.Date.ToString("dd.MM.yyyy")}\n";
-				// Verified status
-				var status = string.Empty;
-				if ((wr.Status.Type == RunStatusType.Verified)
-				&& (game.Ruleset.RequiresVerification))
+
+				try
 				{
-					var vdate = (wr.Status.VerifyDate == null)
-													  ? string.Empty
-													  : " " + wr.Status.VerifyDate.Value.Date.ToString("dd.MM.yyyy");
-					var examiner = (wr.Status.ExaminerUserID == null)
-															 ? string.Empty
-															 : $"Verified by {wr.Status.Examiner.Name}";
-					status = examiner + vdate;
-				}
-				var comment = (string.IsNullOrEmpty(wr.Comment))
-									 ? string.Empty
-									 : $"\n*{wr.Comment}*";
-				return $"**[World Record - *{name}*]**\n"
-					+ $"{category} in **{await FormatTime(time)}** by {player + country}\n"
-					+ video
-					+ $"Played on {platform + date}\n"
-					+ sdate
-					+ status
-					+ comment;
-			}
-			catch
-			{
-				return "**Error**";
-			}
-		}
-
-		public static async Task<string> GetPersonalBestOfPlayerAsync(string name)
-		{
-			try
-			{
-				var player = _client.Users.GetUsers(name)?.FirstOrDefault();
-				if (player == null)
-					return "Player profile doesn't exist.";
-
-				var pbs = default(Record[]);
-				if (player.PersonalBests.Count > 0)
-					pbs = player.PersonalBests.ToArray();
-				else
-					return "Player doesn't have any personal records.";
-
-				var country = player.Location?.Country?.Code?.ToLower() ?? string.Empty;
-				if (country != string.Empty)
-					country = $" :flag_{country}:";
-				var output = $"**[Personal Records - *{player.Name}*{country}]**\n";
-				foreach (var record in pbs)
-				{
-					var game = (record.Category.Type == CategoryType.PerGame)
-													 ? $"**{record.Game.Name}** {record.Category.Name}"
-													 : $"**{record.Game.Name}** {record.Category.Name} • {record.Level.Name}";
-					output += $"{await TopTenFormat(record.Rank.ToString())} • {game} in {await FormatTime(record.Times.Primary.Value)}\n";
-				}
-				return output.Substring(0, output.Length - 1);
-			}
-			catch
-			{
-				return "**Error**";
-			}
-		}
-
-		public static async Task<string> GetGameWorldRecordsAsync(string gamename)
-		{
-			try
-			{
-				var game = _client.Games.SearchGame(gamename);
-				if (game == null)
-					return "Unknown game.";
-
-				var categories = game.Categories.Where(category => category.Type == CategoryType.PerGame);
-				var name = game.Name;
-				var title = $"**[World Records - *{name}*]**\n";
-				var output = title;
-				foreach (var cat in categories)
-				{
-					var wr = cat.WorldRecord;
-					// Skip when there is no record
-					if (wr == null)
-						continue;
-					var category = wr.Category.Name;
-					// Time
-					var time = wr.Times.Primary.Value;
-					// Player stats
-					var player = wr.Player.Name;
-					var country = string.Empty;
-					if (wr.Player.IsUser)
+					return new SpeedrunWorldRecord()
 					{
-						country = wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-						if (country != string.Empty)
-							country = $" :flag_{country}:";
-					}
-					// Stats
-					var platform = wr.Platform.Name;
-					var date = (wr.Date == null)
-										? string.Empty
-										: $" on {wr.Date.Value.Date.ToString("dd.MM.yyyy")}";
-					output += $"{category} in **{await FormatTime(time)}** by {player + country} (Played on {platform + date})\n";
+						Player = new SpeedrunPlayerProfile
+						{
+							Name = wr.Player.Name,
+							CountryCode = (wr.Player.IsUser)
+													? wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
+													: string.Empty
+						},
+						Game = new SpeedrunGame
+						{
+							Name = game.Name,
+							Link = game.WebLink.AbsoluteUri,
+							CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri
+						},
+						CategoryName = wr.Category.Name,
+						EntryTime = await FormatTime(wr.Times.Primary.Value),
+						EntryVideo = wr.Videos.Links.FirstOrDefault().OriginalString,
+						Platform = wr.Platform.Name,
+						EntryDateTime = wr.DateSubmitted.Value,
+						EntryDate = (wr.DateSubmitted == null)
+													  ? string.Empty
+													  : wr.DateSubmitted.Value.ToString(@"yyyy\-MM\-dd hh\:mm\:ss"),
+						EntryStatus = ((wr.Status.Type == RunStatusType.Verified)
+								   && (game.Ruleset.RequiresVerification)
+								   && (wr.Status.ExaminerUserID != null))
+																? $"Verified by {wr.Status.Examiner.Name}" + $"{(wr.Status.VerifyDate == null ? string.Empty : $" on {wr.Status.VerifyDate.Value.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")}")}"
+																: string.Empty,
+						EntryComment = (string.IsNullOrEmpty(wr.Comment))
+											   ? string.Empty
+											   : wr.Comment
+					};
 				}
-				return (output == title)
-							   ? "**Failed** to find the world record.\n• Game might have a level leaderboard instead.\n• Game doesn't have a world record yet."
-							   : output.Substring(0, output.Length - 1);
+				catch (Exception e)
+				{
+					await Logger.SendAsync("SpeedrunCom.GetGameWorldRecordAsync Error", e);
+				}
 			}
-			catch
-			{
-				return "**Error**";
-			}
+			return null;
 		}
 
-		public static Task<string> GetPlayerInfo(string playername)
+		public static async Task<SpeedrunPlayerProfile> GetPersonalBestOfPlayerAsync(string name)
+		{
+			var player = _client.Users.GetUsers(name)?.FirstOrDefault();
+			if (player != null)
+			{
+				try
+				{
+					var pbs = default(Record[]);
+					if (player.PersonalBests.Count > 0)
+						pbs = player.PersonalBests.ToArray();
+					else
+						return new SpeedrunPlayerProfile();
+
+					var profile = new SpeedrunPlayerProfile()
+					{
+						Name = player.Name,
+						Location = (player.Location?.Country?.Code?.ToLower() != null)
+											? $":flag_{player.Location.Country.Code.ToLower()}:"
+											: string.Empty
+					};
+
+					var records = new List<SpeedrunPlayerPersonalBest>();
+					foreach (var pb in pbs)
+					{
+						var record = new SpeedrunPlayerPersonalBest()
+						{
+							CategoryName = pb.Category.Name,
+							LevelName = pb.Level?.Name,
+							Game = new SpeedrunGame
+							{
+								Name = pb.Game.Name,
+								Link = pb.Game.WebLink.AbsoluteUri,
+								CoverLink = pb.Game.Assets.CoverMedium.Uri.AbsoluteUri
+							},
+							PlayerRank = await TopTenFormat(pb.Rank.ToString()),
+							EntryTime = await FormatTime(pb.Times.Primary.Value)
+						};
+						records.Add(record);
+					}
+					profile.PersonalBests = records;
+					return profile;
+				}
+				catch (Exception e)
+				{
+					await Logger.SendAsync("SpeedrunCom.GetPersonalBestOfPlayerAsync Error", e);
+				}
+			}
+			return null;
+		}
+
+		public static async Task<SpeedrunGameLeaderboard> GetGameWorldRecordsAsync(string gamename)
+		{
+			var game = _client.Games.SearchGame(gamename);
+			if (game != null)
+			{
+				try
+				{
+					var records = new List<SpeedrunWorldRecord>();
+					foreach (var category in game.Categories.Where(category => category.Type == CategoryType.PerGame))
+					{
+						var wr = category.WorldRecord;
+						// Skip when there is no record
+						if (wr == null)
+							continue;
+
+						records.Add(new SpeedrunWorldRecord()
+						{
+							CategoryName = wr.Category.Name,
+							EntryTime = await FormatTime(wr.Times.Primary.Value),
+							Player =  new SpeedrunPlayerProfile
+							{
+								Name = wr.Player.Name,
+								CountryCode = (wr.Player.IsUser)
+														? wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
+														: string.Empty
+							},
+							Platform = wr.Platform.Name,
+							EntryDate = (wr.Date == null)
+												 ? string.Empty
+												 : wr.Date.Value.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")
+						});
+					}
+
+					return new SpeedrunGameLeaderboard()
+					{
+						Game = new SpeedrunGame
+						{
+							Name = game.Name,
+							Link = game.WebLink.AbsoluteUri,
+							CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri
+						},
+						WorldRecords = records
+					};
+				}
+				catch (Exception e)
+				{
+					await Logger.SendAsync("SpeedrunCom.GetGameWorldRecordsAsync Error", e);
+				}
+			}
+			return null;
+		}
+
+		public static async Task<SpeedrunPlayerProfile> GetPlayerInfoAsync(string playername)
 		{
 			try
 			{
@@ -197,122 +200,96 @@ namespace NeKzBot.Tasks.Speedrun
 				if (_client.Users.GetUsers(playername).Any())
 					player = _client.Users.GetUsers(playername).FirstOrDefault();
 				else
-					return Task.FromResult("Unknown name.");
-
-				var id = player.ID;
-				var name = player.Name;
-				var countrycode = player.Location?.Country?.Code?.ToLower() ?? string.Empty;
-				var country = string.Empty;
-				country = (countrycode != string.Empty)
-									   ? $" :flag_{countrycode}:"
-									   : string.Empty;
-				countrycode = (countrycode != string.Empty)
-										   ? $"**Country Code** • {countrycode}\n"
-										   : string.Empty;
-				var region = player.Location?.Region?.Code?.ToLower() ?? string.Empty;
-				region = (region != string.Empty)
-								 ? $"**Region Code** • {region}\n"
-								 : string.Empty;
-				var mods = player.ModeratedGames.Count();
-				var pbs = player.PersonalBests.Count;
-				var role = player.Role;
-				var runs = player.Runs.Count();
-				var sudate = player.SignUpDate.Value;
-				var yt = (player.YoutubeProfile != null)
-												? $"\n**YouTube •<{player.YoutubeProfile.OriginalString}> "
-												: string.Empty;
-				var twitch = (player.TwitchProfile != null)
-												   ? $"\n**Twitch •<{player.TwitchProfile.OriginalString}>"
-												   : string.Empty;
-				var twitter = (player.TwitterProfile != null)
-													 ? $"\n**Twitch •<{player.TwitterProfile.OriginalString}>"
-													 : string.Empty;
-				var web = $"\n<{player.WebLink.OriginalString}>";
-				return Task.FromResult($"**[Player Info - *{name}*{country}]**\n"
-									+ $"**Id** • {id}\n"
-									+ countrycode
-									+ region
-									+ $"**Moderator** • {mods}\n"
-									+ $"**Personal Records** • {pbs}\n"
-									+ $"**Role** • {role}\n"
-									+ $"**Runs** • {runs}\n"
-									+ $"**Join Date** • {sudate}"
-									+ yt
-									+ twitch
-									+ twitter
-									+ web);
+					return null;
+				return new SpeedrunPlayerProfile
+				{
+					Id = player.ID,
+					Name = player.Name,
+					CountryCode = player.Location?.Country?.Code?.ToLower() ?? string.Empty,
+					Region = player.Location?.Region?.Code?.ToLower() ?? string.Empty,
+					Mods = player.ModeratedGames.Count(),
+					PersonalBests = new List<SpeedrunPlayerPersonalBest>(player.PersonalBests.Count),
+					Role = player.Role.ToString(),
+					Runs = player.Runs.Count(),
+					SignUpDateTime = player.SignUpDate.Value,
+					YouTubeLink = player.YoutubeProfile?.OriginalString ?? string.Empty,
+					TwitchLink = player.TwitchProfile?.OriginalString ?? string.Empty,
+					TwitterLink = player.TwitterProfile?.OriginalString ?? string.Empty,
+					WebsiteLink = player.WebLink?.OriginalString ?? string.Empty
+				};
 			}
-			catch
+			catch (Exception e)
 			{
-				return Task.FromResult("**Error**");
+				return await Logger.SendToChannelAsync("SpeedrunCom.GetPlayerInfoAsync Error", e) as SpeedrunPlayerProfile;
 			}
 		}
 
-		public static Task<string> GetGameInfo(string gamename)
+		public static async Task<SpeedrunGame> GetGameInfoAsync(string gamename)
 		{
 			try
 			{
 				var game = _client.Games.SearchGame(gamename);
 				if (game == null)
-					return Task.FromResult("Unknown game.");
+					return null;
 
-				// Title
-				var name = game.Name;
-				// Info
-				var id = game.ID;
-				var abbr = game.Abbreviation;
-				var rdate = game.YearOfRelease;
-				var cdate = string.Empty;
-				if (game.CreationDate != null)
-					cdate = $"**Creation Date** • {game.CreationDate.Value}\n";
-				var mods = game.Moderators.Count;
-				var isrom = game.IsRomHack;
-				// Rules
-				var deftiming = game.Ruleset.DefaultTimingMethod;
-				var emus = game.Ruleset.EmulatorsAllowed;
-				var verification = game.Ruleset.RequiresVerification;
-				var vproof = game.Ruleset.RequiresVideo;
-				var showms = game.Ruleset.ShowMilliseconds;
-
-				return Task.FromResult($"**[Game Info - *{name}*]**\n"
-									 + $"**Id** • {id}\n"
-									 + $"**Abbreviation** • {abbr}\n"
-									 + cdate
-									 + $"**Release Date** • {rdate}\n"
-									 + $"**Moderator Count** • {mods}\n"
-									 + $"**Is Rom Hack?** • {isrom}\n"
-									 + $"**Default Timing Method** • {deftiming}\n"
-									 + $"**Emulators Allowed?** • {emus}\n"
-									 + $"**Requires Verification?** • {verification}\n"
-									 + $"**Requires Video?** • {vproof}\n"
-									 + $"**Show Milliseconds?** • {showms}");
+				return new SpeedrunGame
+				{
+					// Title
+					Name = game.Name,
+					// Info
+					Id = game.ID,
+					Link = game.WebLink.AbsoluteUri,
+					CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri,
+					Abbreviation = game.Abbreviation,
+					ReleaseDate = game.YearOfRelease,
+					CreationDateTime = game.CreationDate,
+					Moderators = new List<SpeedrunPlayerProfile>(game.Moderators.Count),
+					IsRom = game.IsRomHack,
+					// Rules
+					DefaultTimingMethod = game.Ruleset.DefaultTimingMethod.ToString(),
+					EmulatorsAllowed = game.Ruleset.EmulatorsAllowed,
+					RequiresVerification = game.Ruleset.RequiresVerification,
+					RequiresVideoProof = game.Ruleset.RequiresVideo,
+					ShowMilliseconds = game.Ruleset.ShowMilliseconds
+				};
 			}
-			catch
+			catch (Exception e)
 			{
-				return Task.FromResult("**Error**");
+				return await Logger.SendToChannelAsync("SpeedrunCom.GetGameInfoAsync Error", e) as SpeedrunGame;
 			}
 		}
 
-		public static Task<string> GetModerators(string gamename)
+		public static async Task<SpeedrunGame> GetModeratorsAsync(string gamename)
 		{
 			try
 			{
 				var output = string.Empty;
 				var game = _client.Games.SearchGame(gamename);
 				if (game == null)
-					return Task.FromResult("Unknown game.");
+					return null;
+
+				var moderators = new List<SpeedrunPlayerProfile>();
 				foreach (var item in game.Moderators.ToArray())
 				{
-					var country = item.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-					if (country != string.Empty)
-						country = $" :flag_{country}:";
-					output += $"{item.Name}{country}\n";
+					moderators.Add(new SpeedrunPlayerProfile
+					{
+						Name = item.Name,
+						Id = item.UserID,
+						CountryCode = item.User.Location?.Country?.Code?.ToLower() ?? string.Empty
+					});
 				}
-				return Task.FromResult(output.Substring(0, output.Length - 1));
+				return new SpeedrunGame
+				{
+					Name = game.Name,
+					Id = game.ID,
+					Link = game.WebLink.AbsoluteUri,
+					CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri,
+					Moderators = moderators
+				};
 			}
-			catch
+			catch (Exception e)
 			{
-				return Task.FromResult("**Error**");
+				return await Logger.SendToChannelAsync("SpeedrunCom.GetModeratorsAsync Error", e) as SpeedrunGame;
 			}
 		}
 
@@ -346,102 +323,130 @@ namespace NeKzBot.Tasks.Speedrun
 			}
 		}
 
-		public static async Task<string> GetTopTenAsync(string name)
+		public static async Task<SpeedrunGameLeaderboard> GetTopTenAsync(string name)
 		{
-			try
+			var game = _client.Games.SearchGame(name);
+			if (game != null)
 			{
-				var game = _client.Games.SearchGame(name);
-				if (game == null)
-					return "Unknown game.";
-
-				var output = $"**[Top 10 - *{game.Name}*]**\n";
-				var category = game.FullGameCategories.FirstOrDefault(cat => (cat.Type == CategoryType.PerGame) && (cat.Runs.Any()));
-				var runs = category.Runs.Where(run => run.Status.Type == RunStatusType.Verified)
-										.OrderBy(run => run.Times.Primary.Value.TotalMilliseconds)
-										.ToArray();
-				var rankcount = (runs.Length >= 10)
-											 ? 10
-											 : runs.Length;
-				var names = new List<string>();
-				for (int i = 0, rank = 0; i < rankcount; i++)
+				try
 				{
-					if (!(names.Contains(runs[i].Player.Name)))
+					var category = game.FullGameCategories.FirstOrDefault(cat => (cat.Type == CategoryType.PerGame) && (cat.Runs.Any()));
+					var runs = category.Runs.Where(run => run.Status.Type == RunStatusType.Verified)
+											.OrderBy(run => run.Times.Primary.Value.TotalMilliseconds)
+											.ToArray();
+					var rankcount = (runs.Length >= 10)
+												 ? 10
+												 : runs.Length;
+					var names = new List<string>();
+					var records = new List<SpeedrunPlayerPersonalBest>();
+					for (int i = 0, rank = 0; i < rankcount; i++)
 					{
-						rank++;
-						if (rank >= 2)
-							if (await IsTied(runs[i].Times.Primary.Value, runs[i - 1].Times.Primary.Value))
-								rank--;
-						names.Add(runs[i].Player.Name);
-						var country = string.Empty;
-						if (runs[i].Player.IsUser)
+						if (!names.Contains(runs[i].Player.Name))
 						{
-							country = runs[i].Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty;
-							if (country != string.Empty)
-								country = $" :flag_{country}:";
+							rank++;
+							if ((rank >= 2)
+							&& (await IsTied(runs[i].Times.Primary.Value, runs[i - 1].Times.Primary.Value)))
+								rank--;
+							names.Add(runs[i].Player.Name);
+
+							var profile = new SpeedrunPlayerPersonalBest()
+							{
+								CategoryName = runs[i].Category.Name,
+								PlayerName = runs[i].Player.Name,
+								PlayerLocation = ((runs[i].Player.IsUser)
+											  && (runs[i].Player.User.Location?.Country?.Code?.ToLower() != null))
+													? $":flag_{runs[i].Player.User.Location.Country.Code.ToLower()}:"
+													: string.Empty,
+								PlayerRank = await TopTenFormat(rank.ToString(), false),
+								EntryTime = await FormatTime(runs[i].Times.Primary.Value)
+							};
+							records.Add(profile);
 						}
-						output += $"{await TopTenFormat(rank.ToString(), false)} **{runs[i].Player.Name}**{country} in {await FormatTime(runs[i].Times.Primary.Value)}\n";
+						else
+							rankcount++;
 					}
-					else
-						rankcount++;
+
+					return new SpeedrunGameLeaderboard()
+					{
+						Game = new SpeedrunGame
+						{
+							Name = game.Name,
+							Link = game.WebLink.AbsoluteUri,
+							CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri
+						},
+						Entries = records
+					};
 				}
-				return output.Substring(0, output.Length - 1);
+				catch (Exception e)
+				{
+					await Logger.SendAsync("SpeedrunCom.GetTopTenAsync Error", e);
+				}
 			}
-			catch
-			{
-				return "**Error**";
-			}
+			return null;
 		}
 
-		public static async Task<string> GetLastNotificationAsync(string scount = null, string nftype = null)
+		public static async Task<List<SpeedrunNotification>> GetLastNotificationAsync(string scount = "x", string nftype = null)
 		{
 			try
 			{
-				// Check parameter <count>
-				if (scount == null)
+				if (string.Equals(scount, "x", StringComparison.CurrentCultureIgnoreCase))
 					scount = _maxnfcount.ToString();
-				else if (string.Equals(scount, "x", StringComparison.CurrentCultureIgnoreCase))
-					scount = _maxnfcount.ToString();
-				else if (!(new Regex("^[1-9]").IsMatch(scount)))
-					return "Invalid notification count. Use numbers 1-9 only.";
+
+				if (!(uint.TryParse(scount, out var count)))
+					return null;
+
 				nftype = nftype ?? "any";
 
-				// Web request
 				var json = await Fetching.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}", _headers);
+
+				// Read
 				if (string.IsNullOrEmpty(json))
 					return null;
 
-				// Read
+				// Read json string
 				dynamic api = JsonConvert.DeserializeObject(json);
 				if (string.IsNullOrEmpty(api?.ToString()))
 					return null;
 
 				// Parse data
-				var output = $"**[Latest Notifications (Type: {nftype})]**\n";
-				var count = Convert.ToInt16(scount);
-				for (int i = 0; i < count; i++)
+				var updates = new List<SpeedrunNotification>();
+				foreach (var data in api.data)
 				{
-					var data = api.data[i];
-					var id = data?.id?.ToString();
-					var created = data?.created?.ToString() ?? string.Empty;
-					var status = data?.status?.ToString() ?? string.Empty;
-					var text = data?.text?.ToString() ?? string.Empty;
-					var type = data?.item?.rel.ToString() ?? string.Empty;
-					var url = data?.item?.uri?.ToString() ?? string.Empty;
+					if (updates.Count == count)
+						break;
 
-					// Filter
-					if ((nftype == "any")
-					|| (nftype == type))
-						output += $"{(status == "read" ? "Read" : "Unread")} | {created} | {text}\n";
-					else
-						count++;
+					var notification = new SpeedrunNotification()
+					{
+						CreationDate = data?.created.ToString() ?? string.Empty,
+						ContentText = data?.text.ToString() ?? string.Empty,
+						Type = (SpeedrunNotificationType)data?.item?.rel,
+						ContentLink = data?.item?.uri?.ToString() ?? string.Empty,
+						Status = data?.item?.status == "read"
+													? SpeedrunNotificationStatus.Read
+													: SpeedrunNotificationStatus.Unread
+					};
+
+					// Filtering
+					if ((string.Equals(notification.Type.ToString(), nftype, StringComparison.CurrentCultureIgnoreCase))
+					|| (nftype == "any"))
+					{
+						await notification.BuildGame();
+						var game = _client.Games.SearchGame(notification.Game.Name);
+						if (game != null)
+						{
+							notification.Game.Link = game?.WebLink?.AbsoluteUri ?? string.Empty;
+							notification.Game.CoverLink = game?.Assets?.CoverSmall?.Uri?.AbsoluteUri ?? string.Empty;
+						}
+						await notification.BuildCache();
+						updates.Add(notification);
+					}
 				}
-				return await Utils.CutMessage(output.Replace("_", "\\_"), 1);
+				return updates;
 			}
 			catch (Exception e)
 			{
-				await Logger.SendToChannelAsync("SpeedrunCom.GetLastNotificationAsync Error", e);
+				return await Logger.SendToChannelAsync("SpeedrunCom.GetLastNotificationAsync Error", e) as List<SpeedrunNotification>;
 			}
-			return "**Error**";
 		}
 
 		public static async Task<List<SpeedrunNotification>> GetNotificationUpdatesAsync(uint count)
@@ -471,12 +476,13 @@ namespace NeKzBot.Tasks.Speedrun
 						CreationDate = data?.created.ToString() ?? string.Empty,
 						ContentText = data?.text.ToString() ?? string.Empty,
 						Type = (SpeedrunNotificationType)data?.item?.rel,
-						ContentLink = data?.item?.uri?.ToString() ?? string.Empty
+						ContentLink = data?.item?.uri?.ToString() ?? string.Empty,
+						Status = data?.item?.status == "read" ? SpeedrunNotificationStatus.Read : SpeedrunNotificationStatus.Unread
 					};
 
 					// Filtering
-					if (notification.Type != SpeedrunNotificationType.Post)
-					{
+					//if (notification.Type != SpeedrunNotificationType.Post)
+					//{
 						// Eh, blame the guy who designed the website/api :c
 						await notification.BuildGame();
 						var game = _client.Games.SearchGame(notification.Game.Name);
@@ -487,7 +493,7 @@ namespace NeKzBot.Tasks.Speedrun
 						}
 						await notification.BuildCache();
 						updates.Add(notification);
-					}
+					//}
 				}
 				return updates;
 			}
@@ -497,41 +503,52 @@ namespace NeKzBot.Tasks.Speedrun
 			}
 		}
 
-		public static Task<string> GetGameRules(string gName, bool il = false)
+		public static async Task<SpeedrunGameRules> GetGameRulesAsync(string gamename, bool il = false)
 		{
-			try
+			var game = _client.Games.SearchGame(gamename);
+			if (game != null)
 			{
-				var game = _client.Games.SearchGame(gName);
-				if (game == null)
-					return Task.FromResult("Unknown game.");
-
-				var rules = string.Empty;
-				foreach (var category in game.Categories.ToArray())
+				try
 				{
-					if (il)
+					foreach (var category in game.Categories.ToArray())
 					{
-						if ((string.IsNullOrEmpty(category.Rules))
-						|| (category.Type != CategoryType.PerLevel))
-							continue;
+						if (il)
+						{
+							if ((string.IsNullOrEmpty(category.Rules))
+							|| (category.Type != CategoryType.PerLevel))
+								continue;
+						}
+						else
+						{
+							if ((string.IsNullOrEmpty(category.Rules))
+							|| (category.Type != CategoryType.PerGame))
+								continue;
+						}
+
+						if (category.Rules != string.Empty)
+						{
+							return new SpeedrunGameRules()
+							{
+								ContentRules = category.Rules,
+								CategoryName = category.Name,
+								Game = new SpeedrunGame
+								{
+									Name = game.Name,
+									Link = game.WebLink.AbsoluteUri,
+									CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri
+								}
+							};
+						}
+						else
+							return new SpeedrunGameRules();
 					}
-					else
-					{
-						if ((string.IsNullOrEmpty(category.Rules))
-						|| (category.Type != CategoryType.PerGame))
-							continue;
-					}
-					rules = category.Rules;
-					if (rules != string.Empty)
-						break;
 				}
-				return Task.FromResult((rules == string.Empty)
-											  ? "No rules have been defined."
-											  : $"*{rules}*");
+				catch (Exception e)
+				{
+					await Logger.SendAsync("SpeedrunCom.GetGameRulesAsync Error", e);
+				}
 			}
-			catch
-			{
-				return Task.FromResult($"**Error.** Try `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>` if you haven't already.");
-			}
+			return null;
 		}
 
 		// Formatting

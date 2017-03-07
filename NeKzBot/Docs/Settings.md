@@ -9,11 +9,8 @@
 | PrefixCmd | Application | The prefix which let's you execute commands. |
 | BotCmd | Application | The group prefix for bot specific commands. |
 | AudioPath | Application | Folder path to the audio files. |
-| RefreshTime | User | Task delay of the Portal 2 auto updater in minutes. |
 | BoardParameter | User | Portal 2 auto updater link query where it checks for new updates. |
-| AutoUpdate | User | State of the Portal 2 auto updater. |
 | GiveawayCode | Application | Puzzle code of the giveaway mini game, numbers only, the length will decide how long it will take to solve it. |
-| GiveawayResetTime | User | Giveaway reset time in milliseconds. |
 | GiveawayMaxTries | User | Maximum user tries per reset time to solve the puzzle. |
 | GiveawayEnabled | User | State of the giveaway game. |
 | DataPath | Application | Folder path to the [data files](#data-example). |
@@ -24,7 +21,7 @@
 | StreamingRoleName | Application | Role name to give when a user stream on Twitch. |
 | WorldRecordRoleName | Application | Role name to give when a user has a world record. |
 | TwitterDescription | Application | Static Twitter description for the online-offline event updater. |
-| BotPermissions | Application | Integer of the permissions invite link value. Here's a nice [calculator](https://discordapi.com/permissions.html) for that. |
+| BotPermissions | Application | Integer of the permissions invite link value. Here's a nice [calculator](https://finitereality.github.io/permissions/?v=0) for that. |
 
 ## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Credentials.settings)
 | Name | Description |

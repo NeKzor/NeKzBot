@@ -29,7 +29,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			}
 
 			// Get new or cached document
-			public static async Task<HtmlDocument> GetCacheAsync(string url, bool ignore = false)
+			public static async Task<HtmlDocument> GetAsync(string url, bool ignore = false)
 			{
 				// Get cache
 				var cache = await Caching.CApplication.GetCacheAsync(_cacheKey);
@@ -51,17 +51,17 @@ namespace NeKzBot.Tasks.Leaderboard
 				}
 				catch (Exception e)
 				{
-					return await Logger.SendToChannelAsync("Fetching.GetDocumentAsync Error (Portal2.Cache.GetCacheAsync)", e) as HtmlDocument;
+					return await Logger.SendToChannelAsync("Fetching.GetDocumentAsync Error (Portal2.Cache.GetAsync)", e) as HtmlDocument;
 				}
 
 				// Save cache
-				await Logger.SendAsync($"Portal2.Cache.GetCacheAsync Caching -> {await Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", LogColor.Caching);
+				await Logger.SendAsync($"Portal2.Cache.GetAsync Caching -> {await Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", LogColor.Caching);
 				await Caching.CApplication.AddCache(_cacheKey, new Dictionary<string, HtmlDocument> { [url] = doc });
 				return doc;
 			}
 
 			// Timer
-			public static async Task ResetCacheAsync()
+			public static async Task ResetAsync()
 			{
 				await Logger.SendAsync("Portal2 Reset Cache Started", LogColor.Leaderboard);
 				_cacheWatch = new Stopwatch();
@@ -71,7 +71,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				{
 					for (;;)
 					{
-						await Task.Delay(((int)Configuration.Default.CachingTime * 60000) - await Watch.GetElapsedTimeAsync(message: "Portal2.Cache.ResetCacheAsync Delay Took -> "));
+						await Task.Delay(((int)Configuration.Default.CachingTime * 60000) - await Watch.GetElapsedTime(debugmsg: "Portal2.Cache.ResetAsync Delay Took -> "));
 						await Watch.RestartAsync();
 
 						// Cache stuff
@@ -79,13 +79,13 @@ namespace NeKzBot.Tasks.Leaderboard
 						await Caching.CApplication.ClearDataAsync(_cacheKey);
 
 						// Use cache reset to set new game and status
-						await Task.Factory.StartNew(async() => Bot.Client.SetGame(await Utils.RNGAsync(Data.RandomGames) as string));
-						await Task.Factory.StartNew(async() => Bot.Client.SetStatus(await Utils.RNGAsync(Data.BotStatus) as UserStatus));
+						await Task.Factory.StartNew(async () => Bot.Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string));
+						await Task.Factory.StartNew(async () => Bot.Client.SetStatus(await Utils.RngAsync(Data.BotStatus) as UserStatus));
 					}
 				}
 				catch
 				{
-					await Logger.SendAsync("Portal2.Cache.ResetCacheAsync Error", LogColor.Error);
+					await Logger.SendAsync("Portal2.Cache.ResetAsync Error", LogColor.Error);
 				}
 				IsRunning = false;
 			}

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
-using NeKzBot.Classes.Discord;
+using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -82,7 +82,7 @@ namespace NeKzBot.Tasks
 
 							foreach (var item in Data.TwitchTvSubscribers)
 							{
-								 await WebhookService.ExecuteWebhookAsync(item, new Webhook
+								await WebhookService.ExecuteWebhookAsync(item, new Webhook
 								{
 									UserName = item.UserName,
 									AvatarUrl = "https://s3-us-west-2.amazonaws.com/web-design-ext-production/p/Glitch_474x356.png",
@@ -92,14 +92,14 @@ namespace NeKzBot.Tasks
 						}
 						else // Remove from cache when not streaming
 							if (cache.Contains(streamer))
-								cache.Remove(streamer);
+							cache.Remove(streamer);
 					}
 					// Save cache
 					await Caching.CApplication.SaveCacheAsync(_cacheKey, cache);
 					cache = null;
 
 					// Check in 3 minutes again
-					await Task.Delay((3 * 60000) - await Watch.GetElapsedTimeAsync(message: "Twitch.StartAsync Delay Took -> "));
+					await Task.Delay((3 * 60000) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> "));
 					await Watch.RestartAsync();
 				}
 			}
@@ -133,7 +133,7 @@ namespace NeKzBot.Tasks
 				Thumbnail = new EmbedThumbnail(stream.Game.BoxArt),
 				Image = new EmbedImage(stream.PreviewLink),
 				Timestamp = DateTime.UtcNow.ToString("s"),
-				Footer = new EmbedFooter("twitch.tv", "https://www.twitch.tv/favicon.ico")
+				Footer = new EmbedFooter("twitch.tv", Data.TwitchTvIconUrl)
 			});
 		}
 	}

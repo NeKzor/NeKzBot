@@ -11,4 +11,8 @@
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartAction>Program</StartAction>
+    <StartProgram>C:\Users\Thomas\Documents\NeKzBotSelfBot - Copy\NeKzBotSelfBot.exe</StartProgram>
+  </PropertyGroup>
 </Project>

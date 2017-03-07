@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using HtmlAgilityPack;
+using NeKzBot.Classes;
+using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
@@ -20,62 +23,90 @@ namespace NeKzBot.Tasks.NonModules
 		}
 
 		// Downloads Steam workshop item image
-		public static async Task<bool> CheckWorkshopAsync(Discord.MessageEventArgs args)
+		public static async Task<bool> CheckWorkshopAsync(MessageEventArgs args)
 		{
 			try
 			{
-				var msg = args.Message.Text;
 				// Check for the link
-				if (!(Uri.TryCreate(msg, UriKind.Absolute, out Uri uri)))
+				if (!(Uri.TryCreate(args.Message.Text, UriKind.Absolute, out Uri uri)))
 					return false;
-				var path = uri.GetLeftPart(UriPartial.Authority);
-				if ((path != "http://steamcommunity.com/sharedfiles/filedetails/")
-				&& (path != "https://steamcommunity.com/sharedfiles/filedetails/"))
-					return false;
-
-				// Get cache
-				var doc = await GetCacheAsync(msg);
-				if (doc == null)
-					return true;
-
-				// Name of game
-				var game = doc.DocumentNode.SelectSingleNode("//div[@class='apphub_AppName ellipsis']").InnerHtml;
-
-				// Name of user
-				var user = string.Empty;
-				if (doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']") != null)
+				var result = await GetSteamWorkshopAsync(uri);
+				if (result != null)
 				{
-					user = doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml;
-					user = user.Substring(0, user.LastIndexOf("<br>")).Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty);
+					await Bot.SendAsync(CustomRequest.SendMessage(args.Channel.Id), new CustomMessage(new Embed
+					{
+						Author = new EmbedAuthor(result.UserName, result.UserLink, result.UserAvatar),
+						Color = Data.SteamColor.RawValue,
+						Title = $"{result.GameName} Workshop Item",
+						Description = $"{result.ItemTitle} made by [{result.UserName}]({result.UserLink})",
+						Url = result.ItemLink,
+						Image = new EmbedImage(result.ItemImage),
+						Footer = new EmbedFooter("steamcommunity.com", Data.SteamcommunityIconUrl)
+					}));
 				}
-				else
-					user = doc.DocumentNode.SelectSingleNode("//div[@class='linkAuthor']//a").InnerHtml;
-
-				// Title of item
-				var item = doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemTitle']").InnerHtml;
-
-				// Workshop preview image
-				var picture = (doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemPreviewImageMain']") != null)
-					? doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemPreviewImageMain']//a").Attributes["onclick"].Value
-					: (doc.DocumentNode.SelectSingleNode("//div[@id='highlight_player_area']") != null)
-						? doc.DocumentNode.SelectSingleNode("//div[@id='highlight_player_area']//a").Attributes["onclick"].Value
-						: (doc.DocumentNode.SelectSingleNode("//div[@class='collectionBackgroundImageContainer']") != null)
-							? $"\n{doc.DocumentNode.SelectSingleNode("//div[@class='collectionBackgroundImageContainer']//img").Attributes["src"].Value}"
-							: string.Empty;
-				const string cut = "ShowEnlargedImagePreview( '";
-				picture = ((picture != string.Empty)
-				&& (picture.Contains(cut)))
-						   ? "\n" + picture.Substring(cut.Length, picture.LastIndexOf("'") - cut.Length)
-						   : picture;
-
-				await args.Channel.SendMessage($"**[Steam Workshop - *{game}*]**\n{item} made by {user}{picture}");
 			}
 			catch (Exception e)
 			{
 				await Logger.SendToChannelAsync("Steam.CheckWorkshopAsync Error", e);
-				await args.Channel.SendMessage("**Error**");
 			}
 			return true;
+		}
+		// Downloads Steam workshop item image
+		public static async Task<SteamWorkshop> GetSteamWorkshopAsync(Uri link)
+		{
+			try
+			{
+				var path = link.GetLeftPart(UriPartial.Path);
+				if ((path != "http://steamcommunity.com/sharedfiles/filedetails/")
+				&& (path != "https://steamcommunity.com/sharedfiles/filedetails/"))
+					return null;
+
+				// Get cache
+				var uri = link.AbsoluteUri;
+				var doc = await GetCacheAsync(uri);
+				if (doc == null)
+					return null;
+
+				// Not the best check, but this should only support workshop items and not all the other shared files stuff
+				var temp = doc.DocumentNode.SelectSingleNode("//title").InnerHtml;
+				if (!(temp.Substring(0, "Steam Workshop".Length) != "Steam Workshop"))
+					return null;
+
+				const string cut = "ShowEnlargedImagePreview( '";
+				var picture = (doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemPreviewImageMain']")
+					!= null)
+					? doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemPreviewImageMain']//a").Attributes["onclick"].Value
+					: (doc.DocumentNode.SelectSingleNode("//div[@id='highlight_player_area']")
+						!= null)
+						? doc.DocumentNode.SelectSingleNode("//div[@id='highlight_player_area']//a").Attributes["onclick"].Value
+						: (doc.DocumentNode.SelectSingleNode("//div[@class='collectionBackgroundImageContainer']")
+							!= null)
+							? $"\n{doc.DocumentNode.SelectSingleNode("//div[@class='collectionBackgroundImageContainer']//img").Attributes["src"].Value}"
+							: string.Empty;
+				picture = ((picture != string.Empty)
+				&& (picture.Contains(cut)))
+							? $"\n{picture.Substring(cut.Length, picture.LastIndexOf("'") - cut.Length)}"
+							: picture;
+
+				return new SteamWorkshop()
+				{
+					UserLink = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//a[@class='friendBlockLinkOverlay']").Attributes["href"].Value,
+					UserAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//div//img").Attributes["src"].Value,
+					GameName = doc.DocumentNode.SelectSingleNode("//div[@class='apphub_AppName ellipsis']").InnerHtml,
+					UserName = (doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']")
+						!= null)
+						? doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.Substring(0, doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.LastIndexOf("<br>")).Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty)
+						: doc.DocumentNode.SelectSingleNode("//div[@class='linkAuthor']//a").InnerHtml,
+					ItemTitle = doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemTitle']").InnerHtml,
+					ItemImage = picture,
+					ItemLink = uri
+				};
+			}
+			catch (Exception e)
+			{
+				await Logger.SendAsync("Steam.GetSteamWorkshopAsync Error", e);
+			}
+			return null;
 		}
 
 		// Copy of Leaderboard.Cache

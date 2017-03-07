@@ -31,7 +31,7 @@ namespace NeKzBot.Modules
 				ThumbnailUrl = record.Game.CoverLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			}
@@ -99,7 +99,7 @@ namespace NeKzBot.Modules
 				ThumbnailUrl = records.Game.CoverLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			};
@@ -136,7 +136,7 @@ namespace NeKzBot.Modules
 				Url = $"https://speedrun.com/{name}",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			}
@@ -179,7 +179,7 @@ namespace NeKzBot.Modules
 				ThumbnailUrl = leaderboard.Game.CoverLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			}
@@ -210,7 +210,7 @@ namespace NeKzBot.Modules
 				ThumbnailUrl = rules.Game.CoverLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			}
@@ -256,7 +256,7 @@ namespace NeKzBot.Modules
 				Url = notification.ContentLink,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by speedrun.com",
+					Text = "speedrun.com",
 					IconUrl = "https://www.speedrun.com/themes/default/favicon.png"
 				}
 			}

@@ -23,7 +23,7 @@ namespace NeKzBot.Modules
 				Author = new EmbedAuthorBuilder
 				{
 					Name = Context.User.Username,
-					IconUrl = Context.User.AvatarUrl,
+					IconUrl = Context.User.GetAvatarUrl(),
 					Url = "https://github.com/NeKzor"
 				},
 				Color = await Utils.GetUserColor(Context.User, Context.Guild),
@@ -127,7 +127,7 @@ namespace NeKzBot.Modules
 				Author = new EmbedAuthorBuilder
 				{
 					Name = Context.User.Username,
-					IconUrl = Context.User.AvatarUrl,
+					IconUrl = Context.User.GetAvatarUrl(),
 					Url = "https://github.com/NeKzor"
 				},
 				Color = await Utils.GetUserColor(Context.User, Context.Guild),
@@ -160,7 +160,7 @@ namespace NeKzBot.Modules
 				Author = new EmbedAuthorBuilder
 				{
 					Name = Context.User.Username,
-					IconUrl = Context.User.AvatarUrl,
+					IconUrl = Context.User.GetAvatarUrl(),
 					Url = "https://github.com/NeKzor"
 				},
 				Color = await Utils.GetUserColor(Context.User, Context.Guild),
@@ -263,9 +263,9 @@ namespace NeKzBot.Modules
 				field.Name = "Features";
 				var output = string.Empty;
 				foreach (var item in guild.Features)
-					output += $"`{item}`, ";
+					output += $"\n`{item}`";
 				field.Value = (output != string.Empty)
-									  ? $"{guild.Features.Count}\n{output.Substring(0, output.Length - 2)}"
+									  ? $"{guild.Features.Count}{output}"
 									  : "None";
 			})
 			.AddField(field =>
@@ -304,7 +304,7 @@ namespace NeKzBot.Modules
 										? $"<:{item.Name}:{item.Id}>  "
 										: $"`{item.Name}`, ";
 				field.Value = (output != string.Empty)
-									  ? $"{guild.Emojis.Count}\n\n{output.Substring(0, output.Length - 2)}"
+									  ? $"{guild.Emojis.Count}\n{output.Substring(0, output.Length - 2)}"
 									  : "None";
 			}));
 		}
@@ -427,7 +427,7 @@ namespace NeKzBot.Modules
 			.WithAuthor(author =>
 			{
 				author.Name = user.Username;
-				author.IconUrl = user.AvatarUrl;
+				author.IconUrl = user.GetAvatarUrl();
 				if (user.Id == Bot.Client.CurrentUser.Id)
 					author.Url = "https://github.com/NeKzor";
 			})
@@ -473,7 +473,7 @@ namespace NeKzBot.Modules
 			{
 				field.IsInline = true;
 				field.Name = "Avatar Url";
-				field.Value = $"[Link]({user.AvatarUrl})";
+				field.Value = $"[Link]({user.GetAvatarUrl()})";
 			})
 			.AddField(field =>
 			{

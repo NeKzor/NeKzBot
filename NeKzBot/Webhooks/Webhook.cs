@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using NeKzBot.Classes.Discord;
+using NeKzBot.Extensions;
 
 namespace NeKzBot.Webhooks
 {
@@ -42,9 +42,9 @@ namespace NeKzBot.Webhooks
 		[JsonProperty("user")]
 		internal InternalUser User { get; set; }
 		[JsonProperty("name")]
-		internal string Name { get; set; }		// Note: 2-100 characters
+		internal string Name { get; set; }      // Note: 2-100 characters
 		[JsonProperty("avatar")]
-		public string Avatar { get; set; }		// Note: base64 128x128 jpeg image (data:image/jpeg;base64,MY_BASE64_IMAGE_DATA_HERE)
+		public string Avatar { get; set; }      // Note: base64 128x128 jpeg image (data:image/jpeg;base64,MY_BASE64_IMAGE_DATA_HERE)
 		[JsonProperty("token")]
 		public string Token { get; set; }
 

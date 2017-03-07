@@ -28,7 +28,7 @@ namespace NeKzBot
 			await InitAsync();
 			await Logger.SendAsync("Connecting", LogColor.Default);
 			await Client.LoginAsync(TokenType.User, Credentials.Default.DiscordUserToken);
-			await Client.ConnectAsync();
+			await Client.StartAsync();
 			await Logger.SendAsync("Connected", LogColor.Default);
 
 			Map = new DependencyMap();

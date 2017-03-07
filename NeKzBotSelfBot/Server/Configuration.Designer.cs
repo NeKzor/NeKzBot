@@ -43,15 +43,6 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.0.1")]
-        public string AppVersion {
-            get {
-                return ((string)(this["AppVersion"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("$nekz")]
         public string PrefixCmd {
             get {
@@ -74,6 +65,15 @@ namespace NeKzBot.Server {
         public string TwitchChannelLink {
             get {
                 return ((string)(this["TwitchChannelLink"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.0.2")]
+        public string AppVersion {
+            get {
+                return ((string)(this["AppVersion"]));
             }
         }
     }

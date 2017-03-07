@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NeKzBot.Classes;
-using NeKzBot.Classes.Discord;
+using NeKzBot.Extensions;
 using NeKzBot.Server;
 
 namespace NeKzBot.Webhooks

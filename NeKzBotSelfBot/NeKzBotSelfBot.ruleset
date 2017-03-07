@@ -31,6 +31,7 @@
     <Rule Id="RCS1035" Action="Info" />
     <Rule Id="RCS1048FadeOut" Action="Info" />
     <Rule Id="RCS1049FadeOut" Action="Info" />
+    <Rule Id="RCS1057" Action="None" />
     <Rule Id="RCS1062" Action="Info" />
     <Rule Id="RCS1066" Action="Info" />
     <Rule Id="RCS1069" Action="Info" />

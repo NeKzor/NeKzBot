@@ -23,7 +23,7 @@ namespace NeKzBot.Modules
 					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", map, out index)))
 						if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", map, out index)))
 							return;
-				url = $"https://board.iverb.me/changelog?chamber={Data.Portal2Maps[index].BestTimeID}&wr=1";
+				url = $"https://board.iverb.me/changelog?chamber={Data.Portal2Maps[index].BestTimeId}&wr=1";
 			}
 			else
 				url = "https://board.iverb.me/changelog?wr=1";
@@ -37,10 +37,10 @@ namespace NeKzBot.Modules
 				Color = Data.BoardColor,
 				Title = "Portal 2 World Record",
 				Url = url,
-				ImageUrl = $"https://board.iverb.me/images/chambers_full/{entry.MapID}.jpg",
+				ImageUrl = $"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			}
@@ -109,7 +109,7 @@ namespace NeKzBot.Modules
 				if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", map, out index)))
 					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", map, out index)))
 						return;
-			await GetLatestMapEntry($"https://board.iverb.me/changelog?chamber={Data.Portal2Maps[index].BestTimeID}", Context.Message);
+			await GetLatestMapEntry($"https://board.iverb.me/changelog?chamber={Data.Portal2Maps[index].BestTimeId}", Context.Message);
 		}
 
 		[Command("entry")]
@@ -155,7 +155,7 @@ namespace NeKzBot.Modules
 				Url = "https://board.iverb.me/changelog",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			};
@@ -199,7 +199,7 @@ namespace NeKzBot.Modules
 					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", map, out index)))
 						return;
 
-			var id = Data.Portal2Maps[index].BestTimeID;
+			var id = Data.Portal2Maps[index].BestTimeId;
 			var url = $"https://board.iverb.me/chamber/{id}";
 			var leaderboard = await Leaderboard.GetMapEntriesAsync(url, 0, top);
 			if (leaderboard == null)
@@ -213,7 +213,7 @@ namespace NeKzBot.Modules
 				ImageUrl = $"https://board.iverb.me/images/chambers_full/{id}.jpg",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			}
@@ -231,58 +231,61 @@ namespace NeKzBot.Modules
 
 		// Others
 		[Command("preview"), Alias("overview", "view")]
-		public async Task GetMapPreview([Remainder]string map = "")
+		public async Task GetMapPreview([Remainder]string name = "")
 		{
-			var url = default(string);
-			if (map != string.Empty)
+			var map = default(Portal2Map);
+			if (name != string.Empty)
 			{
-				if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "Name", map, out var index)))
-					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", map, out index)))
-						if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", map, out index)))
+				if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "Name", name, out var index)))
+					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", name, out index)))
+						if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", name, out index)))
 							return;
-				url = $"https://board.iverb.me/images/chambers_full/{Data.Portal2Maps[index].BestTimeID}.jpg";
+				map = Data.Portal2Maps[index];
 			}
 			else
-				url = $"https://board.iverb.me/images/chambers_full/{(await Utils.RNG(Data.Portal2Maps) as Portal2Map).BestTimeID}.jpg";
+				map = Data.Portal2Maps[await Utils.RNGInt(Data.Portal2Maps)];
 
 			await Message.EditAsync(Context.Message, new EmbedBuilder
 			{
 				Color = Data.BoardColor,
 				Title = "Portal 2 Map Preview",
-				ImageUrl = url,
+				Description = $"{map.Name} • {map.ChallengeModeName}",
+				Url = $"https://board.iverb.me/chambers/{map.BestTimeId}",
+				ImageUrl = $"https://board.iverb.me/images/chambers_full/{map.BestTimeId}.jpg",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Image provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			});
 		}
 
 		[Command("elevator"), Alias("dialogue", "dialog", "timing")]
-		public async Task GetElevatorTiming([Remainder]string map)
+		public async Task GetElevatorTiming([Remainder]string name)
 		{
-			if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "Name", map, out var index)))
-				if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", map, out index)))
-					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", map, out index)))
+			if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "Name", name, out var index)))
+				if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ChallengeModeName", name, out index)))
+					if (!(await Utils.SearchInClassByName(Data.Portal2Maps, typeof(Portal2Map), "ThreeLetterCode", name, out index)))
 						return;
 
+			var map = Data.Portal2Maps[index];
 			await Message.EditAsync(Context.Message, new EmbedBuilder
 			{
 				Color = Data.BoardColor,
 				Title = "Portal 2 Elevator Timing",
-				Description = Data.Portal2Maps[index].Name,
+				Description = map.Name,
 				Url = "https://speedrun.com/Portal_2",
-				ImageUrl = $"https://board.iverb.me/images/chambers_full/{Data.Portal2Maps[index].BestTimeID}.jpg",
+				ImageUrl = $"https://board.iverb.me/images/chambers_full/{map.BestTimeId}.jpg",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Image provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			}
 			.AddField(field =>
 			{
-				field.Name = Data.Portal2Maps[index].ChallengeModeName;
-				field.Value = Data.Portal2Maps[index].ElevatorTiming;
+				field.Name = map.ChallengeModeName;
+				field.Value = map.ElevatorTiming;
 			}));
 		}
 
@@ -298,10 +301,10 @@ namespace NeKzBot.Modules
 				Color = Data.BoardColor,
 				Title = "Portal 2 Entry",
 				Url = url,
-				ImageUrl = $"https://board.iverb.me/images/chambers_full/{entry.MapID}.jpg",
+				ImageUrl = $"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg",
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			}
@@ -382,7 +385,7 @@ namespace NeKzBot.Modules
 				Url = url,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "Data provided by board.iverb.me",
+					Text = "board.iverb.me",
 					IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"
 				}
 			}

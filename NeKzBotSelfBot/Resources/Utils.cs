@@ -63,16 +63,19 @@ namespace NeKzBot.Resources
 			{
 				do
 					numb = _rand.Next(from, to);
-				while ((numb == _temp) || (numb % _luckynumber == 0));
+				while ((numb == _temp) || ((numb != 0) && numb % _luckynumber == 0));
 			}
 			return Task.FromResult(_temp = numb);
 		}
 
-		public static async Task<object> RNG(object[,] array, int index = 0)
+		public static async Task<object> RNGObject(object[,] array, int index = 0)
 			=> array[await RNG(0, array.GetLength(0)), index];
 
-		public static async Task<object> RNG<T>(List<T> list)
+		public static async Task<object> RNGObject<T>(List<T> list)
 			=> list[await RNG(0, list.Count)];
+
+		public static async Task<int> RNGInt<T>(List<T> list)
+			=> await RNG(0, list.Count);
 
 		// File I/O
 		public static async Task<object> ReadDataAsync(string path, string separator = "|")
@@ -181,7 +184,7 @@ namespace NeKzBot.Resources
 			if ((user != null)
 			&& (guild != null))
 				foreach (var role in guild.Roles)
-					if ((user as SocketGuildUser).RoleIds.Contains(role.Id))
+					if ((user as SocketGuildUser).Roles.Contains(role))
 						return Task.FromResult(role.Color);
 			return Task.FromResult(Data.BasicColor);
 		}

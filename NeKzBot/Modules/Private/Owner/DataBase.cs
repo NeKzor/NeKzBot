@@ -3,7 +3,7 @@ using Discord.Commands;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
-namespace NeKzBot.Modules.Private.MainServer
+namespace NeKzBot.Modules.Private.Owner
 {
 	public class DataBase : Commands
 	{
@@ -132,7 +132,8 @@ namespace NeKzBot.Modules.Private.MainServer
 								await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {await Utils.ListToList(await Data.GetDataNames(), "`")}");
 						});
 
-				GBuilder.CreateCommand("data")
+				GBuilder.CreateCommand("datavars")
+						.Alias("vars")
 						.Description("Shows you a list of all data variables.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -140,18 +141,6 @@ namespace NeKzBot.Modules.Private.MainServer
 						{
 							await e.Channel.SendIsTyping();
 							await e.Channel.SendMessage($"**[Data Commands]**\n{await Utils.ListToList(await Data.GetDataNames(), "`", "\n")}");
-						});
-
-				GBuilder.CreateCommand("say")
-						.Alias("speak", "echo", "write")
-						.Description("Returns the given message.")
-						.Parameter("message", ParameterType.Required)
-						.AddCheck(Permissions.BotOwnerOnly)
-						.Hide()
-						.Do(async e =>
-						{
-							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Utils.CutMessage(e.GetArg("message")));
 						});
 			});
 			return Task.FromResult(0);

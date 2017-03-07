@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Compat.Web;
 using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
@@ -21,11 +22,11 @@ namespace NeKzBot.Tasks
 					var temp = doc.DocumentNode.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
 					var entry = new Portal2Entry()
 					{
-						MapID = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length),
+						MapId = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length),
 						Map = doc.DocumentNode.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty,
 						Ranking = await FormatRank(doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty),
 						Time = doc.DocumentNode.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty,
-						Player = doc.DocumentNode.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml ?? string.Empty,
+						Player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml) ?? string.Empty,
 						Date = doc.DocumentNode.SelectSingleNode("//div[@class='datatable page-entries active']//div[@class='entry']//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty,
 						Demo = (doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='demo-url']").Descendants("a")
 							.Any())
@@ -37,7 +38,7 @@ namespace NeKzBot.Tasks
 							: string.Empty,
 						Comment = (doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']").Descendants("i")
 							.Any())
-							? $"{doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']//i").Attributes["data-content"].Value}"
+							? $"{HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//div[@class='entry']//div[@class='comment']//i").Attributes["data-content"].Value)}"
 							: string.Empty
 					};
 					return (new List<string>() { entry.Map, entry.Ranking, entry.Time, entry.Player, entry.Date }
@@ -78,7 +79,7 @@ namespace NeKzBot.Tasks
 								: "too many.",
 						BestPlaceRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml),
 						WorstPlaceRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml),
-						PlayerName = doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml,
+						PlayerName = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml),
 						SinglePlayerRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[0].FirstChild.InnerHtml),
 						CooperativeRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml),
 						OverallRank = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='block-container ranks']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml),
@@ -113,7 +114,7 @@ namespace NeKzBot.Tasks
 					{
 						var entry = new Portal2Entry()
 						{
-							Player = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='boardname']//a")?[i].FirstChild.InnerHtml ?? string.Empty,
+							Player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='boardname']//a")?[i].FirstChild.InnerHtml) ?? string.Empty,
 							Ranking = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='place']")?[i].FirstChild.InnerHtml ?? string.Empty),
 							Time = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//a[@class='score']")?[i].FirstChild.InnerHtml ?? string.Empty,
 							Date = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='date']")?[i].Attributes["date"]?.Value?.ToString() ?? string.Empty
@@ -128,7 +129,7 @@ namespace NeKzBot.Tasks
 					return new Portal2Leaderboard()
 					{
 						// This isn't really needed anymore
-						//MapID = null,
+						//MapId = null,
 						//MapPreview = null,
 						MapName = doc.DocumentNode.SelectSingleNode("//head//title").InnerHtml,
 						Entries = entries
@@ -144,6 +145,9 @@ namespace NeKzBot.Tasks
 
 		internal static Task<string> FormatRank(string s)
 		{
+			if (s == "NO")
+				return Task.FromResult(s);
+
 			var output = $"{s}th";
 			if ((s == "11")
 			|| (s == "12")
@@ -159,11 +163,14 @@ namespace NeKzBot.Tasks
 		}
 
 		private static Task<string> AddDecimalPlace(string s)
-			=> Task.FromResult(s.Contains(".")
+			=> Task.FromResult((s.Contains("."))
+							|| (s == "NO")
 								? s
 								: $"{s}.0");
 
 		private static Task<string> FormatPoints(string s)
-			=> Task.FromResult(int.Parse(s).ToString("#,###,###.##"));
+			=> Task.FromResult((s != "0")
+								  ? int.Parse(s).ToString("#,###,###.##")
+								  : s);
 	}
 }

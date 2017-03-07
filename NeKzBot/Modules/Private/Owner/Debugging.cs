@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Modules.Private.MainServer;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
@@ -8,7 +9,7 @@ using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Tasks.Speedrun;
 using NeKzBot.Webhooks;
 
-namespace NeKzBot.Modules.Private.MainServer
+namespace NeKzBot.Modules.Private.Owner
 {
 	public class Debugging : Commands
 	{
@@ -144,19 +145,21 @@ namespace NeKzBot.Modules.Private.MainServer
 						{
 							await e.Channel.SendIsTyping();
 							var p2hooks = (await Data.GetDataByName("p2hook", out _))?.Data as List<WebhookData>;
-							var srcomhooks = (await Data.GetDataByName("srcomhook", out _))?.Data as List<WebhookData>;
+							var srcomsourcehooks = (await Data.GetDataByName("srcomsourcehook", out _))?.Data as List<WebhookData>;
+							var srcomportal2hooks = (await Data.GetDataByName("srcomportal2hook", out _))?.Data as List<WebhookData>;
 							var twtvhooks = (await Data.GetDataByName("twtvhook", out _))?.Data as List<WebhookData>;
-							if (new List<List<WebhookData>> { p2hooks, srcomhooks, twtvhooks }.Contains(null))
+							if (new List<List<WebhookData>> { p2hooks, srcomsourcehooks, srcomportal2hooks, twtvhooks }.Contains(null))
 							{
 								await e.Channel.SendMessage("**Failed** to load data from data manager.");
 								return;
 							}
 
 							var p2count = 0;
-							var srcomcount = 0;
+							var srcomsourcecount = 0;
+							var srcomportal2count = 0;
 							var twtvcount = 0;
 							var errorcount = 0;
-							var totalhooks = p2hooks?.Count + srcomhooks?.Count + twtvhooks?.Count;
+							var totalhooks = p2hooks?.Count + srcomsourcehooks?.Count + srcomportal2hooks?.Count + twtvhooks?.Count;
 
 							foreach (var data in p2hooks)
 							{
@@ -164,21 +167,34 @@ namespace NeKzBot.Modules.Private.MainServer
 								{
 									if (await WebhookData.UnsubscribeAsync("p2hook", data))
 									{
-										await Logger.SendAsync($"Auto unsubscribed {data.Id} (USER {data.UserName})(ID {data.UserId}) from p2hook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from p2hook", LogColor.Default);
 										p2count++;
 									}
 									else
 										errorcount++;
 								}
 							}
-							foreach (var data in srcomhooks)
+							foreach (var data in srcomsourcehooks)
 							{
 								if (await WebhookService.GetWebhookAsync(data, true) == null)
 								{
-									if (await WebhookData.UnsubscribeAsync("srcomhook", data))
+									if (await WebhookData.UnsubscribeAsync("srcomsourcehook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from srcomhook", LogColor.Default);
-										srcomcount++;
+										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from srcomsourcehook", LogColor.Default);
+										srcomsourcecount++;
+									}
+									else
+										errorcount++;
+								}
+							}
+							foreach (var data in srcomportal2hooks)
+							{
+								if (await WebhookService.GetWebhookAsync(data, true) == null)
+								{
+									if (await WebhookData.UnsubscribeAsync("srcomportal2hook", data))
+									{
+										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from srcomportal2hook", LogColor.Default);
+										srcomportal2count++;
 									}
 									else
 										errorcount++;
@@ -190,7 +206,7 @@ namespace NeKzBot.Modules.Private.MainServer
 								{
 									if (await WebhookData.UnsubscribeAsync("twtvhook", data))
 									{
-										await Logger.SendAsync($"Auto unsubscribed {data.Id} (USER {data.UserName})(ID {data.UserId}) from twtvhook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from twtvhook", LogColor.Default);
 										twtvcount++;
 									}
 									else
@@ -201,7 +217,8 @@ namespace NeKzBot.Modules.Private.MainServer
 							await Logger.SendAsync($"Cleaned webhook data. File I/O errors: {errorcount}", LogColor.Default);
 							await e.Channel.SendMessage($"Sent {totalhooks} ping test{((totalhooks == 1) ? string.Empty : "s")} in total and removed:"
 													  + $"\n• {p2count} webhook{((p2count == 1) ? string.Empty : "s")} from {Data.Portal2WebhookKeyword}"
-													  + $"\n• {srcomcount} webhook{((srcomcount == 1) ? string.Empty : "s")} from {Data.SpeedrunComWebhookKeyword}"
+													  + $"\n• {srcomsourcecount} webhook{((srcomsourcecount == 1) ? string.Empty : "s")} from {Data.SpeedrunComSourceWebhookKeyword}"
+													  + $"\n• {srcomportal2count} webhook{((srcomportal2count == 1) ? string.Empty : "s")} from {Data.SpeedrunComPortal2WebhookKeyword}"
 													  + $"\n• {twtvcount} webhook{((twtvcount == 1) ? string.Empty : "s")} from {Data.TwitchTvWebhookKeyword}");
 						});
 			});

@@ -22,13 +22,13 @@ namespace NeKzBot.Internals
 		/// <summary>Returns the elapsed time of the stopwatch.</summary>
 		/// <param name="unit">Value with the given unit.</param>
 		/// <param name="stop">If true, stops the internal timer.</param>
-		/// <param name="message">If not null or empty, logs the message text with the value.</param>
+		/// <param name="debugmsg">If not null or empty, logs the message text with the value.</param>
 		/// <returns></returns>
-		public async Task<int> GetElapsedTimeAsync(Time unit = Time.Seconds, bool stop = true, string message = "")
+		public Task<int> GetElapsedTime(Time unit = Time.Seconds, bool stop = true, string debugmsg = "")
 		{
 			if ((_watch == null)
 			|| !((bool)_watch?.IsRunning))
-				return 0;
+				return Task.FromResult(0);
 
 			if (stop)
 				_watch.Stop();
@@ -62,9 +62,11 @@ namespace NeKzBot.Internals
 					sresult = $"{iresult}t";
 					break;
 			}
-			if (!(string.IsNullOrEmpty(message)))
-				await Logger.SendAsync(message + sresult, LogColor.Watch);
-			return LastCheckedTimeValue = iresult;
+//#if DEBUG
+//			if (!(string.IsNullOrEmpty(debugmsg)))
+//				await Logger.SendAsync(debugmsg + sresult, LogColor.Watch);
+//#endif
+			return Task.FromResult(LastCheckedTimeValue = iresult);
 		}
 
 		/// <summary>Starts and stops the stopwatch.</summary>
@@ -88,17 +90,6 @@ namespace NeKzBot.Internals
 			if (_watch != null)
 				_watch.Stop();
 			return Task.FromResult(0);
-		}
-
-		/// <summary>Units of time.</summary>
-		public enum Time
-		{
-			Days,
-			Hours,
-			Minutes,
-			Seconds,
-			Milliseconds,
-			Ticks
 		}
 	}
 }

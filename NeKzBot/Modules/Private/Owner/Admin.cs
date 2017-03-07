@@ -5,7 +5,7 @@ using Discord.Commands;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
-namespace NeKzBot.Modules.Private.MainServer
+namespace NeKzBot.Modules.Private.Owner
 {
 	public class Admin : Commands
 	{
@@ -24,7 +24,7 @@ namespace NeKzBot.Modules.Private.MainServer
 						.Description("Sets a random playing game status.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
-						.Do(async e => Bot.Client.SetGame(await Utils.RNGAsync(Data.RandomGames) as string));
+						.Do(async e => Bot.Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string));
 
 				GBuilder.CreateCommand("setgame")
 						.Alias("play", "sg")
@@ -61,7 +61,7 @@ namespace NeKzBot.Modules.Private.MainServer
 							await e.Channel.SendMessage(await Utils.CutMessage(e.GetArg("message")));
 						});
 
-					GBuilder.CreateCommand("send")
+				GBuilder.CreateCommand("send")
 						.Description("Sends the given message to a specific channel of a guild. Use the keyword _this_ to skip the guild id parameter.")
 						.Parameter("guild_id", ParameterType.Required)
 						.Parameter("channel", ParameterType.Required)

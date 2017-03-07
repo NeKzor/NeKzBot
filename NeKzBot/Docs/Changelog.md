@@ -1,5 +1,25 @@
 ﻿# Changelog
 
+## Version 1.5.0
+* Added support for playing audio streams on multiple servers
+* Added VIP guild permission
+* Changed permissions for some modules
+* Removed unnecessary settings, variables and commands
+* Added a bot command to list all available guilds
+* Revised help mode commands
+* Fixed Portal 2 leaderboard profile scores parser
+* Fixed random number generator not returning the number zero
+* Fixed entry comment not showing for Portal 2 webhooks
+* Portal 2 leaderboard names and entry comments are encoded correctly now
+* Added message embedding extension
+* Changed message format into embeds for leaderboard and speedrun module
+* Added embed for Steam workshop parser
+* Fixed event exploits
+* Added a second check if a user has a nickname for the leaderboard module
+* Fixed Steam workshop parser
+* Added command to list all available sound commands
+* Added a profile comparison command for leaderboard module
+
 ## Version 1.4.1
 * Fixed webhook file I/O
 * Fixed data naming and spelling mistakes

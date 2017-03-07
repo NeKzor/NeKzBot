@@ -1,18 +1,38 @@
-﻿namespace NeKzBot.Classes
-{
-	public class Portal2EntryUpdate
-	{
-		public string ChannelMessage { get; set; }
-		public string TweetMessage { get; set; }
-		public string CacheFormat { get; set; }
-		public Cache TweetCache { get; set; }
-		public Portal2Entry Global { get; set; }
+﻿using System;
+using System.Collections.Generic;
 
-		public class Cache
-		{
-			public string Location { get; set; }
-			public string CommentMessage { get; set; }
-		}
+namespace NeKzBot.Classes
+{
+	public sealed class Portal2Map
+	{
+		public string Name { get; set; }
+		public string ChallengeModeName { get; set; }
+		public string BestTimeId { get; set; }
+		public string BestPortalsId { get; set; }
+		public string ThreeLetterCode { get; set; }
+		public string ElevatorTiming { get; set; }
+	}
+
+	public sealed class Portal2Leaderboard
+	{
+		public List<Portal2Entry> Entries { get; set; }
+		public string MapName { get; set; }
+		public string MapId { get; set; }
+		public string MapPreview { get; set; }
+	}
+
+	public sealed class Portal2EntryUpdate
+	{
+		public Portal2Entry Entry { get; set; }
+		public string CacheFormat { get; set; }
+		public Portal2TweetUpdate Tweet { get; set; }
+	}
+
+	public sealed class Portal2TweetUpdate
+	{
+		public string Message { get; set; }
+		public string Location { get; set; }
+		public string CommentMessage { get; set; }
 	}
 
 	public sealed class Portal2Entry
@@ -21,17 +41,30 @@
 		public string Time { get; set; }
 		public Portal2User Player { get; set; }
 		public string Ranking { get; set; }
-		public string Date { get; set; }
+		public string Date
+		{
+			get => (_date != string.Empty)
+						 ? $"{_date} UTC"
+						 : "_Unknown._";
+			set { _date = value; }
+		}
+		public DateTime DateTime
+		{
+			get => DateTime.Parse(_date);	// Useful for duration
+			set { }
+		}
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
-		public string MapID { get; set; }
+		public string MapId { get; set; }
+		private string _date;
 	}
 
 	public sealed class Portal2User
 	{
 		public string Name { get; set; }
-		public string ProfileLink { get; set; }
+		public string SteamLink { get; set; }
+		public string SteamAvatar { get; set; }
 		public string SinglePlayerPoints { get; set; }
 		public string CooperativePoints { get; set; }
 		public string OverallPoints { get; set; }
@@ -44,7 +77,6 @@
 		public string SinglePlayerWorldRecords { get; set; }
 		public string CooperativeWorldRecords { get; set; }
 		public string OverallWorldRecords { get; set; }
-		public string SteamAvatar { get; set; }
 		public string BestPlaceRank { get; set; }
 		public string BestPlaceMap { get; set; }
 		public string WorstPlaceRank { get; set; }
