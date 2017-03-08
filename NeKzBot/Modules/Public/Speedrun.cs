@@ -66,7 +66,7 @@ namespace NeKzBot.Modules.Public
 								}));
 						}
 						else
-							await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -123,7 +123,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await (await e.User.CreatePMChannel())?.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -168,7 +168,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -199,7 +199,7 @@ namespace NeKzBot.Modules.Public
 									{
 										new EmbedField($"{result.Name}", $"**Id** • {result.Id}\n"
 																	   + $"**Location** {(result.Location != string.Empty ? result.Location : "Unknown")}\n"
-																	   + $"**Location** {result.Region}"
+																	   + $"{(result.Region != string.Empty ? $"**Region** {result.Region}\n" : string.Empty)}"
 																	   + $"**Moderator** {result.Mods}\n"
 																	   + $"**Personal Records** {result.PersonalBests.Count}\n"
 																	   + $"**Role** {result.Role}\n"
@@ -214,7 +214,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await (await e.User.CreatePMChannel())?.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -256,7 +256,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await (await e.User.CreatePMChannel())?.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -300,7 +300,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await (await e.User.CreatePMChannel())?.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.User.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -324,7 +324,7 @@ namespace NeKzBot.Modules.Public
 								var output = string.Empty;
 								foreach (var moderator in result.Moderators.OrderBy(mod => mod.Name))
 								{
-									var temp = $"\n{(moderator.Location != string.Empty ? $" {moderator.Location}" : string.Empty)}{moderator.Name.Replace("_", "\\_")}";
+									var temp = $"\n{(moderator.Location != string.Empty ? $"{moderator.Location}" : string.Empty)}{moderator.Name.Replace("_", "\\_")}";
 									if (output.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField)
 										output += temp;
 								}
@@ -344,7 +344,7 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 						else
-							await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -378,7 +378,7 @@ namespace NeKzBot.Modules.Public
 						if (!(string.IsNullOrEmpty(type)))
 							result = await SpeedrunCom.GetLastNotificationAsync(e.GetArg("count"), type);
 						else
-							result = await SpeedrunCom.GetLastNotificationAsync(type);
+							result = await SpeedrunCom.GetLastNotificationAsync(e.GetArg("count"));
 
 						if ((result == null)
 						|| (result?.Count < 1))
@@ -433,7 +433,7 @@ namespace NeKzBot.Modules.Public
 				await e.Channel.SendIsTyping();
 				var result = await SpeedrunCom.GetGameRulesAsync(e.Args[0], isil);
 				if (result == null)
-					await e.Channel.SendMessage($"Couldn't parse a game with this name. Game might have a level leaderboard instead: Try `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>` if you haven't already.");
+					await e.Channel.SendMessage($"Couldn't parse a game with this name.{((isil) ? string.Empty : "Game might have a level leaderboard instead: Try `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>` if you haven't already.")}");
 				else if (result.ContentRules == null)
 					await e.Channel.SendMessage("No rules have been defined.");
 				else
@@ -457,7 +457,7 @@ namespace NeKzBot.Modules.Public
 				}
 			}
 			else
-				await(await e.User.CreatePMChannel())?.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+				await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 		}
 	}
 }

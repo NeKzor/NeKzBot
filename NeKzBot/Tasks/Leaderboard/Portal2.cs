@@ -21,32 +21,39 @@ namespace NeKzBot.Tasks.Leaderboard
 			{
 				try
 				{
-					const string root = "//div[@class='datatable page-entries active']";
-					var map = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
-					var ranking = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
-					var time = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
-					var player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode($"{root}//div[@class='boardname']//a")?.FirstChild?.InnerHtml) ?? string.Empty;
-					var date = doc.DocumentNode.SelectSingleNode($"{root}//div[@class='entry']//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
+					var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div[@class='entry']")[0].InnerHtml);
+					var map = node.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
+					var ranking = node.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
+					var time = node.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
+					var player = HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='boardname']//a")?.FirstChild?.InnerHtml) ?? string.Empty;
+					var date = node.SelectSingleNode("//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
 
 					if (new List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
 					{
-						await Logger.SendToChannelAsync("Portal2.GetLatestEntryAsync Node Is Empty", LogColor.Error);
+						await Logger.SendToChannelAsync("Portal2.GetEntryUpdateAsync Node Is Empty", LogColor.Error);
 						return null;
 					}
 
 					// Only add when it exists
-					var demo = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='demo-url']").Descendants("a")
+					var demo = (node.SelectSingleNode("//div[@class='demo-url']").Descendants("a")
 						.Any())
-						? $"http://board.iverb.me{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='demo-url']//a").Attributes["href"].Value}"
+						? $"http://board.iverb.me{node.SelectSingleNode("//div[@class='demo-url']//a").Attributes["href"].Value}"
 						: string.Empty;
-					var youtube = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='youtube']").Descendants("i")
+					var youtube = (node.SelectSingleNode("//div[@class='youtube']").Descendants("i")
 						.Any())
-						? $"http://youtu.be/{doc.DocumentNode.SelectSingleNode($"{root}//div[@class='youtube']//i").Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
+						? $"http://youtu.be/{node.SelectSingleNode("//div[@class='youtube']//i").Attributes["onclick"].Value.Substring("embedOnBody('".Length, _maxytid)}"
 						: string.Empty;
-					var comment = (doc.DocumentNode.SelectSingleNode($"{root}//div[@class='comment']").Descendants("i")
+					var comment = (node.SelectSingleNode("//div[@class='comment']").Descendants("i")
 						.Any())
-						? HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode($"{root}//div[@class='comment']//i").Attributes["data-content"].Value)
+						? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
+
+					var temp = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
+					var mapid = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length);
+
+					temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
+					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
+					var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
 					return new Portal2Entry
 					{
@@ -55,8 +62,13 @@ namespace NeKzBot.Tasks.Leaderboard
 						Demo = demo,
 						Date = date,
 						Map = map,
-						MapId = map,
-						Player = await GetUserStatsAsync($"https://board.iverb.me/profile/{player}"), // This makes it slower :c
+						MapId = mapid,
+						Player = new Portal2User
+						{
+							Name = player,
+							SteamId = steamid,
+							SteamAvatar = avatar
+						},
 						Ranking = ranking,
 						Time = time
 					};
@@ -111,7 +123,9 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						var temp = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
 						var mapid = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length);
-						var profile = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
+
+						temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
+						var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
 						var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
 						entries.Add(new Portal2EntryUpdate()
@@ -127,7 +141,7 @@ namespace NeKzBot.Tasks.Leaderboard
 								Player = new Portal2User
 								{
 									Name = player,
-									SteamLink = profile,
+									SteamId = steamid,
 									SteamAvatar = avatar
 								},
 								Ranking = ranking,
@@ -164,9 +178,10 @@ namespace NeKzBot.Tasks.Leaderboard
 			{
 				try
 				{
+					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
 					return new Portal2User()
 					{
-						SteamLink = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value,
+						SteamId = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1),
 						SteamAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value,
 						BestPlaceMap = (doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span")[0].Descendants("a")
 							.Any())
@@ -257,7 +272,8 @@ namespace NeKzBot.Tasks.Leaderboard
 						? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='cell comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
 
-					var steamlink = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
+					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
+					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
 					var steamavatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value;
 
 					return new Portal2Entry
@@ -265,7 +281,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						Player = new Portal2User
 						{
 							Name = player,
-							SteamLink = steamlink,
+							SteamId = steamid,
 							SteamAvatar = steamavatar
 						},
 						Date = date,

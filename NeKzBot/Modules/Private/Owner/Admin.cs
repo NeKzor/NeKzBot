@@ -46,7 +46,7 @@ namespace NeKzBot.Modules.Private.Owner
 									await e.Channel.SendMessage("Bot is already playing that game.");
 							}
 							else
-								await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+								await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 						});
 
 				GBuilder.CreateCommand("echo")

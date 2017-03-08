@@ -402,72 +402,44 @@ namespace NeKzBot.Resources
 		public static async Task<string> FindDescriptionAsync(string name)
 		{
 			if (string.IsNullOrEmpty(name))
-				return await GetDescriptionAsync(null);
+				return Data.ListModules + Data.MoreInformation;
 			foreach (var command in Commands.CService.AllCommands)
 			{
 				if ((name == command.Text)
 				|| (command.Aliases.Contains(name)))
-					return await GetDescriptionAsync(command);
+					return await GetDescription(command);
 			}
 			return "This command does not exist.";
 		}
 
-		public static async Task<string> GetDescriptionAsync(Command cmd)
+		public static Task<string> GetDescription(Command cmd)
 		{
-			if (cmd != null)
+			var output = $"`{cmd.Text}";
+			if (cmd.Parameters.Any())
 			{
-				var output = $"`{cmd.Text}";
-
-				if (cmd.Parameters.Any())
+				foreach (var parameter in cmd.Parameters)
 				{
-					foreach (var parameter in cmd.Parameters)
-					{
-						if (parameter.Type == ParameterType.Multiple)
-							output += $" <{parameter.Name}> <etc.>";
-						if (parameter.Type == ParameterType.Optional)
-							output += $" ({parameter.Name})";
-						if (parameter.Type == ParameterType.Required)
-							output += $" <{parameter.Name}>";
-						if (parameter.Type == ParameterType.Unparsed)
-							output += $" <{parameter.Name} ... >";
-					}
+					if (parameter.Type == ParameterType.Multiple)
+						output += $" <{parameter.Name}> <etc.>";
+					if (parameter.Type == ParameterType.Optional)
+						output += $" ({parameter.Name})";
+					if (parameter.Type == ParameterType.Required)
+						output += $" <{parameter.Name}>";
+					if (parameter.Type == ParameterType.Unparsed)
+						output += $" <{parameter.Name} ... >";
 				}
-				output += string.IsNullOrEmpty(cmd.Description)
-							   ? "`\n• No description."
-							   : $"`\n{cmd.Description}";
+			}
+			output += string.IsNullOrEmpty(cmd.Description)
+							? "`\n• No description."
+							: $"`\n{cmd.Description}";
 
-				var aliases = "\n\n• Known aliases:";
-				if (cmd.Aliases.Any())
-					foreach (var alias in cmd.Aliases)
-						aliases += $" `{alias}`, ";
-				return await CutMessage((aliases != "\n\n• Known aliases:")
-												 ? output += aliases.Substring(0, aliases.Length - 2)
-												 : output);
-			}
-			else
-			{
-				var list = new List<string>();
-				var count = 0;
-				foreach (var command in Commands.CService.AllCommands)
-				{
-					if (!(command.IsHidden))
-						count++;
-					var name = command.Text;
-					if (name.Split(' ').Length == 1)
-					{
-						if (command.Parameters.Any())
-						{
-							var temp = string.Empty;
-							foreach (var parameter in command.Parameters)
-								temp += $" <{parameter.Name}>";
-							list.Add(name + temp);
-						}
-						else
-							list.Add(name);
-					}
-				}
-				return await CutMessage($"There are {count} ({Commands.CService.AllCommands.Count()}) commands in total:\n\n{await ListToList(list, "`")}\n\nTry `{Configuration.Default.PrefixCmd}help <command>` for more information.");
-			}
+			var aliases = "\n\n• Known aliases:";
+			if (cmd.Aliases.Any())
+				foreach (var alias in cmd.Aliases)
+					aliases += $" `{alias}`, ";
+			return CutMessage((aliases != "\n\nKnown aliases:")
+									   ? output += aliases.Substring(0, aliases.Length - 2)
+									   : output);
 		}
 		#endregion
 

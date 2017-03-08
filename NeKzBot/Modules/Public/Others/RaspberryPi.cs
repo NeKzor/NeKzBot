@@ -31,7 +31,7 @@ namespace NeKzBot.Modules.Public.Others
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Utils.GetCommandOutputAsync("date"));
+							await e.Channel.SendMessage((await Utils.GetCommandOutputAsync("date")).Replace("  ", " "));
 						});
 
 				GBuilder.CreateCommand("uptime")
@@ -40,7 +40,7 @@ namespace NeKzBot.Modules.Public.Others
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage((await Utils.GetCommandOutputAsync("uptime")).Split(',')[0]);
+							await e.Channel.SendMessage($"{(await Utils.GetCommandOutputAsync("uptime")).Split(',')[0].Replace("up", "(up for")})");
 						});
 
 				GBuilder.CreateCommand("temperature")

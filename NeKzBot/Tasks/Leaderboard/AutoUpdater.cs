@@ -160,7 +160,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			{
 				var embed = new Embed
 				{
-					Author = new EmbedAuthor(wr.Player.Name, $"https://board.iverb.me{wr.Player.SteamLink}", wr.Player.SteamAvatar),
+					Author = new EmbedAuthor(wr.Player.Name, wr.Player.SteamLink, wr.Player.SteamAvatar),
 					Title = "New Portal 2 World Record",
 					Url = "https://board.iverb.me/changelog?wr=1",
 					Color = Data.BoardColor.RawValue,

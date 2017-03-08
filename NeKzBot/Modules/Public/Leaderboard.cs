@@ -69,7 +69,7 @@ namespace NeKzBot.Modules.Public
 							};
 
 							if ((entry.Demo != string.Empty)
-							|| (entry.Demo != string.Empty))
+							|| (entry.YouTube != string.Empty))
 							{
 								embed.AddField(field =>
 								{
@@ -143,7 +143,7 @@ namespace NeKzBot.Modules.Public
 							};
 
 							if ((entry.Demo != string.Empty)
-							|| (entry.Demo != string.Empty))
+							|| (entry.YouTube != string.Empty))
 							{
 								embed.AddField(field =>
 								{
@@ -186,11 +186,11 @@ namespace NeKzBot.Modules.Public
 						if (e.GetArg("mapname") == string.Empty)
 							entry = await Portal2.GetLatestEntryAsync($"{url}{await Utils.RngAsync(Data.Portal2Maps, 0)}");
 						else if (await Utils.SearchArray(Data.Portal2Maps, 2, e.GetArg("mapname"), out var index))
-							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 2]}");
+							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 0]}");
 						else if (await Utils.SearchArray(Data.Portal2Maps, 3, e.GetArg("mapname"), out index))
-							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 3]}");
+							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 0]}");
 						else if (await Utils.SearchArray(Data.Portal2Maps, 5, e.GetArg("mapname"), out index))
-							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 5]}");
+							entry = await Portal2.GetLatestEntryAsync($"{url}{Data.Portal2Maps[index, 0]}");
 						else
 						{
 							await e.Channel.SendMessage("Couldn't find that map.");
@@ -218,7 +218,7 @@ namespace NeKzBot.Modules.Public
 							};
 
 							if ((entry.Demo != string.Empty)
-							|| (entry.Demo != string.Empty))
+							|| (entry.YouTube != string.Empty))
 							{
 								embed.AddField(field =>
 								{
@@ -256,7 +256,7 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var url = $"http://board.iverb.me/profile/{e.User.Name}";
+						var url = $"http://board.iverb.me/profile/{e.User.Name.Trim()}";
 						var profile = default(Portal2User);
 						var entry = default(Portal2Entry);
 
@@ -265,7 +265,7 @@ namespace NeKzBot.Modules.Public
 							profile = await Portal2.GetUserStatsAsync(url);
 							if ((profile == null)
 							&& (e.User.Nickname != null))
-								profile = await Portal2.GetUserStatsAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname}");
+								profile = await Portal2.GetUserStatsAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname.Trim()}");
 
 							if (profile != null)
 							{
@@ -368,7 +368,7 @@ namespace NeKzBot.Modules.Public
 					{
 						await e.Channel.SendIsTyping();
 						var url = (e.GetArg("playername") == string.Empty)
-														  ? $"http://board.iverb.me/profile/{e.User.Name}"
+														  ? $"http://board.iverb.me/profile/{e.User.Name.Trim()}"
 														  : $"http://board.iverb.me/profile/{e.Args[0]}";
 
 						var entry = default(Portal2Entry);
@@ -438,7 +438,7 @@ namespace NeKzBot.Modules.Public
 							var profile = await Portal2.GetUserStatsAsync(url);
 							if ((profile == null)
 							&& (e.User.Nickname != null))
-								profile = await Portal2.GetUserStatsAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname}");
+								profile = await Portal2.GetUserStatsAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname.Trim()}");
 
 							if (profile != null)
 							{
@@ -479,6 +479,8 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
+						const uint minimum = 2;
+						const uint maximum = 3;
 						if (!(await Utils.SearchArray(Data.Portal2Maps, 2, e.GetArg("mapname"), out var index)))
 							if (!(await Utils.SearchArray(Data.Portal2Maps, 3, e.GetArg("mapname"), out index)))
 								if (!(await Utils.SearchArray(Data.Portal2Maps, 5, e.GetArg("mapname"), out index)))
@@ -488,8 +490,8 @@ namespace NeKzBot.Modules.Public
 						if (index != -1)
 						{
 							var players = e.GetArg("players").Split(' ');
-							if ((players.Length < 2)
-							|| (players.Length > 3))
+							if ((players.Length < minimum)
+							|| (players.Length > maximum))
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for comparison.");
 							else
 							{
@@ -538,8 +540,8 @@ namespace NeKzBot.Modules.Public
 						else
 						{
 							var players = e.GetArg("players").Split(' ');
-							if ((players.Length < 1)
-							|| (players.Length > 2))
+							if ((players.Length < minimum - 1)
+							|| (players.Length > maximum - 1))
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for a comparison.");
 							else
 							{

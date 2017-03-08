@@ -32,15 +32,6 @@ namespace NeKzBot.Modules.Public.Others
 						}
 					});
 
-			CService.CreateCommand("devserver")
-					.Description("Returns the static invite link of the main server.")
-					.Hide()
-					.Do(async e =>
-					{
-						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"https://discord.gg/{Credentials.Default.DiscordMainServerLinkId}");
-					});
-
 			// Get bot invite link
 			CService.CreateCommand("join")
 					.Description("Returns the bot invite link. Use this to invite the bot to your server.")
@@ -72,6 +63,16 @@ namespace NeKzBot.Modules.Public.Others
 							await e.Channel.SendFile(path);
 						}
 					});
+
+			// Hidden
+			CService.CreateCommand("devserver")
+					.Description("Returns the static invite link of the main server.")
+					.Hide()
+					.Do(async e =>
+					{
+						await e.Channel.SendIsTyping();
+						await e.Channel.SendMessage($"https://discord.gg/{Credentials.Default.DiscordMainServerLinkId}");
+					});
 			return Task.FromResult(0);
 		}
 
@@ -81,7 +82,7 @@ namespace NeKzBot.Modules.Public.Others
 			CService.CreateCommand(c)
 					.Description("Shows you a list of people who deserve some credit. It will be sent as a DM because the list is kinda long.")
 					.Hide()
-					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.ArrayToList(Data.SpecialThanks.OrderBy(name => name).ToArray(), string.Empty, "\n", "• ")}\nNote: Names are sorted in alphabetical order."));
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.ArrayToList(Data.SpecialThanks.OrderBy(name => name).ToArray(), string.Empty, "\n", "• ")}\n\nNote: Names are sorted in alphabetical order."));
 			return Task.FromResult(0);
 		}
 

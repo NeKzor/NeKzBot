@@ -12,27 +12,32 @@ namespace NeKzBot.Modules.Public.Others
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Resource Module", LogColor.Init);
-			await GetScript("scripts");
+			await GetScriptAsync("scripts");
 			await GetElevatorTiming("dialogue");
 			await GetPortalCvar("cvar");
 			await GetSegmentedRun(Data.SegmentedRunCommand);
 		}
 
-		public static Task GetScript(string c)
+		public static async Task GetScriptAsync(string c)
 		{
 			CService.CreateCommand(c)
-					.Description("Gives you a specific AutoHotkey script.")
-					.Parameter("name", ParameterType.Required)
+					.Alias("script")
+					.Description($"Gives you a specific AutoHotkey script. Available scripts: {await Utils.ArrayToList(Data.ScriptFiles, 0, "`")}")
+					.Parameter("name", ParameterType.Unparsed)
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (await Utils.SearchArray(Data.ScriptFiles, 0, e.Args[0], out var index))
-							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/scripts/{Data.ScriptFiles[index, 1]}");
+						if (e.Args[0] != string.Empty)
+						{
+							if (await Utils.SearchArray(Data.ScriptFiles, 0, e.Args[0], out var index))
+								await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/scripts/{Data.ScriptFiles[index, 1]}");
+							else
+								await e.Channel.SendMessage($"Unknown script. Try one of these: {await Utils.ArrayToList(Data.ScriptFiles, 0, "`")}");
+						}
 						else
-							await e.Channel.SendMessage($"Unknown script. Try one of these:\n{await Utils.ArrayToList(Data.ScriptFiles, 0, "`")}");
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
-			return Task.FromResult(0);
 		}
 
 		public static Task GetElevatorTiming(string c)
@@ -45,14 +50,19 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (await Utils.SearchArray(Data.Portal2Maps, 2, e.Args[0], out var index))
-							await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
-						else if (await Utils.SearchArray(Data.Portal2Maps, 3, e.Args[0], out index))
-							await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
-						else if (await Utils.SearchArray(Data.Portal2Maps, 5, e.Args[0], out index))
-							await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
+						if (e.Args[0] != string.Empty)
+						{
+							if (await Utils.SearchArray(Data.Portal2Maps, 2, e.Args[0], out var index))
+								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
+							else if (await Utils.SearchArray(Data.Portal2Maps, 3, e.Args[0], out index))
+								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
+							else if (await Utils.SearchArray(Data.Portal2Maps, 5, e.Args[0], out index))
+								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
+							else
+								await e.Channel.SendMessage("Unknown map name.");
+						}
 						else
-							await e.Channel.SendMessage("Unknown map name.");
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
 			return Task.FromResult(0);
 		}
@@ -73,7 +83,7 @@ namespace NeKzBot.Modules.Public.Others
 						else if (await Utils.SearchArray(Data.ProjectNames, 1, e.Args[0], out index))
 							await e.Channel.SendMessage($"**{Data.ProjectNames[index, 1]}**\n{Data.ProjectNames[index, 2]}");
 						else
-							await e.Channel.SendMessage($"Unknown run. Try of one these:\n{await Utils.ArrayToList(Data.ProjectNames, 0, "`")}");
+							await e.Channel.SendMessage($"Unknown project. Try of one these: {await Utils.ArrayToList(Data.ProjectNames, 0, "`")}");
 					});
 			return Task.FromResult(0);
 		}
@@ -82,7 +92,7 @@ namespace NeKzBot.Modules.Public.Others
 		{
 			CService.CreateCommand(c)
 					.Alias("cvars")
-					.Description("Returns you the description of a console variable.")
+					.Description("Returns the description of a Portal 2 console variable.")
 					.Parameter("cvar", ParameterType.Unparsed)
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>

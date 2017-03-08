@@ -48,11 +48,7 @@ namespace NeKzBot.Classes
 						 : "_Unknown._";
 			set { _date = value; }
 		}
-		public DateTime DateTime
-		{
-			get => DateTime.Parse(_date);	// Useful for duration
-			set { }
-		}
+		public DateTime DateTime { get => DateTime.Parse(_date); } // Useful for duration
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
@@ -63,8 +59,10 @@ namespace NeKzBot.Classes
 	public sealed class Portal2User
 	{
 		public string Name { get; set; }
-		public string SteamLink { get; set; }
+		public string SteamId { get; set; }
 		public string SteamAvatar { get; set; }
+		public string SteamLink { get => $"https://steamcommunity.com/profiles/{SteamId}"; }
+		public string BoardLink { get => $"https://board.iverb.me/profile/{SteamId}"; }
 		public string SinglePlayerPoints { get; set; }
 		public string CooperativePoints { get; set; }
 		public string OverallPoints { get; set; }

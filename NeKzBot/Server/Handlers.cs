@@ -58,9 +58,9 @@ namespace NeKzBot.Server
 				//case CommandErrorType.BadPermissions:
 				//	await e.Channel.SendMessage("You don't have the permission to do that.");
 				//	break;
-				case CommandErrorType.BadArgCount:
-					await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}help <command>`.");
-					break;
+				//case CommandErrorType.BadArgCount:
+				//	await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}help <command>`.");
+				//	break;
 				case CommandErrorType.InvalidInput:
 					await e.Channel.SendMessage("**Invalid input.**");
 					break;

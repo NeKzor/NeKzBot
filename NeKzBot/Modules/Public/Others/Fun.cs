@@ -85,15 +85,24 @@ namespace NeKzBot.Modules.Public.Others
 					.Parameter("text", ParameterType.Unparsed)
 					.Do(async e =>
 					{
-						await e.Channel.SendIsTyping();
 						if (!(string.IsNullOrEmpty(e.Args[0])))
-							await e.Channel.SendMessage(await Utils.RisAsync(e.Args[0]));
+						{
+							var result = await Utils.RisAsync(e.Args[0]);
+							if (result == string.Empty)
+								return;
+							await e.Channel.SendIsTyping();
+							await e.Channel.SendMessage(result);
+						}
 						else
-							await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+						{
+							await e.Channel.SendIsTyping();
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
+						}
 					});
 
 			CService.CreateCommand("routecredit")
 					.Description("Gives somebody route credit for no reason.")
+					.AddCheck(Permissions.DisallowBots)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -118,7 +127,7 @@ namespace NeKzBot.Modules.Public.Others
 						await e.Channel.SendIsTyping();
 						var question = e.Args[0];
 						if (string.IsNullOrEmpty(question))
-							await e.Channel.SendMessage(await Utils.GetDescriptionAsync(e.Command));
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 						else if (question[question.Length - 1] == '?')
 							await e.Channel.SendMessage(await Utils.RngStringAsync(Data.BotAnswers));
 						else

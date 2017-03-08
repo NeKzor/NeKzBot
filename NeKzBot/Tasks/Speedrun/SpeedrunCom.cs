@@ -129,6 +129,7 @@ namespace NeKzBot.Tasks.Speedrun
 						};
 						records.Add(record);
 					}
+
 					profile.PersonalBests = records;
 					return profile;
 				}
@@ -201,6 +202,7 @@ namespace NeKzBot.Tasks.Speedrun
 					player = _client.Users.GetUsers(playername).FirstOrDefault();
 				else
 					return null;
+
 				return new SpeedrunPlayerProfile
 				{
 					Id = player.ID,
@@ -278,6 +280,7 @@ namespace NeKzBot.Tasks.Speedrun
 						CountryCode = item.User.Location?.Country?.Code?.ToLower() ?? string.Empty
 					});
 				}
+
 				return new SpeedrunGame
 				{
 					Name = game.Name,
@@ -331,17 +334,20 @@ namespace NeKzBot.Tasks.Speedrun
 				try
 				{
 					var category = game.FullGameCategories.FirstOrDefault(cat => (cat.Type == CategoryType.PerGame) && (cat.Runs.Any()));
+					var temp = category.Leaderboard.Records;
+					// I don't know how to make this faster...
 					var runs = category.Runs.Where(run => run.Status.Type == RunStatusType.Verified)
 											.OrderBy(run => run.Times.Primary.Value.TotalMilliseconds)
 											.ToArray();
 					var rankcount = (runs.Length >= 10)
 												 ? 10
 												 : runs.Length;
+
 					var names = new List<string>();
 					var records = new List<SpeedrunPlayerPersonalBest>();
 					for (int i = 0, rank = 0; i < rankcount; i++)
 					{
-						if (!names.Contains(runs[i].Player.Name))
+						if (!(names.Contains(runs[i].Player.Name)))
 						{
 							rank++;
 							if ((rank >= 2)
@@ -349,7 +355,7 @@ namespace NeKzBot.Tasks.Speedrun
 								rank--;
 							names.Add(runs[i].Player.Name);
 
-							var profile = new SpeedrunPlayerPersonalBest()
+							records.Add(new SpeedrunPlayerPersonalBest()
 							{
 								CategoryName = runs[i].Category.Name,
 								PlayerName = runs[i].Player.Name,
@@ -359,8 +365,7 @@ namespace NeKzBot.Tasks.Speedrun
 													: string.Empty,
 								PlayerRank = await TopTenFormat(rank.ToString(), false),
 								EntryTime = await FormatTime(runs[i].Times.Primary.Value)
-							};
-							records.Add(profile);
+							});
 						}
 						else
 							rankcount++;

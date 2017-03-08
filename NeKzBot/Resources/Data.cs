@@ -21,14 +21,15 @@ namespace NeKzBot.Resources
 		public static readonly string CreditsCommand = "credits";
 		public static readonly string ExploitCommand = "exploit";
 		public static readonly string SegmentedRunCommand = "segmented";
-		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me."
-															  + $"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com."
-															  + $"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com."
-															  + $"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use).";
 		public static readonly string Portal2IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"; // <- this link could break
 		public static readonly string SpeedrunComIconUrl = "https://www.speedrun.com/themes/default/favicon.png";
 		public static readonly string TwitchTvIconUrl = "https://www.twitch.tv/favicon.ico";
 		public static readonly string SteamcommunityIconUrl = "https://steamcommunity.com/favicon.ico";
+		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me."
+															  + $"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com."
+															  + $"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com."
+															  + $"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use).";
+		
 
 		public static string[] ConsoleCommands { get; private set; }
 		public static string[] AudioAliases { get; private set; }
@@ -190,7 +191,20 @@ namespace NeKzBot.Resources
 
 		#region HELP COMMAND LIST
 		#region PUBLIC
-		public static readonly string FunPublic = "**[Fun Commands]**"
+		public static readonly string ListModules = "**[Available Modules]**\nInvoke one of them to show the full list."
+								+ $"\n• `{Configuration.Default.PrefixCmd}fun`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}info`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}portal2`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}speedrun`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}other`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}raspberry`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}resource`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}rest`"
+								+ $"\n• `{Configuration.Default.PrefixCmd}vip`";
+
+		public static readonly string MoreInformation = $"\n\nTry `{Configuration.Default.PrefixCmd}help <command>` to get more information.";
+
+		public static readonly string FunPublic = "**[Fun Module]**"
 												+ $"\n• `{Configuration.Default.PrefixCmd}cheat`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}exploit`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}funfact`"
@@ -201,7 +215,7 @@ namespace NeKzBot.Resources
 												+ $"\n• `{Configuration.Default.PrefixCmd}routecredit`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}question <question>`";
 
-		public static readonly string InfoPublic = "**[Info Commands]**"
+		public static readonly string InfoPublic = "**[Info Module]**"
 												 + $"\n• `{Configuration.Default.PrefixCmd}when`"
 												 + $"\n• `{Configuration.Default.PrefixCmd}idinfo`"
 												 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} uptime`"
@@ -211,14 +225,15 @@ namespace NeKzBot.Resources
 												 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} changelog`"
 												 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} guilds`";
 
-		public static readonly string LeaderboardPublic = "**[Portal 2 Leaderboard Commands]**"
+		public static readonly string LeaderboardPublic = "**[Portal 2 Leaderboard Module]**"
 														+ $"\n• `{Configuration.Default.PrefixCmd}latestwr <mapname>`"
 														+ $"\n• `{Configuration.Default.PrefixCmd}wr <mapname>`"
 														+ $"\n• `{Configuration.Default.PrefixCmd}rank <mapname>`"
-														+ $"\n• `{Configuration.Default.PrefixCmd}player <rankname>`"
-														+ $"\n• `{Configuration.Default.PrefixCmd}latestentry <mapname>`";
+														+ $"\n• `{Configuration.Default.PrefixCmd}player <playername>`"
+														+ $"\n• `{Configuration.Default.PrefixCmd}latestentry <mapname>`"
+														+ $"\n• `{Configuration.Default.PrefixCmd}compare <mapname> <players>`";
 
-		public static readonly string SpeedrunComPublic = "**[SpeedrunCom Commands]**"
+		public static readonly string SpeedrunComPublic = "**[SpeedrunCom Module]**"
 														+ $"\n• `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}wr <game>`"
 														+ $"\n• `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}wrs <game>`"
 														+ $"\n• `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}top <game>`"
@@ -231,34 +246,33 @@ namespace NeKzBot.Resources
 														+ $"\n• `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>`"
 														+ $"\n• `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}notification <count> <type>`";
 
-		public static readonly string OthersPublic = "**[Other Commands]**"
+		public static readonly string OthersPublic = "**[Other Module]**"
 												   + $"\n• `{Configuration.Default.PrefixCmd}meme`"
 												   + $"\n• `{Configuration.Default.PrefixCmd}tool`"
 												   + $"\n• `{Configuration.Default.PrefixCmd}link`"
-												   + $"\n• `{Configuration.Default.PrefixCmd}text`";
+												   + $"\n• `{Configuration.Default.PrefixCmd}quote`";
 
-		public static readonly string LinuxOnly = "**[Raspberry Pi Commands]**"
+		public static readonly string LinuxOnly = "**[Raspberry Pi Module]**"
 												+ $"\n• `{Configuration.Default.PrefixCmd}rpi specs`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}rpi date`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}rpi uptime`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}rpi temperature`"
 												+ $"\n• `{Configuration.Default.PrefixCmd}rpi os`";
 
-		public static readonly string ResourcesPublic = "**[Resource Commands]**"
+		public static readonly string ResourcesPublic = "**[Resource Module]**"
 													  + $"\n• `{Configuration.Default.PrefixCmd}scripts <name>`"
 													  + $"\n• `{Configuration.Default.PrefixCmd}dialogue <mapname>`"
 													  + $"\n• `{Configuration.Default.PrefixCmd}segmented <project>`";
 
-		public static readonly string RestPublic = "**[Rest Commands]**"
+		public static readonly string RestPublic = "**[Rest Module]**"
 												 + $"\n• `{Configuration.Default.PrefixCmd}invite`"
-												 + $"\n• `{Configuration.Default.PrefixCmd}devserver`"
 												 + $"\n• `{Configuration.Default.PrefixCmd}join`"
 												 + $"\n• `{Configuration.Default.PrefixCmd}view <mapname>`"
 												 + $"\n• `{Configuration.Default.PrefixCmd}credits`";
 
-		public static readonly string VipServersOnly = "**[Special Commands - VIP Servers Only]**"
+		public static readonly string VipServersOnly = "**[VIP Module]**"
 													 + $"\n• `{Configuration.Default.PrefixCmd}sound`"
-													 + $"\n• `{Configuration.Default.PrefixCmd}stream <channel>`"
+													 + $"\n• `{Configuration.Default.PrefixCmd}twitch <channel>`"
 													 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} connect`"
 													 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} disconnect`"
 													 + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} stop`"
@@ -267,7 +281,7 @@ namespace NeKzBot.Resources
 		#endregion
 
 		#region PRIVATE
-		public static readonly string MainServerOnly = "**[Bot Commands - Developer Server Only]**"
+		public static readonly string MainServerOnly = "**[Bot Module - Developer Server Only]**"
 													 + $"\n• `{Configuration.Default.PrefixCmd}cloud`"
 													 + $"\n• `{Configuration.Default.PrefixCmd}dbfolder`"
 													 + $"\n• `{Configuration.Default.PrefixCmd}dbdelete <file>`"
@@ -276,12 +290,12 @@ namespace NeKzBot.Resources
 													 + $"\n• `{Configuration.Default.PrefixCmd}giveaway setstate <state>`"
 													 + $"\n• `{Configuration.Default.PrefixCmd}giveaway status`";
 
-		public static readonly string LeaderboardPrivate = "**[Leaderboard Commands - Bot Owner Only]**"
+		public static readonly string LeaderboardPrivate = "**[Leaderboard Module - Bot Owner Only]**"
 														 + $"\n• `{Configuration.Default.PrefixCmd}boardparameter <name>`"
 														 + $"\n• `{Configuration.Default.PrefixCmd}cachetime`"
 														 + $"\n• `{Configuration.Default.PrefixCmd}setcachetime <value>`";
 
-		public static readonly string BotOwnerOnly = "**[Bot Commands - Bot Owner Only]**"
+		public static readonly string BotOwnerOnly = "**[Bot Module - Bot Owner Only]**"
 												   + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} newgame`"
 												   + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} setgame <name>`"
 												   + $"\n• `{Configuration.Default.PrefixCmd + Configuration.Default.BotCmd} echo <message>`"
@@ -307,7 +321,6 @@ namespace NeKzBot.Resources
 												  + "\n**RAM**\n • 1GB"
 												  + "\n**Network**\n • 10/100 Ethernet\n• 802.11n Wireless";
 
-		public static readonly string MessagEnding = $"\n**Notes**\n• Some commands don't require a parameter.• Some commands require a special permission.\n• Try `{Configuration.Default.PrefixCmd}help <command>` for more information.";
 		public static readonly string[] BotGreetings = { "Hey!", "Yo!", "Hi!", "Yoo!", "Hello!", "Hej!", "Hallo!", "Hola!", "Salut!" };
 		public static readonly string[] BotFeelings = { ":grinning:", ":grimacing:", ":grin:", ":smiley:", ":smile:", ":sweat_smile:", ":wink:", ":slight_smile:", ":rage:", ":yum:", ":blush:", ":robot:", ":thumbsup:", ":ok_hand:", ":v:", ":heart:" };
 

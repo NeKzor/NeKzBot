@@ -26,31 +26,21 @@ namespace NeKzBot.Modules.Public
 					});
 
 			CService.CreateCommand("commands")
-					.Alias("cmds")
-					.Description("Shows you a list of commands.")
+					.Alias("cmds", "modules")
+					.Description("Lists you all available modules.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var msg = "**[All Available Commands]**\nInvoke one of them to show the full list."
-								+ $"\n• `{Configuration.Default.PrefixCmd}fun`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}info`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}portal2`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}speedrun`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}other`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}raspberry`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}resource`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}rest`"
-								+ $"\n• `{Configuration.Default.PrefixCmd}vip`";
 						if (e.Server.Id == Credentials.Default.DiscordMainServerId)
-							await e.Channel.SendMessage($"{msg}\n• `{Configuration.Default.PrefixCmd}development`");
+							await e.Channel.SendMessage($"{Data.ListModules}\n• `{Configuration.Default.PrefixCmd}development`{Data.MoreInformation}");
 						else if (e.User.Id == Credentials.Default.DiscordBotOwnerId)
-							await e.Channel.SendMessage($"{msg}\n• `{Configuration.Default.PrefixCmd}development`\n• `{Configuration.Default.PrefixCmd}private`\n• `{Configuration.Default.PrefixCmd}hidden`");
+							await e.Channel.SendMessage($"{Data.ListModules}\n• `{Configuration.Default.PrefixCmd}development`\n• `{Configuration.Default.PrefixCmd}private`\n• `{Configuration.Default.PrefixCmd}hidden`{Data.MoreInformation}");
 						else
-							await e.Channel.SendMessage(msg);
+							await e.Channel.SendMessage(Data.ListModules + Data.MoreInformation);
 					});
 
 			CService.CreateCommand("fun")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the fun module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -58,7 +48,7 @@ namespace NeKzBot.Modules.Public
 					});
 
 			CService.CreateCommand("info")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the info module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -67,7 +57,7 @@ namespace NeKzBot.Modules.Public
 
 			CService.CreateCommand("portal2")
 					.Alias("leaderboard")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the portal2 module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -75,7 +65,7 @@ namespace NeKzBot.Modules.Public
 					});
 
 			CService.CreateCommand("speedrun")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the speedrun module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -84,7 +74,7 @@ namespace NeKzBot.Modules.Public
 
 			CService.CreateCommand("other")
 					.Alias("others")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the other module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -93,7 +83,7 @@ namespace NeKzBot.Modules.Public
 
 			CService.CreateCommand("raspberry")
 					.Alias("rpi")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the raspberry module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -102,7 +92,7 @@ namespace NeKzBot.Modules.Public
 
 			CService.CreateCommand("resource")
 					.Alias("resources")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the resource module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -110,7 +100,7 @@ namespace NeKzBot.Modules.Public
 					});
 
 			CService.CreateCommand("rest")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the rest module.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -118,7 +108,7 @@ namespace NeKzBot.Modules.Public
 					});
 
 			CService.CreateCommand("vip")
-					.Description("Shows you a list of commands.")
+					.Description("Lists you all commands of the vip module.")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
@@ -150,12 +140,12 @@ namespace NeKzBot.Modules.Public
 					.Hide()
 					.Do(async e =>
 					{
-						await (await e.User.CreatePMChannel())?.SendMessage("**[Hidden Commands & Tricks]**\n• `10=tick` converts 10 ticks into seconds with the default Portal 2 tickrate 60.\n"
+						await (await e.User.CreatePMChannel())?.SendMessage("**[Hidden Commands & Neat Shortcuts]**\n• `10=tick` converts 10 ticks into seconds with the default Portal 2 tickrate 60.\n"
 																		  + "• `1=sec` converts 1 second into ticks with the default Portal 2 tickrate 60.\n"
 																		  + "• You can also set a custom tickrate like this: `1=sec66`.\n"
 																		  + "• You can create a startdemos command very quickly with this: `10->demo_`.\n"
 																		  + "• You can view the image preview of a Steam workshop item by just sending a valid uri which should have `https` or `http` in the beginning.\n"
-																		  + $"• The prefix command doesn't have to start at the beginning of the input: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n"
+																		  + $"• You can execute commands at the end of your text too: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n"
 																		  + $"• You can also use a mention to execute commands: `{Bot.Client.CurrentUser.Mention} commands`.\n"
 																		  + "• Every Portal 2 challenge mode map has its own abbreviation e.g. `PGN` means Portal Gun, you don't have to write it in caps.");
 					});
@@ -163,7 +153,7 @@ namespace NeKzBot.Modules.Public
 			CService.CreateCommand("sound")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Hide()
-					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**[Sound Commands - VIP Servers Only]**\n{await Utils.ArrayToList(Data.SoundNames, 0, string.Empty, "`, ", $"`{Configuration.Default.PrefixCmd}", 2)}"));
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**[Sound Commands - VIP Servers Only]**\nUsage: `{Configuration.Default.PrefixCmd}sound <name>`. All available names:\n{await Utils.ArrayToList(Data.SoundNames, 0, string.Empty, ", ", string.Empty, 2)}"));
 
 			// Hints
 			CService.CreateCommand("meme")
@@ -192,9 +182,9 @@ namespace NeKzBot.Modules.Public
 						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync(Data.LinkCommands, 0) as string}`.");
 					});
 
-			CService.CreateCommand("text")
+			CService.CreateCommand("quote")
 					.AddCheck(Permissions.VipGuildsOnly)
-					.Description("Hints you a text command.")
+					.Description("Hints you a quote command.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();

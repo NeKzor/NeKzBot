@@ -29,7 +29,7 @@ namespace NeKzBot.Modules.Public
 						});
 
 				GBuilder.CreateCommand("location")
-						.Description("Gives you information about the server where the bot is located.")
+						.Description("Returns the current location of the server bot.")
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
@@ -38,7 +38,7 @@ namespace NeKzBot.Modules.Public
 
 				GBuilder.CreateCommand("info")
 						.Alias("status")
-						.Description("Shows some information about the bot.")
+						.Description("Shows some information about the application.")
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
@@ -60,7 +60,7 @@ namespace NeKzBot.Modules.Public
 						});
 
 				GBuilder.CreateCommand("version")
-						.Description("Returns the current version of the bot.")
+						.Description("Returns the current version of the application.")
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
@@ -68,13 +68,13 @@ namespace NeKzBot.Modules.Public
 						});
 
 				GBuilder.CreateCommand("changelog")
-						.Description("Returns the current version of the bot.")
+						.Description("Returns the latest changelog of this project.")
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
 							await e.Channel.SendMessage($"**Version {Configuration.Default.AppVersion}**"
 													  + Data.LatestChangelog
-													  + $"\n<{Configuration.Default.AppUrl}/blob/master/NeKzBot/Docs/Changelog.md#version-{Configuration.Default.AppVersion.Replace(".", string.Empty)}>");
+													  + $"\nRead more here: <{Configuration.Default.AppUrl}/blob/master/NeKzBot/Docs/Changelog.md#version-{Configuration.Default.AppVersion.Replace(".", string.Empty)}>");
 						});
 
 				GBuilder.CreateCommand("guilds")
@@ -87,7 +87,7 @@ namespace NeKzBot.Modules.Public
 							{
 								output += $"\n• {guild.Name} (ID {guild.Id})"
 										+ $"\n\t• Owner {guild.Owner?.Name ?? "_Unknown._"} (ID {guild.Owner.Id})"
-										+ $"\n\t• Users {guild.Users.Count(user => !user.IsBot)}"
+										+ $"\n\t• Users {guild.Users.Count(user => !(user.IsBot))}"
 										+ $"\n\t• Bots {guild.Users.Count(user => user.IsBot)}";
 							}
 							await e.Channel.SendMessage($"**Guild Count: {Bot.Client.Servers.Count()}**{ output}");
@@ -100,7 +100,7 @@ namespace NeKzBot.Modules.Public
 		{
 			// Small user information
 			CService.CreateCommand("when")
-					.Description("Shows you when you joined the server.")
+					.Description("Returns your joined server date.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
