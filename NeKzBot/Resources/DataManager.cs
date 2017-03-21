@@ -45,6 +45,19 @@ namespace NeKzBot.Resources
 		public static async Task InitMangerAsync()
 		{
 			await Logger.SendAsync("Initializing Data Manger", LogColor.Init);
+			PatternMatching = obj =>
+			{
+				if (obj is InternalData<Simple> simple)
+					return simple.Name;
+				if (obj is InternalData<Complex> complex)
+					return complex.Name;
+				if (obj is InternalData<Subscribers> subs)
+					return subs.Name;
+				if (obj is InternalData<Portal2Maps> p2map)
+					return p2map.Name;
+				else
+					return null;
+			};
 			Manager = new List<object>
 			{
 				new InternalData<Simple>("cc", true, true, "consolecmds.dat"),
@@ -62,24 +75,11 @@ namespace NeKzBot.Resources
 				new InternalData<Complex>("sounds", false, false, "sounds.dat"),
 				new InternalData<Complex>("exploits", true, true, "exploits.dat"),
 				new InternalData<Complex>("p2cvars", true, true, "p2cvars.dat"),
-				new InternalData<Subscribers>("p2hook", true, true, "p2subs.dat"),
+				new InternalData<Subscribers>("p2hook", true, true, "p2subs.dat", Parsers.WebhookDataParser),
 				new InternalData<Subscribers>("srcomsourcehook", true, true, "srsourcesubs.dat", Parsers.WebhookDataParser),
 				new InternalData<Subscribers>("twtvhook", true, true, "twtvsubs.dat", Parsers.WebhookDataParser),
 				new InternalData<Subscribers>("srcomportal2hook", true, true, "srportal2subs.dat", Parsers.WebhookDataParser),
 				new InternalData<Portal2Maps>("p2maps", true, false, "p2maps.dat", Parsers.Portal2MapListParser)
-			};
-			PatternMatching = obj =>
-			{
-				if (obj is InternalData<Simple> simple)
-					return simple.Name;
-				if (obj is InternalData<Complex> complex)
-					return complex.Name;
-				if (obj is InternalData<Subscribers> subs)
-					return subs.Name;
-				if (obj is InternalData<Portal2Maps> p2map)
-					return p2map.Name;
-				else
-					return null;
 			};
 		}
 	}
