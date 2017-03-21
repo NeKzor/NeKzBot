@@ -7,8 +7,8 @@ using Discord;
 using Discord.Audio;
 using NeKzBot.Classes;
 using NeKzBot.Internals;
-using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Tasks
 {
@@ -91,7 +91,7 @@ namespace NeKzBot.Tasks
 						break;
 					client.Send(buffer, 0, byteCount);
 
-					// Check if user wants to stop audio stream, so update the audio status
+					// Check if user wants to stop audio stream, update the audio status
 					if (_audioClients.TryGetValue(guildid, out var temp))
 						audio = temp;
 					else

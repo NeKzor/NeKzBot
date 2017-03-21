@@ -13,18 +13,14 @@ namespace NeKzBot.Resources
 	{
 		public static List<object> Manager { get; private set; }
 
-		public static Task<T> Get<T>(string name) where T : class, new()
+		public static Task<T> Get<T>(string name)
+			where T : class, new()
 		{
 			var index = Manager.FindIndex(data => PatternMatching(data) == name);
 			return Task.FromResult((index != -1)
 										  ? (T)((InternalData<T>)Manager[index]).Memory
 										  : null);
 		}
-
-		public static Task<T> Get<T>(int index) where T : class, new()
-			=> Task.FromResult((index != -1)
-									  ? (T)((InternalData<T>)Manager[index]).Memory
-									  : null);
 
 		public static Task<IData> Get(string name)
 		{
@@ -34,14 +30,11 @@ namespace NeKzBot.Resources
 										  : null);
 		}
 
-		public static async Task InitAsync<T>(int index) where T : class, new()
-			=> await ((InternalData<T>)Manager[index]).Init();
-
-		public static async Task InitAsync<T>(string name) where T : class, new()
-			=> await ((InternalData<T>)Manager[Manager.FindIndex(data => PatternMatching(data) == name)]).Init();
-
-		//public static Task<bool> Exists(string name, out int index)
-		//	 => Task.FromResult((index = Manager.FindIndex(data => PatternMatching(data) == name)) != -1);
+		public static async Task InitAsync<T>(string name)
+			where T : class, new()
+		{
+			await ((InternalData<T>)Manager[Manager.FindIndex(data => PatternMatching(data) == name)]).Init();
+		}
 
 		public static Task<List<string>> GetNames()
 			=> Task.FromResult(Manager.Select(data => PatternMatching(data))

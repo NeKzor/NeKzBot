@@ -15,6 +15,7 @@ using NeKzBot.Tasks;
 using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Tasks.NonModules;
 using NeKzBot.Tasks.Speedrun;
+using NeKzBot.Utilities;
 
 namespace NeKzBot
 {
@@ -76,7 +77,6 @@ namespace NeKzBot
 				await Audio.InitAsync();
 				await Logger.InitAsync();
 				await CommandModule.InitAsync();
-				await Data.InitAsync();
 				await Data.InitMangerAsync();
 				await Caching.InitAsync();
 				// ^Important stuff first

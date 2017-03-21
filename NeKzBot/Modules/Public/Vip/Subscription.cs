@@ -4,6 +4,7 @@ using Discord.Commands;
 using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Public.Vip
@@ -31,7 +32,7 @@ namespace NeKzBot.Modules.Public.Vip
 						.Do(async e =>
 						{
 							// Check permission
-							if (!(await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag)))
+							if (!(await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag)))
 							{
 								await e.Channel.SendIsTyping();
 								await e.Channel.SendMessage("The permission to manage webhooks is required.");
@@ -112,7 +113,7 @@ namespace NeKzBot.Modules.Public.Vip
 						.Do(async e =>
 						{
 							// Check permission
-							if (await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag))
+							if (await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag))
 							{
 								await e.Channel.SendIsTyping();
 								await e.Channel.SendMessage("The permission to manage webhooks is required.");

@@ -6,6 +6,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Private.Owner
 {
@@ -42,7 +43,7 @@ namespace NeKzBot.Modules.Private.Owner
 								if (e.Args[0] != Bot.Client.CurrentGame.Name)
 								{
 									Bot.Client.SetGame(e.Args[0]);
-									await e.Channel.SendMessage($"Bot is now playing **{e.Args[0]}**.");
+									await e.Channel.SendMessage($"Bot is now playing **{await Utils.AsRawText(e.Args[0])}**.");
 								}
 								else
 									await e.Channel.SendMessage("Bot is already playing that game.");
@@ -80,14 +81,14 @@ namespace NeKzBot.Modules.Private.Owner
 
 							var server = default(Discord.Server);
 							if (ulong.TryParse(e.GetArg("guild_id"), out var guiid))
-								server = await Utils.FindServerById(guiid);
+								server = await Utils.FindGuild(guiid);
 							else
 								server = e.Server;
 
 							var channel = default(Channel);
 							if (server != null)
 							{
-								channel = await Utils.FindTextChannelByName(e.GetArg("channel"), server);
+								channel = await Utils.FindTextChannel(e.GetArg("channel"), server);
 								var permissions = e.Channel.Users.FirstOrDefault(x => x.Id == Bot.Client.CurrentUser.Id).GetPermissions(channel);
 								if (!(permissions.ReadMessages))
 								{
@@ -117,6 +118,7 @@ namespace NeKzBot.Modules.Private.Owner
 							await channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
 						});
 
+				// I don't know why but this doesn't work on my Linux server :(
 				GBuilder.CreateCommand("react")
 						.Parameter("channel_id", ParameterType.Required)
 						.Parameter("message_id", ParameterType.Required)
@@ -126,7 +128,7 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							// Check permission
-							if (await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
+							if (await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
 							{
 								var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
 													  ? result

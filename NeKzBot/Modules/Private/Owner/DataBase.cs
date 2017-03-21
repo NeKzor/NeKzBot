@@ -4,6 +4,7 @@ using Discord.Commands;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Private.Owner
@@ -21,7 +22,7 @@ namespace NeKzBot.Modules.Private.Owner
 			CService.CreateGroup(n, GBuilder =>
 			{
 				GBuilder.CreateCommand("add")
-						.Description($"Adds a new command to the database. Use the separator '{Utils.Separator}' for data arrays.")
+						.Description($"Adds a new command to the database. Use the separator '{Utils.DataSeparator}' for data arrays.")
 						.Parameter("name", ParameterType.Required)
 						.Parameter("values", ParameterType.Unparsed)
 						.AddCheck(Permissions.BotOwnerOnly)
@@ -76,13 +77,13 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await Data.InitAsync();
+							await Data.InitMangerAsync();
 							await e.Channel.SendMessage("Reloaded data.");
 						});
 
 				GBuilder.CreateCommand("showdata")
 						.Alias("debugdata")
-						.Description("Shows the data of a certain data array.")
+						.Description("Shows the data of an internal data collection.")
 						.Parameter("name", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
@@ -111,7 +112,7 @@ namespace NeKzBot.Modules.Private.Owner
 										output += $"{hook.GuildId}, ";
 								}
 								else
-									await e.Channel.SendMessage("Found unsupported type in data manager.");
+									await e.Channel.SendMessage("Type not supported.");
 								await e.Channel.SendMessage((output != string.Empty)
 																	? await Utils.CutMessageAsync(output.Substring(0, output.Length - 2))
 																	: "Data is empty.");
@@ -128,7 +129,7 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"**[Data Commands]**\n{await Utils.CollectionToList((await Data.GetNames()).OrderBy(name => name).ToList(), "`", "\n")}");
+							await e.Channel.SendMessage($"**[Data Commands]**\n{await Utils.CollectionToList((await Data.GetNames()).OrderBy(name => name), "`", "\n")}");
 						});
 			});
 			return Task.FromResult(0);

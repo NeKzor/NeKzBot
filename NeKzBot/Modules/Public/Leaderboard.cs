@@ -12,6 +12,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks.Leaderboard;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public
 {
@@ -36,7 +37,7 @@ namespace NeKzBot.Modules.Public
 		{
 			CService.CreateCommand(c)
 					.Alias("wrupdate")
-					.Description($"Gives you the most recent world record. Try `{Configuration.Default.PrefixCmd + c} yt` to filter wrs by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter them by demos only.")
+					.Description($"Returns the most recent world record. Try `{Configuration.Default.PrefixCmd + c} yt` to filter wrs by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter them by demos only.")
 					.Parameter("filter", ParameterType.Optional)
 					.Do(async e =>
 					{
@@ -69,7 +70,7 @@ namespace NeKzBot.Modules.Public
 								Fields = new EmbedField[]
 								{
 									new EmbedField("Map", entry.Map, true),
-									new EmbedField("Player", entry.Player.Name, true),
+									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
 									new EmbedField("Time", entry.Time, true),
 									new EmbedField("Date", entry.Date, true)
 								}
@@ -100,10 +101,10 @@ namespace NeKzBot.Modules.Public
 							}
 							if (entry.Comment != string.Empty)
 							{
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Comment";
-									field.Value = entry.Comment;
+									field.Value = await Utils.AsRawText(entry.Comment);
 								});
 							}
 							await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -118,7 +119,7 @@ namespace NeKzBot.Modules.Public
 		{
 			CService.CreateCommand(c)
 					.Alias("entry")
-					.Description($"Gives you the most recent leaderboard entry. Try `{Configuration.Default.PrefixCmd + c} yt` to filter entries by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter by demos only.")
+					.Description($"Returns the most recent leaderboard entry. Try `{Configuration.Default.PrefixCmd + c} yt` to filter entries by videos only or `{Configuration.Default.PrefixCmd + c} demo` to filter by demos only.")
 					.Parameter("filter", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -182,10 +183,10 @@ namespace NeKzBot.Modules.Public
 							}
 							if (entry.Comment != string.Empty)
 							{
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Comment";
-									field.Value = entry.Comment;
+									field.Value = await Utils.AsRawText(entry.Comment);
 								});
 							}
 							await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -200,7 +201,7 @@ namespace NeKzBot.Modules.Public
 		{
 			CService.CreateCommand(c)
 					.Alias("currentwr", "p2wr")
-					.Description($"Shows you the latest world record of a map. Try `{Configuration.Default.PrefixCmd + c}` to show a random wr entry.")
+					.Description($"Returns latest world record of a map. Try `{Configuration.Default.PrefixCmd + c}` to show a random wr entry.")
 					.Parameter("mapname", ParameterType.Unparsed)
 					.Do(async e =>
 					{
@@ -234,7 +235,7 @@ namespace NeKzBot.Modules.Public
 								Fields = new EmbedField[]
 								{
 									new EmbedField("Map", entry.Map, true),
-									new EmbedField("Player", entry.Player.Name, true),
+									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
 									new EmbedField("Time", entry.Time, true),
 									new EmbedField("Date", entry.Date, true)
 								}
@@ -265,10 +266,10 @@ namespace NeKzBot.Modules.Public
 							}
 							if (entry.Comment != string.Empty)
 							{
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Comment";
-									field.Value = entry.Comment;
+									field.Value = await Utils.AsRawText(entry.Comment);
 								});
 							}
 							await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -375,10 +376,10 @@ namespace NeKzBot.Modules.Public
 								}
 								if (entry.Comment != string.Empty)
 								{
-									embed.AddField(field =>
+									embed.AddField(async field =>
 									{
 										field.Name = "Comment";
-										field.Value = entry.Comment;
+										field.Value = await Utils.AsRawText(entry.Comment);
 									});
 								}
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -448,7 +449,6 @@ namespace NeKzBot.Modules.Public
 									Title = "Personal Record",
 									Url = url,
 									Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
-									//Thumbnail = new EmbedThumbnail($"TODO?"),	// Chamber overview would be better as a thumbnail
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
@@ -484,10 +484,10 @@ namespace NeKzBot.Modules.Public
 								}
 								if (entry.Comment != string.Empty)
 								{
-									embed.AddField(field =>
+									embed.AddField(async field =>
 									{
 										field.Name = "Comment";
-										field.Value = entry.Comment;
+										field.Value = await Utils.AsRawText(entry.Comment);
 									});
 								}
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -532,10 +532,9 @@ namespace NeKzBot.Modules.Public
 									{
 										Color = Data.BoardColor.RawValue,
 										Title = "Player Profile Comparison",
-										Description = await Utils.CollectionToList(list.Select(profile => profile.Name).ToList(), delimiter: " vs "),
+										Description = await Utils.AsRawText(await Utils.CollectionToList(list.Select(profile => profile.Name), delimiter: " vs ")),
 										Url = "https://board.iverb.me",
-										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
-										Fields = new EmbedField[] { }
+										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 									};
 									foreach (var profile in list)
 									{
@@ -582,10 +581,9 @@ namespace NeKzBot.Modules.Public
 									{
 										Color = Data.BoardColor.RawValue,
 										Title = "Player Rank Comparison",
-										Description = $"{await Utils.CollectionToList(list.Select(profile => profile.Player.Name).ToList(), delimiter: " vs ")}\non {list.First().Map}",
+										Description = $"{await Utils.AsRawText(await Utils.CollectionToList(list.Select(profile => profile.Player.Name), delimiter: " vs "))}\non {list.First().Map}",
 										Url = "https://board.iverb.me",
-										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
-										Fields = new EmbedField[] { }
+										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 									};
 									foreach (var entry in list)
 									{
@@ -662,7 +660,11 @@ namespace NeKzBot.Modules.Public
 								field.Name = leaderboard.MapName;
 								var output = string.Empty;
 								foreach (var item in leaderboard.Entries)
-									output += $"\n{item.Ranking} {item.Time} by {await Utils.FormatRawText(item.Player.Name)} ({item.Date.Replace(".", string.Empty)})";
+								{
+									var temp = $"\n{item.Ranking} {item.Time} by {await Utils.AsRawText(item.Player.Name)} ({item.Date.Replace(".", string.Empty)})";
+									if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
+										output += temp;
+								}
 								field.Value = (output != string.Empty)
 													  ? output
 													  : "Data not found.";
@@ -674,6 +676,7 @@ namespace NeKzBot.Modules.Public
 			return Task.FromResult(0);
 		}
 
+		#region Development
 		// TODO: make some optimisations
 		// NOTE: code below here is really bad
 		private static Task GetPiePlayerComparison(string c)
@@ -949,6 +952,7 @@ namespace NeKzBot.Modules.Public
 				await e.Channel.SendMessage("A minimum of two (maximum four) player profiles are required.");
 			}
 		}
+#endregion
 
 		private static Task LeaderboardCommands(string c)
 		{

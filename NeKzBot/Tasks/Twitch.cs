@@ -6,6 +6,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks
@@ -67,14 +68,14 @@ namespace NeKzBot.Tasks
 							var gamename = api?.stream?.channel?.game?.ToString();
 							var stream = new TwitchStream()
 							{
-								ChannelName = api?.stream?.channel?.display_name?.ToString() ?? "**ERROR**",
+								ChannelName = api?.stream?.channel?.display_name?.ToString() ?? "ERROR",
 								Game = new TwitchGame
 								{
 									Name = (gamename != null) ? $"Playing {gamename}" : "Streaming",
 									BoxArt = (await Classes.TwitchTv.GetGameAsync(gamename))?.games[0]?.box?.medium?.ToString() ?? string.Empty
 								},
-								StreamTitle = api?.stream?.channel?.status?.ToString() ?? "**ERROR**",
-								StreamLink = api?.stream?.channel?.url?.ToString() ?? "**ERROR**",
+								StreamTitle = api?.stream?.channel?.status?.ToString() ?? "ERROR",
+								StreamLink = api?.stream?.channel?.url?.ToString() ?? "ERROR",
 								PreviewLink = api?.stream?.preview?.large?.ToString(),
 								ChannelViewers = (api?.stream?.viewers != null) ? uint.Parse(api.stream.viewers.ToString()) : 0,
 								AvatarLink = api?.stream?.channel?.logo?.ToString() ?? "https://static-cdn.jtvnw.net/jtv_user_pictures/xarth/404_user_70x70.png"
@@ -101,19 +102,19 @@ namespace NeKzBot.Tasks
 								{
 									UserName = "TwitchTv",
 									AvatarUrl = "https://s3-us-west-2.amazonaws.com/web-design-ext-production/p/Glitch_474x356.png",
-									Embeds = new Embed[] { await CreateEmbed(stream) }
+									Embeds = new Embed[] { await CreateEmbedAsync(stream) }
 								});
 							}
 						}
 						else // Remove from cache when not streaming
 							if (cache.Contains(streamer))
 								cache.Remove(streamer);
+						api = null;
 					}
 					// Save cache
 					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(cache, delimiter: "|"));
 					cache = null;
 
-					// How can I improve this?
 					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> ");
 					await Task.Delay((delay > 0 ) ? delay : 0);
 					await Watch.RestartAsync();
@@ -137,7 +138,7 @@ namespace NeKzBot.Tasks
 												 : streamer?.stream?.preview?.large?.ToString();
 		}
 
-		private static Task<Embed> CreateEmbed(TwitchStream stream)
+		private static async Task<Embed> CreateEmbedAsync(TwitchStream stream)
 		{
 			var people = default(string);
 			switch (stream.ChannelViewers)
@@ -153,18 +154,18 @@ namespace NeKzBot.Tasks
 					break;
 			}
 
-			return Task.FromResult(new Embed
+			return new Embed
 			{
 				Author = new EmbedAuthor(stream.ChannelName, stream.StreamLink, stream.AvatarLink),
 				Title = "Twitch Livestream",
-				Description = $"{stream.Game.Name}{people}!\n\n_[{stream.StreamTitle}]({stream.StreamLink})_",
+				Description = $"{await Utils.AsRawText(stream.Game.Name)}{people}!\n\n_[{await Utils.AsRawText(stream.StreamTitle)}]({stream.StreamLink})_",
 				Url = stream.StreamLink,
 				Color = Data.TwitchColor.RawValue,
 				Thumbnail = new EmbedThumbnail(stream.Game.BoxArt),
 				Image = new EmbedImage(stream.PreviewLink),
 				Timestamp = DateTime.UtcNow.ToString("s"),
 				Footer = new EmbedFooter("twitch.tv", Data.TwitchTvIconUrl)
-			});
+			};
 		}
 	}
 }

@@ -7,6 +7,7 @@ using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Tasks.NonModules
 {
@@ -17,7 +18,7 @@ namespace NeKzBot.Tasks.NonModules
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Steam", LogColor.Init);
-			_cacheKey = _cacheKey ?? "steam";
+			_cacheKey = "steam";
 			await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);
 		}
 
@@ -36,12 +37,13 @@ namespace NeKzBot.Tasks.NonModules
 					{
 						Author = new EmbedAuthor(result.UserName, result.UserLink, result.UserAvatar),
 						Color = Data.SteamColor.RawValue,
-						Title = $"{result.GameName} Workshop Item",
-						Description = $"{result.ItemTitle} made by [{result.UserName}]({result.UserLink})",
+						Title = $"{await Utils.AsRawText(result.GameName)} Workshop Item",
+						Description = $"{await Utils.AsRawText(result.ItemTitle)} made by [{await Utils.AsRawText(result.UserName)}]({result.UserLink})",
 						Url = result.ItemLink,
 						Image = new EmbedImage(result.ItemImage),
 						Footer = new EmbedFooter("steamcommunity.com", Data.SteamcommunityIconUrl)
 					}));
+					result = null;
 				}
 			}
 			catch (Exception e)
@@ -84,11 +86,10 @@ namespace NeKzBot.Tasks.NonModules
 							: string.Empty;
 				picture = ((picture != string.Empty)
 				&& (picture.Contains(cut)))
-							? $"\n{picture.Substring(cut.Length, picture.LastIndexOf("'") - cut.Length)}"
-							: picture;
+						   ? $"\n{picture.Substring(cut.Length, picture.LastIndexOf("'") - cut.Length)}"
+						   : picture;
 
-				doc = null;
-				return new SteamWorkshop()
+				var workshop = new SteamWorkshop
 				{
 					UserLink = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//a[@class='friendBlockLinkOverlay']").Attributes["href"].Value,
 					UserAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//div//img").Attributes["src"].Value,
@@ -101,12 +102,14 @@ namespace NeKzBot.Tasks.NonModules
 					ItemImage = picture,
 					ItemLink = uri
 				};
+				doc = null;
+				return workshop;
 			}
 			catch (Exception e)
 			{
 				await Logger.SendToChannelAsync("Steam.GetSteamWorkshopAsync Error", e);
 			}
-			return null;
+			return default(SteamWorkshop);
 		}
 
 		// Copy of Leaderboard.Cache

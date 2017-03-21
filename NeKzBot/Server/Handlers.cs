@@ -33,7 +33,7 @@ namespace NeKzBot.Server
 														? -1
 														: text.IndexOf(prefix) + prefix.Length;
 
-			// Bot mentioned
+			// Bot mention
 			return (text.StartsWith(botname))
 						? botname.Length
 						: (text.Contains(botname))
@@ -52,15 +52,6 @@ namespace NeKzBot.Server
 					await e.Channel.SendMessage("**Error.**");
 					await Logger.SendToChannelAsync("Commands.ErrorHandler Unhandled Exception", e.Exception);
 					break;
-				//case CommandErrorType.UnknownCommand:
-				//	await e.Channel.SendMessage("Unknown command.");
-				//	break;
-				//case CommandErrorType.BadPermissions:
-				//	await e.Channel.SendMessage("You don't have the permission to do that.");
-				//	break;
-				//case CommandErrorType.BadArgCount:
-				//	await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}help <command>`.");
-				//	break;
 				case CommandErrorType.InvalidInput:
 					await e.Channel.SendMessage("**Invalid input.**");
 					break;

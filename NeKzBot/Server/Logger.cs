@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Resources;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Server
 {
@@ -52,14 +52,14 @@ namespace NeKzBot.Server
 		public static async Task<object> SendToChannelAsync(string message, LogColor color)
 		{
 			await SendAsync(message, color);
-			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{message}");
+			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{message}");
 			return null;
 		}
 
 		public static async Task<object> SendToChannelAsync(string message, Exception e)
 		{
 			await SendAsync(message, e);
-			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
+			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
 			return null;
 		}
 

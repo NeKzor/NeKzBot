@@ -7,10 +7,11 @@ using NeKzBot.Resources;
 using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Tasks.NonModules;
 using NeKzBot.Tasks.Speedrun;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Server
 {
-	// TODO: fix or remove
+	// TODO: fix or delete
 	public static class Events
 	{
 		private const int _ratelimit = 333;
@@ -38,7 +39,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} joined a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} joined a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
 			}
 			catch (Exception ex)
 			{
@@ -51,7 +52,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} left a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{Bot.Client.CurrentUser?.Name}#{Bot.Client.CurrentUser?.Discriminator.ToString("D4")} left a server.\nName • {e.Server?.Name} (ID {e.Server?.Id})\nOwner • {(e.Server?.Owner?.Name != null ? $"*{e.Server?.Owner.Name}#{e.Server?.Owner.Discriminator.ToString("D4")}*" : "*not found*")} (ID {e.Server?.Owner.Id})");
 			}
 			catch (Exception ex)
 			{
@@ -64,7 +65,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been banned from the server.");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been banned from the server.");
 			}
 			catch (Exception ex)
 			{
@@ -77,7 +78,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been unbanned from the server.");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has been unbanned from the server.");
 			}
 			catch (Exception ex)
 			{
@@ -90,7 +91,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) joined the server.");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) joined the server.");
 
 				// Give new user a world record role if he has one on speedrun.com or on board.iverb.me
 				if (!((bool)(e?.User?.IsBot))
@@ -122,7 +123,7 @@ namespace NeKzBot.Server
 						}
 						else
 							return;
-						await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
+						await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) has earned the _{Configuration.Default.WorldRecordRoleName}_ role.");
 					}
 				}
 			}
@@ -137,7 +138,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) left or was kicked from the server.");
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.User?.Name}#{e.User?.Discriminator.ToString("D4")} (ID {e.User?.Id}) left or was kicked from the server.");
 			}
 			catch (Exception ex)
 			{
@@ -175,7 +176,7 @@ namespace NeKzBot.Server
 							await e.After.AddRoles(role);
 							// Not adding this to the streaming list, somebody could have abused this by changing his game url multiple times
 							//var result = await Utils.AddDataAsync(index, channel);
-							await (await Utils.FindTextChannelByName(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.After.Name}#{e.After.Discriminator.ToString("D4")} (ID {e.After.Id}) has  earned the _{Configuration.Default.StreamingRoleName}_ role.");
+							await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{e.After.Name}#{e.After.Discriminator.ToString("D4")} (ID {e.After.Id}) has  earned the _{Configuration.Default.StreamingRoleName}_ role.");
 						}
 					}
 				}

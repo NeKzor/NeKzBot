@@ -85,6 +85,7 @@ namespace NeKzBot.Classes
 				try
 				{
 					// TODO: parse notification type "guide"
+					// TODO: could fix escaping here too
 					if (Type == SpeedrunNotificationType.Thread)
 						return $"Posted a new thread:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length, ContentText.Length - ContentText.IndexOf(" forum: ") - " forum: ".Length)}]({ContentLink})_";
 					if (Type == SpeedrunNotificationType.Post)
@@ -129,7 +130,7 @@ namespace NeKzBot.Classes
 		}
 	}
 
-	public class SpeedrunPlayerPersonalBest
+	public sealed class SpeedrunPlayerPersonalBest
 	{
 		public SpeedrunGame Game { get; set; }
 		public string PlayerName { get; set; }
@@ -140,13 +141,13 @@ namespace NeKzBot.Classes
 		public string PlayerLocation { get; set; }
 	}
 
-	public class SpeedrunVariable
+	public sealed class SpeedrunVariable
 	{
 		public string Name { get; set; }
 		public string Value { get; set; }
 	}
 
-	public class SpeedrunWorldRecord
+	public sealed class SpeedrunWorldRecord
 	{
 		public IEnumerable<SpeedrunPlayerProfile> Players { get; set; }
 		public SpeedrunGame Game { get; set; }
@@ -166,7 +167,7 @@ namespace NeKzBot.Classes
 		public IEnumerable<SpeedrunVariable> Variables { get; set; }
 	}
 
-	public class SpeedrunGame
+	public sealed class SpeedrunGame
 	{
 		public string Name { get; set; }
 		public string Id { get; set; }
@@ -201,7 +202,7 @@ namespace NeKzBot.Classes
 		}
 	}
 
-	public class SpeedrunGameCategory
+	public sealed class SpeedrunGameCategory
 	{
 		public string Name { get; set; }
 		public string Id { get; set; }

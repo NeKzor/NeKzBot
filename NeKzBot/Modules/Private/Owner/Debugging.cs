@@ -32,6 +32,7 @@ namespace NeKzBot.Modules.Private.Owner
 						{
 							await e.Channel.SendIsTyping();
 							Configuration.Default.Reset();
+							Configuration.Default.Save();
 							await e.Channel.SendMessage("Default settings have been restored.");
 						});
 

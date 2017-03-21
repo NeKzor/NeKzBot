@@ -5,6 +5,7 @@ using Discord.Commands;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Others
 {
@@ -79,7 +80,7 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(e.Args[0] != "kys" ? await Utils.RngStringAsync(Data.BotFeelings) : await Utils.RisAsync("hopes deleted") + " :robot:");
+						await e.Channel.SendMessage((e.Args[0] != "kys") ? await Utils.RngStringAsync(Data.BotFeelings) : await Utils.RisAsync("hopes deleted") + " :robot:");
 					});
 
 			// Convert text to symbols
@@ -119,7 +120,7 @@ namespace NeKzBot.Modules.Public.Others
 						do
 							rand = e.Server.Users.ElementAt(await Utils.RngAsync(e.Server.UserCount));
 						while (rand.IsBot);
-						await msg.Edit($"{credit} **{((string.IsNullOrEmpty(rand.Nickname)) ? rand.Name : rand.Nickname)}**");
+						await msg.Edit($"{credit} **{await Utils.AsRawText((string.IsNullOrEmpty(rand.Nickname)) ? rand.Name : rand.Nickname)}**");
 					});
 
 			CService.CreateCommand("question")

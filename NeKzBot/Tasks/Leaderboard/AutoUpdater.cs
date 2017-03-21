@@ -9,6 +9,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks.Leaderboard
@@ -62,28 +63,29 @@ namespace NeKzBot.Tasks.Leaderboard
 							_entryCount = 1;
 
 						// Download entry
-						var entryUpdates = await GetEntryUpdateAsync("http://board.iverb.me/changelog" + Configuration.Default.BoardParameter, _entryCount);
-						var sendUpdates = new List<Portal2EntryUpdate>();
+						var entryupdates = await GetEntryUpdateAsync("http://board.iverb.me/changelog" + Configuration.Default.BoardParameter, _entryCount);
+						var sendupdates = new List<Portal2EntryUpdate>();
 
 						// Method returns null when an error occurs, ignore it
-						if ((entryUpdates != null)
-						&& (entryUpdates?.Count > 0))
+						if ((entryupdates != null)
+						&& (entryupdates?.Count > 0))
 						{
 							// Find the last entry
-							foreach (var update in entryUpdates)
+							foreach (var update in entryupdates)
 							{
 								if (cache != update.CacheFormat)
-									sendUpdates.Add(update);
+									sendupdates.Add(update);
 								else
 									break;
 							}
+							cache = null;
 
 							// Send new updates
-							if (sendUpdates?.Count > 0)
+							if (sendupdates.Count > 0)
 							{
 								// Send every new entry
-								sendUpdates.Reverse();
-								foreach (var update in sendUpdates)
+								sendupdates.Reverse();
+								foreach (var update in sendupdates)
 								{
 									// RIP channel messages, webhooks are the future
 									foreach (var item in (await Data.Get<Subscribers>("p2hook")).Subs)
@@ -92,7 +94,7 @@ namespace NeKzBot.Tasks.Leaderboard
 										{
 											UserName = "Portal2Records",
 											AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
-											Embeds = new Embed[] { await CreateEmbed(update.Entry) }
+											Embeds = new Embed[] { await CreateEmbedAsync(update.Entry) }
 										});
 									}
 
@@ -112,18 +114,21 @@ namespace NeKzBot.Tasks.Leaderboard
 								}
 
 								// Save last entry for caching
-								var newcache = sendUpdates[sendUpdates.Count - 1].CacheFormat;
+								var newcache = sendupdates[sendupdates.Count - 1].CacheFormat;
 								await Logger.SendAsync($"Portal2.AutoUpdater.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
 								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
+								newcache = null;
 
 								// Bad joke about Twitter location
-								foreach (var item in entryUpdates)
+								foreach (var item in entryupdates)
 								{
 									var name = item.Tweet.Location;
 									if (!(Data.TwitterLocations.Contains($"{name}'s basement")))
 										Data.TwitterLocations.Add($"{name}'s basement");
 								}
 							}
+							entryupdates = null;
+							sendupdates = null;
 						}
 						// Update Twitter location
 						await Twitter.UpdateLocationAsync(LeaderboardTwitterAccount, await Utils.RngStringAsync(Data.TwitterLocations));
@@ -157,7 +162,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			}
 
 			// Embedding <3
-			private static Task<Embed> CreateEmbed(Portal2Entry wr)
+			private static async Task<Embed> CreateEmbedAsync(Portal2Entry wr)
 			{
 				var embed = new Embed
 				{
@@ -165,14 +170,14 @@ namespace NeKzBot.Tasks.Leaderboard
 					Title = "New Portal 2 World Record",
 					Url = "https://board.iverb.me/changelog?wr=1",
 					Color = Data.BoardColor.RawValue,
-					Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{wr.MapId}.jpg"),
+					Image = new EmbedImage(wr.ImageLink),
 					Timestamp = DateTime.UtcNow.ToString("s"),  // Close enough
 					Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 					Fields = new EmbedField[]
 					{
 						new EmbedField("Map", wr.Map, true),
 						new EmbedField("Time", wr.Time, true),
-						new EmbedField("Player", wr.Player.Name, true),
+						new EmbedField("Player", await Utils.AsRawText(wr.Player.Name), true),
 						new EmbedField("Date", wr.Date, true)
 					}
 				};
@@ -183,25 +188,25 @@ namespace NeKzBot.Tasks.Leaderboard
 					embed.AddField(field =>
 					{
 						field.Name = "Demo File";
-						field.Value = wr.Demo != string.Empty ? $"[Download]({wr.Demo})" : "_Not available._";
+						field.Value = (wr.Demo != string.Empty) ? $"[Download]({wr.Demo})" : "_Not available._";
 						field.Inline = true;
 					});
 					embed.AddField(field =>
 					{
 						field.Name = "Video Link";
-						field.Value = wr.YouTube != string.Empty ? $"[Watch]({wr.YouTube})" : "_Not available._";
+						field.Value = (wr.YouTube != string.Empty) ? $"[Watch]({wr.YouTube})" : "_Not available._";
 						field.Inline = true;
 					});
 				}
 				if (wr.Comment != string.Empty)
 				{
-					embed.AddField(field =>
+					embed.AddField(async field =>
 					{
 						field.Name = "Comment";
-						field.Value = wr.Comment;
+						field.Value = await Utils.AsRawText(wr.Comment);
 					});
 				}
-				return Task.FromResult(embed);
+				return embed;
 			}
 		}
 	}

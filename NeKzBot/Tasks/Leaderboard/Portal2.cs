@@ -21,6 +21,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				try
 				{
 					var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div[@class='entry']")[0].InnerHtml);
+					doc = null;
 					var map = node.SelectSingleNode("//div[@class='map']//a")?.FirstChild?.InnerHtml ?? string.Empty;
 					var ranking = node.SelectSingleNode("//div[@class='newscore']//div[@class='rank']")?.FirstChild?.InnerHtml ?? string.Empty;
 					var time = node.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
@@ -28,10 +29,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					var date = node.SelectSingleNode("//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
 
 					if (new List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
-					{
-						await Logger.SendToChannelAsync("Portal2.GetEntryUpdateAsync Node Is Empty", LogColor.Error);
-						return null;
-					}
+						return await Logger.SendToChannelAsync("Portal2.GetEntryUpdateAsync Node Is Empty", LogColor.Error) as Portal2Entry;
 
 					// Only add when it exists
 					var demo = (node.SelectSingleNode("//div[@class='demo-url']").Descendants("a")
@@ -54,6 +52,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
 					var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
+					node = null;
 					return new Portal2Entry
 					{
 						Comment = comment,
@@ -78,7 +77,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
 				}
 			}
-			return null;
+			return default(Portal2Entry);
 		}
 
 		public static async Task<List<Portal2EntryUpdate>> GetEntryUpdateAsync(string url, uint count)
@@ -101,10 +100,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						var date = node.SelectSingleNode("//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
 
 						if (new List<string>() { map, ranking, time, player, date }.Contains(string.Empty))
-						{
-							await Logger.SendToChannelAsync("Portal2.GetEntryUpdateAsync Node Is Empty", LogColor.Error);
-							return null;
-						}
+							return await Logger.SendToChannelAsync("Portal2.GetEntryUpdateAsync Node Is Empty", LogColor.Error) as List<Portal2EntryUpdate>;
 
 						// Only add when it exists
 						var demo = (node.SelectSingleNode("//div[@class='demo-url']").Descendants("a")
@@ -127,6 +123,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
 						var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
+						node = null;
 						entries.Add(new Portal2EntryUpdate()
 						{
 							// Webhooks <3
@@ -158,6 +155,7 @@ namespace NeKzBot.Tasks.Leaderboard
 							}
 						});
 					}
+					doc = null;
 					return entries;
 				}
 				catch (Exception e)
@@ -166,7 +164,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
 				}
 			}
-			return null;
+			return default(List<Portal2EntryUpdate>);
 		}
 
 		public static async Task<Portal2User> GetUserStatsAsync(string url)
@@ -178,7 +176,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				try
 				{
 					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
-					return new Portal2User()
+					var user = new Portal2User()
 					{
 						SteamId = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1),
 						SteamAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value,
@@ -209,21 +207,23 @@ namespace NeKzBot.Tasks.Leaderboard
 						CooperativeWorldRecords = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[1].FirstChild.InnerHtml,
 						OverallWorldRecords = doc.DocumentNode.SelectNodes("//div[@class='block-container wr']//div[@class='block']//div[@class='block-inner']//div[@class='number']")[2].FirstChild.InnerHtml
 					};
+					doc = null;
+					return user;
 				}
 				catch (Exception e)
 				{
-					await Logger.SendAsync("Leaderboard.GetUserStatsAsync Error", e);
+					await Logger.SendAsync("Portal2.GetUserStatsAsync Error", e);
 				}
 			}
-			return null;
+			return default(Portal2User);
 		}
 
 		public static async Task<Portal2Entry> GetUserRankAsync(string url, Portal2Map map)
 		{
 			// Check if map has a leaderboard
 			var mapid = map.BestTimeId;
-			if (mapid == string.Empty)
-				return null;	// "Map is not supported.";
+			if (string.IsNullOrEmpty(mapid))
+				return default(Portal2Entry);	// "Map is not supported.";
 
 			var doc = await Cache.GetAsync(url);
 			if (doc != null)
@@ -232,26 +232,26 @@ namespace NeKzBot.Tasks.Leaderboard
 				{
 					// Check if profile is actually a Portal 2 challenge mode runner
 					if (doc.DocumentNode.Descendants("div").Any(n => n.GetAttributeValue("class", string.Empty) == "user-noexist"))
-						return null;	// "Player profile doesn't exist.";
+						return default(Portal2Entry);	// "Player profile doesn't exist.";
 
 					// First get all maps
 					var maps = doc.DocumentNode.SelectNodes("//div[@class='cell title']//a");
 					var mapname = map.Name;
 
 					// Find index map of all nodes
-					var idx = 0;
-					for (; idx < maps.Count; idx++)
-						if (maps[idx].Attributes["href"].Value == "/chamber/" + mapid)
+					var index = 0;
+					for (; index < maps.Count; index++)
+						if (string.Equals(maps[index].Attributes["href"].Value, $"/chamber/{mapid}", StringComparison.CurrentCultureIgnoreCase))
 							break;
 
 					var player = HttpUtility.HtmlDecode(doc.DocumentNode.SelectSingleNode("//head//title").FirstChild.InnerHtml);
 					// This should fix it
-					var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='chamberScoreInfo']")[idx].InnerHtml);
+					var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='chamberScoreInfo']")[index].InnerHtml);
 					var ranking = node.SelectSingleNode("//div[@class='cell rank']").FirstChild.InnerHtml;
 
 					// Check if the rank doesn't exist
 					if (ranking == "-")
-						return null; // "Player doesn't have a ranking for this map.";
+						return default(Portal2Entry); // "Player doesn't have a ranking for this map.";
 
 					var time = node.SelectSingleNode("//a[@class='cell score']").FirstChild.InnerHtml.Replace("\n", string.Empty).Replace(" ", string.Empty);
 					// Difference shouldn't exist since everything is UTC, parsing this one because the new created node doesn't come with the date attribute
@@ -271,10 +271,12 @@ namespace NeKzBot.Tasks.Leaderboard
 						? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='cell comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
 
+					node = null;
 					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
 					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
 					var steamavatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value;
 
+					doc = null;
 					return new Portal2Entry
 					{
 						Player = new Portal2User
@@ -299,7 +301,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
 				}
 			}
-			return null;
+			return default(Portal2Entry);
 		}
 
 		public static async Task<Portal2Leaderboard> GetMapEntriesAsync(string url, uint starting = 0, uint count = 10, uint max = 20)
@@ -310,7 +312,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				try
 				{
 					var entries = new List<Portal2Entry>();
-					for (var i = (int)starting; i < (count > max ? max : count); i++)
+					for (var i = (int)starting; i < ((count > max) ? max : count); i++)
 					{
 						var entry = new Portal2Entry()
 						{
@@ -322,13 +324,16 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						// Don't check date because this can sometimes be unknown
 						if (new List<string>() { entry.Ranking, entry.Time, entry.Player.Name }.Contains(string.Empty))
-							return await Logger.SendAsync("Leaderboard.GetMapEntriesAsync Node Empty", LogColor.Error) as Portal2Leaderboard;
+							return await Logger.SendAsync("Portal2.GetMapEntriesAsync Node Is Empty", LogColor.Error) as Portal2Leaderboard;
 						entries.Add(entry);
 					}
 
+					var map = doc.DocumentNode.SelectSingleNode("//head//title").InnerHtml;
+					doc = null;
+
 					return new Portal2Leaderboard()
 					{
-						MapName = doc.DocumentNode.SelectSingleNode("//head//title").InnerHtml,
+						MapName = map,
 						Entries = entries
 					};
 				}
@@ -337,7 +342,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					await Logger.SendAsync("Portal2.GetMapEntriesAsync Error", e);
 				}
 			}
-			return null;
+			return default(Portal2Leaderboard);
 		}
 
 		public static async Task<bool> CheckIfUserHasWorldRecordAsync(string url)
@@ -347,7 +352,9 @@ namespace NeKzBot.Tasks.Leaderboard
 			{
 				try
 				{
-					return doc.DocumentNode.SelectNodes("//div[@id='changelog']//div[@class='activity']") != null;
+					var answer = doc.DocumentNode.SelectNodes("//div[@id='changelog']//div[@class='activity']") != null;
+					doc = null;
+					return answer;
 				}
 				catch (Exception e)
 				{

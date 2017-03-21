@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NeKzBot.Classes;
 using NeKzBot.Internals;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Resources

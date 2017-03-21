@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Server;
 using NeKzBot.Tasks.NonModules;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Resources
 {
@@ -68,7 +69,7 @@ namespace NeKzBot.Resources
 			"Yes.", "Yeah.", "Ye.", ":thumbsup:",
 			"No.", "Nope.", "Nah.", ":thumbsdown:",
 			"Of course.", ":ok_hand:",
-			"Maybe.", "Perhaps.", "Obviously...", "Good question...",
+			"Maybe.", "Perhaps.", "Obviously...",
 			"I bad understund what you writen here.", "What do you think?"
 		};
 
@@ -106,13 +107,6 @@ namespace NeKzBot.Resources
 											  "\n• Fixed caching system and improved its logic" +
 											  "\n• Improved internal data manager" +
 											  "\n• Lots of bug fixes";
-
-		public static async Task InitAsync()
-		{
-			await Logger.SendAsync("Initializing Data", LogColor.Init);
-			// Wow its empty in here :o
-			await InitMangerAsync();
-		}
 
 		public static async Task GenerateModuleListsAsync()
 		{

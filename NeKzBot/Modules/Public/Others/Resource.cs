@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Classes;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
-using System.Collections.Generic;
-using NeKzBot.Internals;
-using NeKzBot.Classes;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Others
 {
@@ -108,14 +109,20 @@ namespace NeKzBot.Modules.Public.Others
 						var cvars = await Data.Get<Complex>("p2cvars");
 						var rand = cvars.Values[await Utils.RngAsync(cvars.Values.Count)].Value;
 						if (string.IsNullOrEmpty(e.GetArg("cvar")))
-							await e.Channel.SendMessage($"**{rand[0]}**{(rand[3] != string.Empty ? $"\n{rand[3]}" : string.Empty)}{(rand[1] != string.Empty ? $"\n• Default Value: {rand[1]}" : string.Empty)}{(rand[2] != string.Empty ? $"\n• Flags: {rand[2]}" : string.Empty)}");	// Sry
+							await e.Channel.SendMessage($"**{await Utils.AsRawText(rand[0])}**" +
+														$"{((rand[3] != string.Empty) ? $"\n{await Utils.AsRawText(rand[3])}" : string.Empty)}" +
+														$"{((rand[1] != string.Empty) ? $"\n• Default Value: {rand[1]}" : string.Empty)}" +
+														$"{((rand[2] != string.Empty) ? $"\n• Flags: {rand[2]}" : string.Empty)}");
 						else
 						{
 							var result = default(Simple);
 							if ((result = cvars.Get(e.GetArg("cvar"))) == null)
 								await e.Channel.SendMessage("Unknown console variable.");
 							else
-								await e.Channel.SendMessage($"**{result.Value[0]}**{(result.Value[3] != string.Empty ? $"\n{result.Value[3]}" : string.Empty)}{(result.Value[1] != string.Empty ? $"\n• Default Value: {result.Value[1]}" : string.Empty)}{(result.Value[2] != string.Empty ? $"\n• Flags: {result.Value[2]}" : string.Empty)}");
+								await e.Channel.SendMessage($"**{await Utils.AsRawText(result.Value[0])}**" +
+															$"{((result.Value[3] != string.Empty) ? $"\n{await Utils.AsRawText(result.Value[3])}" : string.Empty)}" +
+															$"{((result.Value[1] != string.Empty) ? $"\n• Default Value: {result.Value[1]}" : string.Empty)}" +
+															$"{((result.Value[2] != string.Empty) ? $"\n• Flags: {result.Value[2]}" : string.Empty)}");
 						}
 					});
 
@@ -137,9 +144,9 @@ namespace NeKzBot.Modules.Public.Others
 						if (temp?.Count() < 1)
 							return;
 						output = output.Where(cvar => cvar.Substring(0, e.Args[0].Length) == e.Args[0]);
-						if (temp?.Count() < 1)
+						if (output?.Count() < 1)
 							return;
-						await (await e.User.CreatePMChannel())?.SendMessage(await Utils.CutMessageAsync(await Utils.CollectionToList(output.ToList())));
+						await (await e.User.CreatePMChannel())?.SendMessage(await Utils.CutMessageAsync(await Utils.CollectionToList(output)));
 					});
 			return Task.FromResult(0);
 		}

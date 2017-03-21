@@ -4,13 +4,6 @@ using System.Threading.Tasks;
 
 namespace NeKzBot.Classes
 {
-	public enum MapFilter
-	{
-		Any,
-		SinglePlayer,
-		MultiPlayer
-	}
-
 	public sealed class Portal2Maps
 	{
 		public List<Portal2Map> Maps { get; set; }
@@ -29,7 +22,7 @@ namespace NeKzBot.Classes
 					if ((index = Maps.FindIndex(map => string.Equals(map.Name, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
 						if ((index = Maps.FindIndex(map => string.Equals(map.ChallengeModeName, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
 							if ((index = Maps.FindIndex(map => string.Equals(map.ThreeLetterCode, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-								return null;
+								return Task.FromResult(default(Portal2Map));
 			return Task.FromResult(Maps[index]);
 		}
 	}
@@ -90,6 +83,10 @@ namespace NeKzBot.Classes
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
 		public string MapId { get; set; }
+		public string ImageLink
+		{
+			get => $"https://board.iverb.me/images/chambers_full/{MapId}.jpg";
+		}
 		private string _date;
 	}
 
@@ -122,5 +119,13 @@ namespace NeKzBot.Classes
 		public string BestPlaceMap { get; set; }
 		public string WorstPlaceRank { get; set; }
 		public string WorstPlaceMap { get; set; }
+	}
+
+	public enum MapFilter
+	{
+		Any,
+		SinglePlayer,
+		MultiPlayer,
+		Workshop
 	}
 }

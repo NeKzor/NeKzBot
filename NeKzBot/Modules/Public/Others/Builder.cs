@@ -1,7 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Others
 {
@@ -10,15 +14,15 @@ namespace NeKzBot.Modules.Public.Others
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Builder Module", LogColor.Init);
-			await Utils.CommandBuilder(async() => await CreateToolsAsync(Utils.CBuilderIndex), 0, (await Data.Get<Complex>("tools")).Cast());
-			await Utils.CommandBuilder(async () => await CreateMemesAsync(Utils.CBuilderIndex), 0, (await Data.Get<Complex>("memes")).Cast());
-			await Utils.CommandBuilder(async () => await CreateLinksAsync(Utils.CBuilderIndex), 0, (await Data.Get<Complex>("links")).Cast());
-			await Utils.CommandBuilder(async () => await CreateQuotesAsync(Utils.CBuilderIndex), 0, (await Data.Get<Complex>("quotes")).Cast());
+			await Utils.CommandBuilder(CreateTool, (await Data.Get<Complex>("tools")).Values);
+			await Utils.CommandBuilder(CreateMeme, (await Data.Get<Complex>("memes")).Values);
+			await Utils.CommandBuilder(CreateLink, (await Data.Get<Complex>("links")).Values);
+			await Utils.CommandBuilder(CreateQuote, (await Data.Get<Complex>("quotes")).Values);
 		}
 
-		public static async Task CreateMemesAsync(int i)
+		public static Action<IEnumerable<string>> CreateMeme = collection =>
 		{
-			var meme = (await Data.Get<Complex>("memes")).Values[i].Value;
+			var meme = collection.ToList();
 			CService.CreateCommand(meme[0])
 					.Description(meme[1])
 					.AddCheck(Permissions.VipGuildsOnly)
@@ -40,11 +44,11 @@ namespace NeKzBot.Modules.Public.Others
 							await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/pics/{meme[2]}");
 						}
 					});
-		}
+		};
 
-		public static async Task CreateToolsAsync(int i)
+		public static Action<IEnumerable<string>> CreateTool = collection =>
 		{
-			var tool = (await Data.Get<Complex>("tools")).Values[i].Value;
+			var tool = collection.ToList();
 			CService.CreateCommand(tool[0])
 					.Description(tool[1])
 					.AddCheck(Permissions.VipGuildsOnly)
@@ -53,11 +57,11 @@ namespace NeKzBot.Modules.Public.Others
 						await e.Channel.SendIsTyping();
 						await e.Channel.SendMessage($"**{tool[3]}**\n{tool[2]}");
 					});
-		}
+		};
 
-		public static async Task CreateLinksAsync(int i)
+		public static Action<IEnumerable<string>> CreateLink = collection =>
 		{
-			var link = (await Data.Get<Complex>("links")).Values[i].Value;
+			var link = collection.ToList();
 			CService.CreateCommand(link[0])
 					.Description(link[1])
 					.Do(async e =>
@@ -65,11 +69,11 @@ namespace NeKzBot.Modules.Public.Others
 						await e.Channel.SendIsTyping();
 						await e.Channel.SendMessage($"{link[3]}\n{link[2]}");
 					});
-		}
+		};
 
-		public static async Task CreateQuotesAsync(int i)
+		public static Action<IEnumerable<string>> CreateQuote = collection =>
 		{
-			var text = (await Data.Get<Complex>("quotes")).Values[i].Value;
+			var text = collection.ToList();
 			CService.CreateGroup("quote", GBuilder =>
 			{
 				GBuilder.CreateCommand(text[0])
@@ -81,6 +85,6 @@ namespace NeKzBot.Modules.Public.Others
 							await e.Channel.SendMessage($"*{text[1]}*");
 						});
 			});
-		}
+		};
 	}
 }

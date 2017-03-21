@@ -4,28 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NeKzBot.Resources;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Server
 {
-	/*	Advanced caching system variants
-	 *	 - As unique files
-	 *	 - As static variables
-	 *	 - As properties user scope (old method, shouldn't be used for caching)
-	 *	
-	 *	Module				System
-	 *	-------------------------------------
-	 *	Leaderboard			Files/Static ✔
-	 *	SpeedrunCom			Files ✔
-	 *	DropboxCom			Files ✔
-	 *	Giveaway Game		Files/Static ✔
-	 *	TwitchTv			Files/Static ✔
-	 *	Steam				Static ✔		*/
-
 	/// <summary>Used to cache data.</summary>
 	public static class Caching
 	{
-		/// <summary>Used to initialize all caching methods<summary>
+		/// <summary>Used to initialize all caching methods.<summary>
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Caching Systems", LogColor.Init);
@@ -187,7 +173,8 @@ namespace NeKzBot.Server
 			/// <typeparam name="T">Object type.</typeparam>
 			/// <param name="key">Name of requester.</param>
 			/// <param name="newdata">Data to store.</param>
-			public static async Task<bool> ReserverMemoryAsync<T>(string key) where T : class
+			public static async Task<bool> ReserverMemoryAsync<T>(string key)
+				where T : class
 			{
 				await ClearKey(key);
 				return _appCache.TryAdd(key, new List<T>().Cast<object>().ToList());
@@ -197,7 +184,8 @@ namespace NeKzBot.Server
 			/// <typeparam name="T">Object type.</typeparam>
 			/// <param name="key">Name of requester.</param>
 			/// <param name="data">Data to store.</param>
-			public static Task AddOrUpdateCache<T>(string key, List<T> data) where T : class
+			public static Task AddOrUpdateCache<T>(string key, List<T> data)
+				where T : class
 			{
 				var cache = data.Cast<object>().ToList();
 				_appCache.AddOrUpdate(key, cache, (k, c) => cache);

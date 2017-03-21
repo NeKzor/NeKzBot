@@ -7,6 +7,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks.Speedrun;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public
 {
@@ -50,7 +51,7 @@ namespace NeKzBot.Modules.Public
 								var embed = new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Game.Name} World Record",
+									Title = $"{await Utils.AsRawText(result.Game.Name)} World Record",
 									Url = result.Game.Link,
 									Thumbnail = new EmbedThumbnail(result.Game.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl)
@@ -58,10 +59,10 @@ namespace NeKzBot.Modules.Public
 								var partners = result.Players.Count();
 								if (partners == 1)
 									embed.WithAuthor(new EmbedAuthor(result.Players.First().Name, result.Players.First().PlayerLink, result.Players.First().PlayerAvatar));
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Category";
-									field.Value = result.CategoryName;
+									field.Value = await Utils.AsRawText(result.CategoryName);
 									field.Inline = true;
 								});
 								embed.AddField(async field =>
@@ -71,18 +72,20 @@ namespace NeKzBot.Modules.Public
 										field.Name = "Players";
 										var output = string.Empty;
 										foreach (var player in result.Players.Take(2))
-											output += $"\n{await Utils.FormatRawText(player.Name)}{(player.Location != string.Empty ? $" {player.Location}" : string.Empty)}";
-										field.Value = (partners > 2) ? $"{output}\n[and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({result.EntryLink})" : output;
+											output += $"\n{await Utils.AsRawText(player.Name)}{((player.Location != string.Empty) ? $" {player.Location}" : string.Empty)}";
+										field.Value = (partners > 2)
+																? $"{output}\n[and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({result.EntryLink})"
+																: output;
 									}
 									else if (partners == 1)
 									{
 										field.Name = "Player";
-										field.Value = $"{await Utils.FormatRawText(result.Players.First().Name)}{(result.Players.First().Location != string.Empty ? $" {result.Players.First().Location}" : string.Empty)}";
+										field.Value = $"{await Utils.AsRawText(result.Players.First().Name)}{((result.Players.First().Location != string.Empty) ? $" {result.Players.First().Location}" : string.Empty)}";
 									}
 									else
 									{
-										field.Name = "MISSING";
-										field.Name = "error";
+										field.Name = "Error";
+										field.Name = "Sry :(";
 									}
 									field.Inline = true;
 								});
@@ -111,18 +114,18 @@ namespace NeKzBot.Modules.Public
 														 : $"[Link]({result.EntryVideo})";
 									field.Inline = true;
 								});
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Comment";
 									field.Value = (result.EntryComment != string.Empty)
-																	   ? result.EntryComment
+																	   ? await Utils.AsRawText(result.EntryComment)
 																	   : "_No comment._";
 									field.Inline = true;
 								});
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Status";
-									field.Value = result.EntryStatus;
+									field.Value = await Utils.AsRawText(result.EntryStatus);
 									field.Inline = true;
 								});
 
@@ -159,7 +162,7 @@ namespace NeKzBot.Modules.Public
 								var embed = new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Game.Name} World Record",
+									Title = $"{await Utils.AsRawText(result.Game.Name)} World Record",
 									Url = result.Game.Link,
 									Thumbnail = new EmbedThumbnail(result.Game.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl)
@@ -167,10 +170,10 @@ namespace NeKzBot.Modules.Public
 								var partners = result.Players.Count();
 								if (partners == 1)
 									embed.WithAuthor(new EmbedAuthor(result.Players.First().Name, result.Players.First().PlayerLink, result.Players.First().PlayerAvatar));
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Category";
-									field.Value = result.CategoryName;
+									field.Value = await Utils.AsRawText(result.CategoryName);
 									field.Inline = true;
 								});
 								embed.AddField(async field =>
@@ -180,18 +183,20 @@ namespace NeKzBot.Modules.Public
 										field.Name = "Players";
 										var output = string.Empty;
 										foreach (var player in result.Players.Take(2))
-											output += $"\n{await Utils.FormatRawText(player.Name)}{(player.Location != string.Empty ? $" {player.Location}" : string.Empty)}";
-										field.Value = (partners > 2) ? $"{output}\n[and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({result.EntryLink})" : output;
+											output += $"\n{await Utils.AsRawText(player.Name)}{((player.Location != string.Empty) ? $" {player.Location}" : string.Empty)}";
+										field.Value = (partners > 2)
+																? $"{output}\n[and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({result.EntryLink})"
+																: output;
 									}
 									else if (partners == 1)
 									{
 										field.Name = "Player";
-										field.Value = $"{await Utils.FormatRawText(result.Players.First().Name)}{(result.Players.First().Location != string.Empty ? $" {result.Players.First().Location}" : string.Empty)}";
+										field.Value = $"{await Utils.AsRawText(result.Players.First().Name)}{(result.Players.First().Location != string.Empty ? $" {result.Players.First().Location}" : string.Empty)}";
 									}
 									else
 									{
-										field.Name = "MISSING";
-										field.Name = "error";
+										field.Name = "Error";
+										field.Name = "Sry :(";
 									}
 									field.Inline = true;
 								});
@@ -220,18 +225,18 @@ namespace NeKzBot.Modules.Public
 														 : $"[Link]({result.EntryVideo})";
 									field.Inline = true;
 								});
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Comment";
 									field.Value = (result.EntryComment != string.Empty)
-																	   ? result.EntryComment
+																	   ? await Utils.AsRawText(result.EntryComment)
 																	   : "_No comment._";
 									field.Inline = true;
 								});
-								embed.AddField(field =>
+								embed.AddField(async field =>
 								{
 									field.Name = "Status";
-									field.Value = result.EntryStatus;
+									field.Value = await Utils.AsRawText(result.EntryStatus);
 									field.Inline = true;
 								});
 
@@ -265,18 +270,18 @@ namespace NeKzBot.Modules.Public
 								var fullgameruns = string.Empty;
 								foreach (var item in result.PersonalBests)
 								{
-									var temp = $"\n{item.PlayerRank} • {item.Game.Name} • {item.CategoryName} in {item.EntryTime}";
+									var temp = $"\n{item.PlayerRank} • {await Utils.AsRawText(item.Game.Name)} • {await Utils.AsRawText(item.CategoryName)} in {item.EntryTime}";
 									if ((item.LevelName == null)
-									&& (fullgameruns.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField))
+									&& ((fullgameruns.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField))
 										fullgameruns += temp;
 								}
 
 								var levelruns = string.Empty;
 								foreach (var item in result.PersonalBests)
 								{
-									var temp = $"\n{item.PlayerRank} • {item.Game.Name} • {item.CategoryName} • {item.LevelName} in {item.EntryTime}";
+									var temp = $"\n{item.PlayerRank} • {await Utils.AsRawText(item.Game.Name)} • {await Utils.AsRawText(item.CategoryName)} • {await Utils.AsRawText(item.LevelName)} in {item.EntryTime}";
 									if ((item.LevelName == null)
-									&& (levelruns.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField))
+									&& ((levelruns.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField))
 										levelruns += temp;
 								}
 
@@ -325,17 +330,17 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField(result.Name, $"**Id** {result.Id}\n"
-																  + $"**Abbreviation** {result.Abbreviation}\n"
-																  + $"**Creation Date** {result.CreationDate}\n"
-																  + $"**Release Date** {result.ReleaseDate}\n"
-																  + $"**Moderator Count** {result.Moderators.Count}\n"
-																  + $"**Is Rom Hack?** {result.IsRom}\n"
-																  + $"**Default Timing Method** {result.DefaultTimingMethod}\n"
-																  + $"**Emulators Allowed?** {result.EmulatorsAllowed}\n"
-																  + $"**Requires Verification?** {result.RequiresVerification}\n"
-																  + $"**Requires Video?** {result.RequiresVideoProof}\n"
-																  + $"**Show Milliseconds?** {result.ShowMilliseconds}")
+										new EmbedField(await Utils.AsRawText(result.Name), $"**Id** {result.Id}\n"
+																						 + $"**Abbreviation** {await Utils.AsRawText(result.Abbreviation)}\n"
+																						 + $"**Creation Date** {result.CreationDate}\n"
+																						 + $"**Release Date** {result.ReleaseDate}\n"
+																						 + $"**Moderator Count** {result.Moderators.Count}\n"
+																						 + $"**Is Rom Hack?** {(result.IsRom ? "Yes" : "No")}\n"
+																						 + $"**Default Timing Method** {result.DefaultTimingMethod}\n"
+																						 + $"**Emulators Allowed?** {(result.EmulatorsAllowed ? "Yes" : "No")}\n"
+																						 + $"**Requires Verification?** {(result.RequiresVerification ? "Yes" : "No")}\n"
+																						 + $"**Requires Video?** {(result.RequiresVideoProof ? "Yes" : "No")}\n"
+																						 + $"**Show Milliseconds?** {(result.ShowMilliseconds ? "Yes" : "No")}")
 									}
 								}));
 							}
@@ -370,18 +375,18 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField($"{result.Name}", $"**Id** • {result.Id}\n"
-																	   + $"**Location** {(result.Location != string.Empty ? result.Location : "Unknown")}\n"
-																	   + $"{(result.Region != string.Empty ? $"**Region** {result.Region}\n" : string.Empty)}"
-																	   + $"**Moderator** {result.Mods}\n"
-																	   + $"**Personal Records** {result.PersonalBests.Count}\n"
-																	   + $"**Role** {result.Role}\n"
-																	   + $"**Runs** {result.Runs}\n"
-																	   + $"**Join Date** {result.SignUpDate}"
-																	   + (result.YouTubeLink != string.Empty ? $"\n[YouTube]({result.YouTubeLink})" : string.Empty)
-																	   + (result.TwitchLink != string.Empty ? $"\n[Twitch]({result.TwitchLink})" : string.Empty)
-																	   + (result.TwitterLink != string.Empty ? $"\n[Twitter]({result.TwitterLink})" : string.Empty)
-																	   + (result.WebsiteLink != string.Empty ? $"\n[Website]({result.WebsiteLink})" : string.Empty))
+										new EmbedField(await Utils.AsRawText(result.Name), $"**Id** • {result.Id}\n"
+																						 + $"**Location** {((result.Location != string.Empty) ? result.Location : "Unknown")}\n"
+																						 + $"{((result.Region != string.Empty) ? $"**Region** {result.Region}\n" : string.Empty)}"
+																						 + $"**Moderator Of** {result.Mods} Games\n"
+																						 + $"**Personal Records** {result.PersonalBests.Count}\n"
+																						 + $"**Role** {result.Role}\n"
+																						 + $"**Runs** {result.Runs}\n"
+																						 + $"**Join Date** {result.SignUpDate}"
+																						 + ((result.YouTubeLink != string.Empty) ? $"\n[YouTube]({result.YouTubeLink})" : string.Empty)
+																						 + ((result.TwitchLink != string.Empty) ? $"\n[Twitch]({result.TwitchLink})" : string.Empty)
+																						 + ((result.TwitterLink != string.Empty) ? $"\n[Twitter]({result.TwitterLink})" : string.Empty)
+																						 + ((result.WebsiteLink != string.Empty) ? $"\n[Website]({result.WebsiteLink})" : string.Empty))
 									}
 								}));
 							}
@@ -417,21 +422,25 @@ namespace NeKzBot.Modules.Public
 									var output = string.Empty;
 									var partners = wr.Players.Count();
 									if (partners == 1)
-										output = $"{await Utils.FormatRawText(wr.Players.First().Name)}{(wr.Players.First().Location != string.Empty ? $" {wr.Players.First().Location}" : string.Empty)}";
+										output = $"{wr.EntryTime} {await Utils.AsRawText(wr.Players.First().Name)}{((wr.Players.First().Location != string.Empty) ? $" {wr.Players.First().Location}" : string.Empty)}";
 									else if (partners > 1)
+									{
+										output += wr.EntryTime;
 										foreach (var player in wr.Players.Take(2))
-											output += $"\n{await Utils.FormatRawText(player.Name)}{(player.Location != string.Empty ? $" {player.Location}" : string.Empty)}";
-									fields[i] = new EmbedField(wr.CategoryName, (output != string.Empty)
-																						? (partners > 2)
-																									? $"{output}\n[and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({wr.EntryLink})"
-																									: output
-																						: "MISSING\nerror");
+											output += $"  {await Utils.AsRawText(player.Name)}{((player.Location != string.Empty) ? $" {player.Location}" : string.Empty)}";
+										output += (partners > 2)
+															? $"  [and {partners - 2} other{((partners - 2 == 1) ? string.Empty : "s")}]({wr.EntryLink})"
+															: string.Empty;
+									}
+									fields[i] = new EmbedField(await Utils.AsRawText(wr.CategoryName), (output != string.Empty)
+																											   ? output
+																											   : "Error\nSry :(");
 								}
 
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Game.Name} World Records",
+									Title = $"{await Utils.AsRawText(result.Game.Name)} World Records",
 									Url = result.Game.Link,
 									Thumbnail = new EmbedThumbnail(result.Game.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
@@ -465,22 +474,19 @@ namespace NeKzBot.Modules.Public
 								var entries = string.Empty;
 								foreach (var item in result.Entries)
 								{
-									var temp = $"\n{item.PlayerRank} • {await Utils.FormatRawText(item.PlayerName)}{(item.PlayerLocation != string.Empty ? $" {item.PlayerLocation}" : string.Empty)} with {item.EntryTime}";
-									if (entries.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField)
+									var temp = $"\n{item.PlayerRank} • {await Utils.AsRawText(item.PlayerName)}{((item.PlayerLocation != string.Empty) ? $" {item.PlayerLocation}" : string.Empty)} with {item.EntryTime}";
+									if ((entries.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 										entries += temp;
 								}
 								await msg.Delete();
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Game.Name} Top Ten",
+									Title = $"{await Utils.AsRawText(result.Game.Name)} Top Ten",
 									Url = result.Game.Link,
 									Thumbnail = new EmbedThumbnail(result.Game.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
-									Fields = new EmbedField[]
-									{
-										new EmbedField(result.Entries[0].CategoryName, (entries != string.Empty) ? entries : "None.")
-									}
+									Fields = new EmbedField[] { new EmbedField(await Utils.AsRawText(result.Entries[0].CategoryName), (entries != string.Empty) ? entries : "None.") }
 								}));
 							}
 						}
@@ -509,22 +515,19 @@ namespace NeKzBot.Modules.Public
 								var output = string.Empty;
 								foreach (var moderator in result.Moderators.OrderBy(mod => mod.Name))
 								{
-									var temp = $"\n{(moderator.Location != string.Empty ? $"{moderator.Location}" : string.Empty)}{await Utils.FormatRawText(moderator.Name)}";
-									if (output.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField)
+									var temp = $"\n{((moderator.Location != string.Empty) ? $"{moderator.Location}  " : string.Empty)}{await Utils.AsRawText(moderator.Name)}";
+									if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 										output += temp;
 								}
 
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Name} Moderators",
+									Title = $"{await Utils.AsRawText(result.Name)} Moderators",
 									Url = result.Link,
 									Thumbnail = new EmbedThumbnail(result.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
-									Fields = new EmbedField[]
-									{
-										new EmbedField("Sorted By Name", output)
-									}
+									Fields = new EmbedField[] { new EmbedField("Sorted By Name", output) }
 								}));
 							}
 						}
@@ -573,8 +576,8 @@ namespace NeKzBot.Modules.Public
 							var output = string.Empty;
 							foreach (var nf in result)
 							{
-								var temp = $"\n{nf.Status} | {nf.CreationDate}\n[{nf.Author.Name}]({nf.Author.PlayerLink}) {nf.FormattedText.Replace("\n", " ")}";
-								if (output.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField)
+								var temp = $"\n{nf.Status} | {nf.CreationDate}\n[{await Utils.AsRawText(nf.Author.Name)}]({nf.Author.PlayerLink}) {nf.FormattedText.Replace("\n", " ")}";
+								if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 									output += temp;
 							}
 
@@ -618,7 +621,7 @@ namespace NeKzBot.Modules.Public
 				await e.Channel.SendIsTyping();
 				var result = await SpeedrunCom.GetGameRulesAsync(e.Args[0], isil);
 				if (result == null)
-					await e.Channel.SendMessage($"Couldn't parse a game with this name.{((isil) ? string.Empty : "Game might have a level leaderboard instead: Try `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>` if you haven't already.")}");
+					await e.Channel.SendMessage($"Couldn't parse a game with this name.{((isil) ? string.Empty : " Game might have a level leaderboard instead: Try `{Configuration.Default.PrefixCmd}{Configuration.Default.PrefixCmd}ilrules <game>` if you haven't already.")}");
 				else if (result.ContentRules == null)
 					await e.Channel.SendMessage("No rules have been defined.");
 				else
@@ -632,8 +635,8 @@ namespace NeKzBot.Modules.Public
 						Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),
 						Fields = new EmbedField[]
 						{
-							new EmbedField("Game", result.Game.Name),
-							new EmbedField("Category", result.CategoryName),
+							new EmbedField("Game", await Utils.AsRawText(result.Game.Name)),
+							new EmbedField("Category", await Utils.AsRawText(result.CategoryName)),
 							new EmbedField("Rules", (result.ContentRules != string.Empty)
 																		 ? await Utils.CutMessageAsync(result.ContentRules, (int)DiscordConstants.MaximumCharsPerEmbedField - "...".Length, "...")
 																		 : "No rules have been defined.")
@@ -664,15 +667,15 @@ namespace NeKzBot.Modules.Public
 								var output = string.Empty;
 								foreach (var category in result.Categories.OrderBy(cat => cat.Name))
 								{
-									var temp = $"\n{await Utils.FormatRawText(category.Name)}";
-									if (output.Length + temp.Length <= DiscordConstants.MaximumCharsPerEmbedField)
+									var temp = $"\n{await Utils.AsRawText(category.Name)}";
+									if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 										output += temp;
 								}
 
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Color = Data.SpeedruncomColor.RawValue,
-									Title = $"{result.Name} Categories",
+									Title = $"{await Utils.AsRawText(result.Name)} Categories",
 									Url = result.Link,
 									Thumbnail = new EmbedThumbnail(result.CoverLink),
 									Footer = new EmbedFooter("speedrun.com", Data.SpeedrunComIconUrl),

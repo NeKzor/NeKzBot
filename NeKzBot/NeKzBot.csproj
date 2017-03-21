@@ -132,6 +132,11 @@
     <Compile Include="Modules\Public\Others\Rest.cs" />
     <Compile Include="Modules\Public\Others\Resource.cs" />
     <Compile Include="Resources\Parsers.cs" />
+    <Compile Include="Utilities\RngUtils.cs" />
+    <Compile Include="Utilities\FileUtils.cs" />
+    <Compile Include="Utilities\DiscordUtils.cs" />
+    <Compile Include="Utilities\StringUtils.cs" />
+    <Compile Include="Utilities\RestUtils.cs" />
     <Compile Include="Server\Handlers.cs" />
     <Compile Include="Internals\InternalAudio.cs" />
     <Compile Include="Webhooks\WebhookData.cs" />
@@ -149,7 +154,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Data.cs" />
     <Compile Include="Resources\DataManager.cs" />
-    <Compile Include="Resources\Utils.cs" />
+    <Compile Include="Utilities\Utils.cs" />
     <Compile Include="Server\Audio.cs" />
     <Compile Include="Server\Caching.cs" />
     <Compile Include="Server\CommandModule.cs" />

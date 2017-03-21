@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace NeKzBot
 {
-	internal static class Program
+	public static class Program
 	{
-		private static void Main(string[] args)
+		public static void Main(string[] args)
 		{
 			var nekzbot = default(Bot);
 			for (;;)

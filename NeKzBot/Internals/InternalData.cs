@@ -6,28 +6,33 @@ using NeKzBot.Resources;
 
 namespace NeKzBot.Internals
 {
+	// TODO: add json attributes
 	public class Simple
 	{
 		public List<string> Value { get; set; }
+
 		public Simple()
 			=> Value = new List<string>();
 		public Simple(List<string> value)
 			=> Value = value;
+
+		public string Search(string value)
+			=> Value.Find(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase));
 		public override string ToString()
 			=> Value.FirstOrDefault();
 		public string ToString(int index)
 			=> Value.ElementAt(index);
-		public string Search(string value)
-			=> Value.Find(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase));
 	}
 
 	public class Complex
 	{
 		public List<Simple> Values { get; set; }
+
 		public Complex()
 			=> Values = new List<Simple>();
 		public Complex(List<Simple> value)
 			=> Values = value;
+
 		public Simple Get(string value)
 		{
 			foreach (var item in Values)
@@ -58,7 +63,8 @@ namespace NeKzBot.Internals
 		}
 	}
 
-	public sealed class InternalData<T> : IData where T : class, new()
+	public sealed class InternalData<T> : IData
+		where T : class, new()
 	{
 		public string Name { get; }
 		public bool ReadingAllowed { get; }
@@ -82,15 +88,13 @@ namespace NeKzBot.Internals
 							   ? Parsers.CrossParser
 							   : parser;
 			if (initnow)
-				Init();
+				Init().GetAwaiter().GetResult();
 		}
 
 		public Task Init()
 			=> Task.FromResult(Memory = SelfInit(FileName));
-
 		public Task Get()
 			=> Task.FromResult(Memory as T);
-
 		public Task Change(object data)
 			=> Task.FromResult(Memory = data);
 	}

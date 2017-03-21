@@ -4,6 +4,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Webhooks
 {
@@ -58,7 +59,7 @@ namespace NeKzBot.Webhooks
 		public static async Task<bool> SubscribeAsync(string subscription, WebhookData data)
 		{
 			if (await Data.Get<Subscribers>(subscription) is IData sub)
-				if (await Utils.ChangeDataAsync(sub, $"{data.Id}{Utils.Separator}{data.Token}{Utils.Separator}{data.GuildId}{Utils.Separator}{data.UserId}", DataChangeMode.Add) == string.Empty)
+				if (await Utils.ChangeDataAsync(sub, $"{data.Id}{Utils.DataSeparator}{data.Token}{Utils.DataSeparator}{data.GuildId}{Utils.DataSeparator}{data.UserId}", DataChangeMode.Add) == string.Empty)
 					return await SendTestPing(data);
 			return false;
 		}

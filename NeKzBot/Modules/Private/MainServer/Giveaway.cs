@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Internals;
-using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Private.MainServer
 {

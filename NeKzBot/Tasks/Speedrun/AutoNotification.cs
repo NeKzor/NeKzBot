@@ -6,6 +6,7 @@ using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks.Speedrun
@@ -88,8 +89,6 @@ namespace NeKzBot.Tasks.Speedrun
 								var newcache = nfstosend[nfstosend.Count - 1].Cache;
 								await Logger.SendAsync($"SpeedrunCom.AutoNotification.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
 								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
-								newcache = null;
-								cache = null;
 							}
 						}
 						// Check every minute (max speed request is 100 per min tho)

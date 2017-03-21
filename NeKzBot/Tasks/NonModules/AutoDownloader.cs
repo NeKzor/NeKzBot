@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Classes;
-using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Tasks.NonModules
 {
@@ -34,12 +34,12 @@ namespace NeKzBot.Tasks.NonModules
 							// Maximum 5000KB
 							if (file.Size > _maxfilesize)
 							{
-								await args.Channel.SendMessage($"File {file.Filename} is too large for an upload (max. {_maxfilesize}KB).");
+								await args.Channel.SendMessage($"File {await Utils.AsRawText(filename)} is too large for an upload (max. {_maxfilesize}KB).");
 								continue;
 							}
 							else if (file.Size == 0)
 							{
-								await args.Channel.SendMessage($"File {file.Filename} seems to be broken.");
+								await args.Channel.SendMessage($"File {await Utils.AsRawText(filename)} seems to be broken.");
 								continue;
 							}
 
@@ -79,7 +79,7 @@ namespace NeKzBot.Tasks.NonModules
 							// Send file to Dropbox
 							var msg = await args.Channel.SendMessage("Uploading...");
 							if (await DropboxCom.UploadAsync(path, filename, cacheFile))
-								await msg.Edit($"Uploaded {await Utils.FormatRawText(filename)} to Dropbox.");
+								await msg.Edit($"Uploaded {await Utils.AsRawText(filename)} to Dropbox.");
 							else
 								await msg.Edit("**Upload error.**");
 

@@ -5,21 +5,23 @@ using System.Threading.Tasks;
 using Dropbox.Api;
 using Dropbox.Api.Files;
 using Dropbox.Api.Sharing;
-using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Classes
 {
 	public static class DropboxCom
 	{
 		private static DropboxClient _client;
-		private static DropboxClientConfig _clientConfig;
 
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Dropbox Client", LogColor.Init);
-			_clientConfig = new DropboxClientConfig($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", 3);
-			_client = new DropboxClient(Credentials.Default.DropboxToken, _clientConfig);
+			_client = new DropboxClient(Credentials.Default.DropboxToken, new DropboxClientConfig
+			{
+				UserAgent = $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}",
+				MaxRetriesOnError = 3
+			});
 		}
 
 		public static async Task<bool> UploadAsync(string folder, string file, string localpath)
@@ -56,7 +58,7 @@ namespace NeKzBot.Classes
 					if (file.IsFile)
 					{
 						var duration = await Utils.GetDuration(file.AsFile.ServerModified);
-						output += $"{await Utils.FormatRawText(file.Name)}{((duration != default(string)) ? $" (modified {duration} ago)": string.Empty)}\n";
+						output += $"{await Utils.AsRawText(file.Name)}{((duration != default(string)) ? $" (modified {duration} ago)": string.Empty)}\n";
 					}
 				}
 
@@ -91,7 +93,7 @@ namespace NeKzBot.Classes
 			try
 			{
 				await _client.Files.DeleteAsync($"/{folder}/{file}");
-				return $"File {await Utils.FormatRawText(file)} has been deleted.";
+				return $"File {await Utils.AsRawText(file)} has been deleted.";
 			}
 			catch (ApiException<DeleteError> api)
 			{
@@ -112,7 +114,7 @@ namespace NeKzBot.Classes
 				var data = await _client.Sharing.CreateSharedLinkWithSettingsAsync($"/{fullpath}");
 				return data.Url;
 			}
-			catch (ApiException<CreateSharedLinkWithSettingsError> api)	// I don't like this library...
+			catch (ApiException<CreateSharedLinkWithSettingsError> api)	// I don't like this library... actually, it's decent I guess
 			{
 				await Logger.SendAsync("DropboxCom.CreateLinkAsync API Error", api);
 				if (api.ErrorResponse.IsSharedLinkAlreadyExists)

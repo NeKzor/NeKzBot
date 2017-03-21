@@ -6,6 +6,7 @@ using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Others
 {
@@ -67,7 +68,7 @@ namespace NeKzBot.Modules.Public.Others
 
 			// Hidden
 			CService.CreateCommand("devserver")
-					.Description("Returns the static invite link of the main server.")
+					.Description("Returns the static invite link of the developer server.")
 					.Hide()
 					.Do(async e =>
 					{
@@ -83,7 +84,7 @@ namespace NeKzBot.Modules.Public.Others
 			CService.CreateCommand(c)
 					.Description("Shows you a list of people who deserve some credit. It will be sent as a DM because the list is kinda long.")
 					.Hide()
-					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.CollectionToList((await Data.Get<Simple>("credits")).Value.OrderBy(name => name).ToArray(), string.Empty, "\n", "• ")}\n\nNote: Names are sorted in alphabetical order."));
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.CollectionToList((await Data.Get<Simple>("credits")).Value.OrderBy(name => name), string.Empty, "\n", "• ")}\n\nNote: Names are sorted in alphabetical order."));
 			return Task.FromResult(0);
 		}
 
@@ -100,8 +101,7 @@ namespace NeKzBot.Modules.Public.Others
 						if (string.IsNullOrEmpty(e.GetArg("mapname")))
 						{
 							var random = await Utils.RngAsync(list.Maps.Select(map => map.BestTimeId)
-																	   .Where(id => !(string.IsNullOrEmpty(id)))
-																	   .ToArray()) as string;
+																	   .Where(id => !(string.IsNullOrEmpty(id))));
 							await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/pics/maps/{random}.jpg");
 						}
 						else
@@ -109,10 +109,9 @@ namespace NeKzBot.Modules.Public.Others
 							var map = await list.Search(e.GetArg("mapname"));
 							if (map != null)
 							{
-								if (map.BestTimeId != null)
-									await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/pics/maps/{map.BestTimeId}.jpg");
-								else
-									await e.Channel.SendMessage("Map is not supported.");
+								await e.Channel.SendFile(!(string.IsNullOrEmpty(map.BestTimeId))
+														 ? $"{await Utils.GetAppPath()}/Resources/Private/pics/maps/{map.BestTimeId}.jpg"
+														 : "Map is not supported.");
 							}
 							else
 								await e.Channel.SendMessage("Couldn't find that map.");

@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Vip
 {
@@ -15,34 +18,8 @@ namespace NeKzBot.Modules.Public.Vip
 			await Logger.SendAsync("Loading Sound Module", LogColor.Init);
 			await GetRandomYanniSound("yanni");
 			await GetRandomPortal2Sound("p2");
-			await Utils.CommandBuilder(() => PlaySoundInVoiceChannel(Utils.CBuilderGroup, Utils.CBuilderIndex), 0, (await Data.Get<Complex>("sounds")).Cast(), true, (await Data.Get<Simple>("aa")).Value);
+			await Utils.CommandBuilder(CreateSound, (await Data.Get<Complex>("sounds")).Values, (await Data.Get<Simple>("aa")).Value);
 			await BotVipCommands(Configuration.Default.BotCmd);
-		}
-
-		public static Task PlaySoundInVoiceChannel(string s, int i)
-		{
-			CService.CreateGroup(s, async GBuilder =>
-			{
-				var sound = (await Data.Get<Complex>("sounds")).Values[i].Value;
-				GBuilder.CreateCommand(sound[0])
-						.Description(sound[1])
-						.AddCheck(Permissions.VipGuildsOnly)
-						.Do(async e =>
-						{
-							var check = await VoiceChannel.ConnectionCheck(e.Server, e.User);
-							if (check == AudioError.None)
-							{
-								var result = await VoiceChannel.PlayAsync(e.Server.Id, sound[2]);
-								if (result == AudioError.AlreadyPlaying)
-									return;
-								if (result != AudioError.None)
-									await e.Channel.SendMessage(result);
-							}
-							else
-								await e.Channel.SendMessage(check);
-						});
-			});
-			return Task.FromResult(0);
 		}
 
 		public static Task GetRandomYanniSound(string c)
@@ -134,5 +111,29 @@ namespace NeKzBot.Modules.Public.Vip
 			});
 			return Task.FromResult(0);
 		}
+
+		public static Action<string, IEnumerable<string>> CreateSound = (alias, collection) =>
+		{
+			CService.CreateGroup(alias, GBuilder =>
+			{
+				GBuilder.CreateCommand(collection.ToArray()[0])
+						.Description(collection.ToArray()[1])
+						.AddCheck(Permissions.VipGuildsOnly)
+						.Do(async e =>
+						{
+							var check = await VoiceChannel.ConnectionCheck(e.Server, e.User);
+							if (check == AudioError.None)
+							{
+								var result = await VoiceChannel.PlayAsync(e.Server.Id, collection.ToArray()[2]);
+								if (result == AudioError.AlreadyPlaying)
+									return;
+								if (result != AudioError.None)
+									await e.Channel.SendMessage(result);
+							}
+							else
+								await e.Channel.SendMessage(check);
+						});
+			});
+		};
 	}
 }

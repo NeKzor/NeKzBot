@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
 using HtmlAgilityPack;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Tasks.Leaderboard
 {
@@ -84,7 +84,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						// Use cache reset to set new game and status
 						await Task.Factory.StartNew(async () => Bot.Client.SetGame(await Utils.RngAsync((await Data.Get<Simple>("games")).Value)));
-						await Task.Factory.StartNew(async () => Bot.Client.SetStatus(await Utils.RngAsync(Data.BotStatus) as UserStatus));
+						await Task.Factory.StartNew(async () => Bot.Client.SetStatus(await Utils.RngAsync(Data.BotStatus)));
 					}
 				}
 				catch
