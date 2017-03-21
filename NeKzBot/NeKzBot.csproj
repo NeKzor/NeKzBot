@@ -82,6 +82,9 @@
     <Reference Include="Nito.AsyncEx.Enlightenment, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
     </Reference>
+    <Reference Include="OxyPlot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
+      <HintPath>..\packages\OxyPlot.Core.1.0.0\lib\net45\OxyPlot.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
     </Reference>
@@ -112,6 +115,7 @@
     <Compile Include="Extensions\Embed.cs" />
     <Compile Include="Classes\Errors.cs" />
     <Compile Include="Extensions\Request.cs" />
+    <Compile Include="Resources\IData.cs" />
     <Compile Include="Internals\InternalWatch.cs" />
     <Compile Include="Internals\InternalData.cs" />
     <Compile Include="Classes\Web.cs" />
@@ -119,7 +123,7 @@
     <Compile Include="Classes\Speedrun.cs" />
     <Compile Include="Classes\TwitchTv.cs" />
     <Compile Include="Classes\Twitter.cs" />
-    <Compile Include="Modules\Private\MainServer\Cloud.cs" />
+    <Compile Include="Modules\Public\Vip\Cloud.cs" />
     <Compile Include="Modules\Private\Owner\Debugging.cs" />
     <Compile Include="Modules\Public\Vip\Subscription.cs" />
     <Compile Include="Modules\Private\Owner\DataBase.cs" />
@@ -127,6 +131,7 @@
     <Compile Include="Modules\Public\Others\Builder.cs" />
     <Compile Include="Modules\Public\Others\Rest.cs" />
     <Compile Include="Modules\Public\Others\Resource.cs" />
+    <Compile Include="Resources\Parsers.cs" />
     <Compile Include="Server\Handlers.cs" />
     <Compile Include="Internals\InternalAudio.cs" />
     <Compile Include="Webhooks\WebhookData.cs" />
@@ -147,7 +152,7 @@
     <Compile Include="Resources\Utils.cs" />
     <Compile Include="Server\Audio.cs" />
     <Compile Include="Server\Caching.cs" />
-    <Compile Include="Server\Commands.cs" />
+    <Compile Include="Server\CommandModule.cs" />
     <Compile Include="Server\Credentials.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

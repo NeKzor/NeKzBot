@@ -4,7 +4,7 @@ namespace NeKzBot.Classes
 {
 	public class WebHeader
 	{
-		private Tuple<string, string> _header { get; set; }
+		private Tuple<string, string> _header { get; }
 
 		public Tuple<string, string> GetHeader()
 			=> _header;

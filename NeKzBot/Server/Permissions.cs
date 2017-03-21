@@ -1,6 +1,6 @@
-﻿using System.Linq;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 
 namespace NeKzBot.Server
@@ -24,17 +24,19 @@ namespace NeKzBot.Server
 			return false;
 		}
 
-		public static bool MainServerOnly(Command _, User __, Channel cha)
+		public static bool DevelopersOnly(Command _, User usr, Channel cha)
 		{
-			if (cha.Server.Id == Credentials.Default.DiscordMainServerId)
+			if (cha.Server.Id == Credentials.Default.DiscordMainServerId
+			|| (usr.Id == usr.Server.Owner.Id))
 				return true;
-			cha.SendMessage("This command only works on the developer mode.");
+			cha.SendMessage("This command is currently in development.");
 			return false;
 		}
 
-		public static bool VipGuildsOnly(Command _, User __, Channel cha)
+		public static bool VipGuildsOnly(Command _, User usr, Channel cha)
 		{
-			if (Data.VipGuilds.Contains(cha.Server.Id.ToString()))
+			if ((Data.Get<Simple>("vips").GetAwaiter().GetResult()).Value.Contains(cha.Server.Id.ToString())
+			|| (usr.Id == usr.Server.Owner.Id))
 				return true;
 			cha.SendMessage("This command only works for VIP servers.");
 			return false;

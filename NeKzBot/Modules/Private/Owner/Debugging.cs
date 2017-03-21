@@ -11,7 +11,7 @@ using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Private.Owner
 {
-	public class Debugging : Commands
+	public class Debugging : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -144,10 +144,10 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							var p2hooks = (await Data.GetDataByName("p2hook", out _))?.Data as List<WebhookData>;
-							var srcomsourcehooks = (await Data.GetDataByName("srcomsourcehook", out _))?.Data as List<WebhookData>;
-							var srcomportal2hooks = (await Data.GetDataByName("srcomportal2hook", out _))?.Data as List<WebhookData>;
-							var twtvhooks = (await Data.GetDataByName("twtvhook", out _))?.Data as List<WebhookData>;
+							var p2hooks = (await Data.Get<Subscribers>("p2hook")).Subs;
+							var srcomsourcehooks = (await Data.Get<Subscribers>("srcomsourcehook")).Subs;
+							var srcomportal2hooks = (await Data.Get<Subscribers>("srcomportal2hook")).Subs;
+							var twtvhooks = (await Data.Get<Subscribers>("twtvhook")).Subs;
 							if (new List<List<WebhookData>> { p2hooks, srcomsourcehooks, srcomportal2hooks, twtvhooks }.Contains(null))
 							{
 								await e.Channel.SendMessage("**Failed** to load data from data manager.");
@@ -167,7 +167,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("p2hook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from p2hook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from p2hook", LogColor.Default);
 										p2count++;
 									}
 									else
@@ -180,7 +180,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("srcomsourcehook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from srcomsourcehook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomsourcehook", LogColor.Default);
 										srcomsourcecount++;
 									}
 									else
@@ -193,7 +193,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("srcomportal2hook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from srcomportal2hook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomportal2hook", LogColor.Default);
 										srcomportal2count++;
 									}
 									else
@@ -206,7 +206,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("twtvhook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (USER {data.UserName})(ID {data.UserId}) from twtvhook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from twtvhook", LogColor.Default);
 										twtvcount++;
 									}
 									else

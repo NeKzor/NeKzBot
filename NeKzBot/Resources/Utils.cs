@@ -11,6 +11,7 @@ using Discord;
 using Discord.Commands;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
+using NeKzBot.Internals;
 using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
@@ -22,6 +23,7 @@ namespace NeKzBot.Resources
 		public static string CBuilderGroup { get; private set; } = string.Empty;
 		private static int _temp = -1;
 		private static readonly Random _rand = new Random(DateTime.Now.Millisecond);
+		private static readonly string[] _badChars = { "\\", "*", "_", "~", "`" };
 
 		public const char Separator = '|';
 		private const int _luckynumber = 7;
@@ -29,11 +31,11 @@ namespace NeKzBot.Resources
 
 		#region String search
 		// Check if a specific value is in that data array/list
-		public static Task<bool> SearchArray(string[] searchin, string tosearch)
-			=> Task.FromResult(Array.FindIndex(searchin, str => str == tosearch) != -1);
+		public static Task<bool> SearchCollection(IEnumerable<string> collection, string tosearch)
+			=> Task.FromResult(Array.FindIndex(collection.ToArray(), str => str == tosearch) != -1);
 
-		public static Task<bool> SearchArray(string[] searchin, string tosearch, out int index)
-			=> Task.FromResult((index = Array.FindIndex(searchin, str => str == tosearch)) != -1);
+		public static Task<bool> SearchCollection(IEnumerable<string> Collection, string tosearch, out int index)
+			=> Task.FromResult((index = Array.FindIndex(Collection.ToArray(), str => str == tosearch)) != -1);
 
 		public static Task<bool> SearchArray(object[,] searchin, int dimension, string tosearch, out int index)
 		{
@@ -55,64 +57,39 @@ namespace NeKzBot.Resources
 		#endregion
 
 		#region To List
-		// Turn the array/list dimension into a list
-		public static Task<string> ArrayToList(string[,] s, int d, string formatting = "", string delimiter = ", ", string list = "", int customsub = 0)
+		// Turn collections to readable string list
+		public static Task<string> CollectionToList(IEnumerable<IEnumerable<string>> s, int d, string formatting = "", string delimiter = ", ", string list = "", int customsub = 0)
 		{
 			var output = string.Empty;
-			for (int i = 0; i < s.GetLength(0); i++)
-				output += list + formatting + s[i, d] + formatting + delimiter;
+			for (int i = 0; i < s.Count(); i++)
+				output += list + formatting + s.ElementAt(i).ElementAt(d) + formatting + delimiter;
 			return Task.FromResult(output.Substring(0, output.Length - ((customsub == 0) ? delimiter.Length : customsub)));
 		}
 
-		public static Task<string> ArrayToList(string[] s, string formatting = "", string delimiter = ", ", string list = "")
+		public static Task<string> CollectionToList(IEnumerable<string> s, string formatting = "", string delimiter = ", ", string list = "", int customsub = 0)
 		{
 			var output = string.Empty;
-			for (int i = 0; i < s.GetLength(0); i++)
-				output += list + s[i] + delimiter;
-			return Task.FromResult(output.Substring(0, output.Length - delimiter.Length));
-		}
-
-		public static Task<string> ListToList(List<string> s, string formatting = "", string delimiter = ", ")
-		{
-			var output = string.Empty;
-			for (int i = 0; i < s.Count; i++)
-				output += formatting + s[i] + formatting + delimiter;
-			return Task.FromResult(output.Substring(0, output.Length - delimiter.Length));
+			for (int i = 0; i < s.Count(); i++)
+				output += list + formatting + s.ElementAt(i) + formatting + delimiter;
+			return Task.FromResult(output.Substring(0, output.Length - ((customsub == 0) ? delimiter.Length : customsub)));
 		}
 		#endregion
 
 		#region Create Commands
 		// Create multiple commands from array
-		public static Task CommandBuilder(Action act, int dim, string[,] str, bool hasaliases = false, string[] aliases = null)
+		public static Task CommandBuilder(Action act, int dim, IEnumerable<string> str, bool hasaliases = false, IEnumerable<string> aliases = null)
 		{
 			if (hasaliases)
 			{
 				foreach (var item in aliases)   // Command has multiple aliases
 				{
 					CBuilderGroup = item;
-					for (CBuilderIndex = 0; CBuilderIndex < str.GetLength(dim); CBuilderIndex++)
+					for (CBuilderIndex = 0; CBuilderIndex < str.ToArray().GetLength(dim); CBuilderIndex++)
 						act?.Invoke();
 				}
 			}
 			else
-				for (CBuilderIndex = 0; CBuilderIndex < str.GetLength(dim); CBuilderIndex++)
-					act?.Invoke();
-			return Task.FromResult(0);
-		}
-
-		public static Task CommandBuilder(Action act, int from, int to, bool hasaliases = false, string[] aliases = null)
-		{
-			if (hasaliases)
-			{
-				foreach (var item in aliases)
-				{
-					CBuilderGroup = item;
-					for (CBuilderIndex = from; CBuilderIndex < to; CBuilderIndex++)
-						act?.Invoke();
-				}
-			}
-			else
-				for (CBuilderIndex = from; CBuilderIndex < to; CBuilderIndex++)
+				for (CBuilderIndex = 0; CBuilderIndex < str.ToArray().GetLength(dim); CBuilderIndex++)
 					act?.Invoke();
 			return Task.FromResult(0);
 		}
@@ -134,6 +111,9 @@ namespace NeKzBot.Resources
 		public static async Task<int> RngAsync(int to)
 			=> await Rng(0, to);
 
+		public static async Task<T> RngAsync<T>(List<T> collection)
+			=> collection[await Rng(0, collection.Count)];
+
 		public static async Task<object> RngAsync(object[] array)
 			=> array[await Rng(0, array.Length)];
 
@@ -148,9 +128,9 @@ namespace NeKzBot.Resources
 		#endregion
 
 		#region DATA I/O
-		public static async Task<object> ReadFromFileAsync(string filepath)
+		public static async Task<object> ReadFromFileAsync(string name)
 		{
-			var file = Path.Combine(await GetPath(), Configuration.Default.DataPath, filepath);
+			var file = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, name);
 			if (!(File.Exists(file)))
 				return null;
 
@@ -182,150 +162,142 @@ namespace NeKzBot.Resources
 			return array;
 		}
 
-		public static async Task<string> AddDataAsync(int index, string value)
+		public static async Task<string> ChangeDataAsync(IData data, string value, DataChangeMode mode)
 		{
-			var file = Data.Manager[index].FileName;
-			var filepath = Path.Combine(await GetPath(), Configuration.Default.DataPath, file);
+			// Fail safe
+			var file = data.FileName;
+			var filepath = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, file);
 			if (!(File.Exists(filepath)))
 				return DataError.FileNotFound;
 
-			var values = value.Split(Separator)
+			var values = default(List<string>);
+			if (mode == DataChangeMode.Add)
+			{
+				values = value.Split(Separator)
 							  .ToList();
+				foreach (var item in values)
+					if (item == string.Empty)
+						return DataError.InvalidValues;
+			}
 
-			foreach (var item in values)
-				if (item == string.Empty)
-					return DataError.InvalidValues;
-
-			var data = new List<string>();
-			var obj = Data.Manager[index].Data;
-			if (obj == null)
+			// Pattern matching
+			var dimensions = 1;
+			var collection = default(List<string>);
+			var foundindex = default(int);
+			var memory = data.Memory;
+			if (memory == null)
 				return DataError.DataMissing;
-			if (obj.GetType() == typeof(string[,]))
+			if (memory is Complex complex)
 			{
-				if (await SearchArray(obj as string[,], 0, values[0], out _))
-					return DataError.NameAlreadyExists;
-				var temp = await ReadFromFileAsync(file) as string[,];
-				if (temp.GetLength(1) != values.Count)
-					return DataError.InvalidDimensions;
-				data = temp.Cast<string>()
-						   .ToList();
+				var count = 0;
+				for (; count < complex.Values.Count; count++)
+					if (await SearchCollection(complex.Values[count].Value, value, out foundindex))
+						break;
+
+				if ((foundindex != -1)
+				&& (mode == DataChangeMode.Delete))
+				{
+					foundindex += count;
+					var temp = await ReadFromFileAsync(file) as string[,];
+					dimensions = temp.GetLength(1);
+					collection = temp.Cast<string>()
+									 .ToList();
+					for (int i = 0; i < dimensions; i++)
+						collection.RemoveAt(foundindex * dimensions);
+				}
+				else if ((foundindex == -1)
+				&& (mode == DataChangeMode.Add))
+				{
+					var temp = await ReadFromFileAsync(file) as string[,];
+					if (temp.GetLength(1) != values.Count)
+						return DataError.InvalidDimensions;
+					collection = temp.Cast<string>()
+									 .ToList();
+					foreach (var item in values)
+						collection.Add(item);
+				}
+				else
+					return DataError.NameNotFound;
+				var result = await WriteToFileAsync(collection, dimensions, filepath);
+				if (!(string.IsNullOrEmpty(result)))
+					return result;
+				await Data.InitAsync<Complex>(data.Name);
 			}
-			else if (obj.GetType() == typeof(string[]))
+			else if (memory is Simple simple)
 			{
-				if (await SearchArray(obj as string[], values[0], out _))
-					return DataError.NameAlreadyExists;
-				data = (await ReadFromFileAsync(file) as string[]).ToList();
+				await SearchCollection(simple.Value, value, out foundindex);
+				if ((foundindex != -1)
+				&& (mode == DataChangeMode.Delete))
+				{
+					collection = (await ReadFromFileAsync(file) as string[]).ToList();
+					for (int i = 0; i < dimensions; i++)
+						collection.RemoveAt(foundindex * dimensions);
+				}
+				else if ((foundindex == -1)
+				&& (mode == DataChangeMode.Add))
+				{
+					collection = (await ReadFromFileAsync(file) as string[]).ToList();
+					foreach (var item in values)
+						collection.Add(item);
+				}
+				else
+					return DataError.NameNotFound;
+				var result = await WriteToFileAsync(collection, dimensions, filepath);
+				if (!(string.IsNullOrEmpty(result)))
+					return result;
+				await Data.InitAsync<Simple>(data.Name);
 			}
-			else if (obj.GetType() == typeof(List<WebhookData>))
+			else if (memory is Subscribers sub)
 			{
-				if (await SearchInListClassPropertiesByName(obj as List<WebhookData>, "Id", values[0]) != -1)
-					return DataError.NameAlreadyExists;
-				var temp = await ReadFromFileAsync(file) as string[,];
-				if (temp.GetLength(1) != values.Count)
-					return DataError.InvalidDimensions;
-				data = temp.Cast<string>()
-						   .ToList();
+				if (((foundindex = sub.Subs.FindIndex(s => s.Id.ToString() == value)) != -1)
+				&& (mode == DataChangeMode.Delete))
+				{
+					var temp = await ReadFromFileAsync(file) as string[,];
+					dimensions = temp.GetLength(1);
+					collection = temp.Cast<string>()
+									 .ToList();
+					for (int i = 0; i < dimensions; i++)
+						collection.RemoveAt(foundindex * dimensions);
+				}
+				else if ((foundindex == -1)
+				&& (mode == DataChangeMode.Add))
+				{
+					var temp = await ReadFromFileAsync(file) as string[,];
+					if (temp.GetLength(1) != values.Count)
+						return DataError.InvalidDimensions;
+					collection = temp.Cast<string>()
+									 .ToList();
+					foreach (var item in values)
+						collection.Add(item);
+				}
+				else
+					return DataError.NameNotFound;
+				var result = await WriteToFileAsync(collection, dimensions, filepath);
+				if (!(string.IsNullOrEmpty(result)))
+					return result;
+				await Data.InitAsync<Subscribers>(data.Name);
 			}
 			else
 				return DataError.Unknown;
-
-			// Add new data
-			foreach (var item in values)
-				data.Add(item);
-
-			// Write new data
-			try
-			{
-				using (var fs = new FileStream(filepath, FileMode.Create))
-				using (var sw = new StreamWriter(fs))
-				{
-					for (int i = 0; i < data.Count; i += values.Count)
-					{
-						for (int j = 0; j < values.Count; j++)
-						{
-							await sw.WriteAsync(data[i + j]);
-							if (j + 1 != values.Count)
-								await sw.WriteAsync(Separator);
-						}
-						if (i + values.Count != data.Count)
-							await sw.WriteAsync("\n");
-					}
-				}
-			}
-			catch
-			{
-				return DataError.InvalidStream;
-			}
-			if (!(await Data.ReloadAsync(index)))
-				return DataError.Reload;
-			return string.Empty;
+			return null;
 		}
 
-		public static async Task<string> DeleteDataAsync(int index, string value)
+		private static async Task<string> WriteToFileAsync(List<string> collection, int dimensions, string filepath)
 		{
-			var file = Data.Manager[index].FileName;
-			var filepath = Path.Combine(await GetPath(), Configuration.Default.DataPath, file);
-			if (!(File.Exists(filepath)))
-				return DataError.FileNotFound;
-
-			// Check if command does actually exit
-			var foundindex = default(int);
-			var dimensions = 1;
-			var ls = default(List<string>);
-			var obj = Data.Manager[index].Data;
-			if (obj == null)
-				return DataError.DataMissing;
-			if (obj.GetType() == typeof(string[,]))
-			{
-				if (await SearchArray(obj as string[,], 0, value, out foundindex))
-				{
-					var temp = await ReadFromFileAsync(file) as string[,];
-					dimensions = temp.GetLength(1);
-					ls = temp.Cast<string>()
-							 .ToList();
-				}
-				else
-					return DataError.NameNotFound;
-			}
-			else if (obj.GetType() == typeof(string[]))
-			{
-				if (await SearchArray(obj as string[], value, out foundindex))
-					ls = (await ReadFromFileAsync(file) as string[]).ToList();
-				else
-					return DataError.NameNotFound;
-			}
-			else if (obj.GetType() == typeof(List<WebhookData>))
-			{
-				if ((foundindex = await SearchInListClassPropertiesByName(obj as List<WebhookData>, "Id", value)) != -1)
-				{
-					var temp = await ReadFromFileAsync(file) as string[,];
-					dimensions = temp.GetLength(1);
-					ls = temp.Cast<string>()
-							 .ToList();
-				}
-				else
-					return DataError.NameNotFound;
-			}
-			else
-				return DataError.Unknown;
-
-			for (int i = 0; i < dimensions; i++)
-				ls.RemoveAt(foundindex * dimensions);
-
 			try
 			{
 				using (var fs = new FileStream(filepath, FileMode.Create))
 				using (var sw = new StreamWriter(fs))
 				{
-					for (int i = 0; i < ls.Count; i += dimensions)
+					for (int i = 0; i < collection.Count; i += dimensions)
 					{
 						for (int j = 0; j < dimensions; j++)
 						{
-							await sw.WriteAsync(ls[i + j]);
+							await sw.WriteAsync(collection[i + j]);
 							if (j + 1 != dimensions)
 								await sw.WriteAsync(Separator);
 						}
-						if (i + dimensions != ls.Count)
+						if (i + dimensions != collection.Count)
 							await sw.WriteAsync("\n");
 					}
 				}
@@ -334,9 +306,7 @@ namespace NeKzBot.Resources
 			{
 				return DataError.InvalidStream;
 			}
-			if (!(await Data.ReloadAsync(index)))
-				return DataError.Reload;
-			return string.Empty;
+			return null;
 		}
 		#endregion
 
@@ -403,7 +373,7 @@ namespace NeKzBot.Resources
 		{
 			if (string.IsNullOrEmpty(name))
 				return Data.ListModules + Data.MoreInformation;
-			foreach (var command in Commands.CService.AllCommands)
+			foreach (var command in CommandModule.CService.AllCommands)
 			{
 				if ((name == command.Text)
 				|| (command.Aliases.Contains(name)))
@@ -414,32 +384,41 @@ namespace NeKzBot.Resources
 
 		public static Task<string> GetDescription(Command cmd)
 		{
-			var output = $"`{cmd.Text}";
+			var output = $"`{Configuration.Default.PrefixCmd}{cmd.Text}";
 			if (cmd.Parameters.Any())
 			{
 				foreach (var parameter in cmd.Parameters)
 				{
 					if (parameter.Type == ParameterType.Multiple)
 						output += $" <{parameter.Name}> <etc.>";
-					if (parameter.Type == ParameterType.Optional)
+					else if (parameter.Type == ParameterType.Optional)
 						output += $" ({parameter.Name})";
-					if (parameter.Type == ParameterType.Required)
+					else
 						output += $" <{parameter.Name}>";
-					if (parameter.Type == ParameterType.Unparsed)
-						output += $" <{parameter.Name} ... >";
 				}
 			}
-			output += string.IsNullOrEmpty(cmd.Description)
-							? "`\n• No description."
-							: $"`\n{cmd.Description}";
+			output += (string.IsNullOrEmpty(cmd.Description))
+							 ? "`\nNo description."
+							 : $"`\n{cmd.Description}";
 
-			var aliases = "\n\n• Known aliases:";
+			var aliases = "\n\nKnown aliases:";
 			if (cmd.Aliases.Any())
 				foreach (var alias in cmd.Aliases)
 					aliases += $" `{alias}`, ";
-			return CutMessage((aliases != "\n\nKnown aliases:")
+			return CutMessageAsync((aliases != "\n\nKnown aliases:")
 									   ? output += aliases.Substring(0, aliases.Length - 2)
-									   : output);
+									   : output, badchars: false);
+		}
+
+		public static Task<Command> FindCommandByName(string name)
+		{
+			foreach (var command in CommandModule.CService.AllCommands)
+			{
+				if ((name == command.Text)
+				|| (command.Aliases.Contains(name)))
+					return Task.FromResult(command);
+			}
+			return Task.FromResult(default(Command));
 		}
 		#endregion
 
@@ -507,14 +486,22 @@ namespace NeKzBot.Resources
 			}
 			return output;
 		}
+
+		// Another copy...
+		public static Task<string> FormatRawText(string text)
+		{
+			foreach (var item in _badChars)
+				text = text.Replace(item, $"\\{item}");
+			return Task.FromResult(text);
+		}
 		#endregion
 
 		#region Others
-		public static Task<bool> ValidFileName(string path)
-			=> Task.FromResult((string.IsNullOrEmpty(path)) || (path?.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0));
+		public static Task<bool> ValidFileName(string file)
+			=> Task.FromResult((!(string.IsNullOrEmpty(file))) && (file?.IndexOfAny(Path.GetInvalidFileNameChars()) == -1));
 
-		//public static Task<bool> ValidPathName(string path)
-		//	=> Task.FromResult((string.IsNullOrEmpty(path)) || (path?.IndexOfAny(Path.GetInvalidPathChars()) >= 0));
+		public static Task<bool> ValidPathName(string path)
+			=> Task.FromResult((!(string.IsNullOrEmpty(path))) && (path?.IndexOfAny(Path.GetInvalidPathChars()) == -1));
 
 		public static Task<string> UpperString(string s, bool yes = true)
 			=> Task.FromResult((yes)
@@ -527,18 +514,18 @@ namespace NeKzBot.Resources
 		public static Task<string> GetLocalTime()
 			=> Task.FromResult(DateTime.Now.ToString("HH:mm:ss"));
 
-		public static Task<string> GetPath()
+		public static Task<string> GetAppPath()
 			=> Task.FromResult(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 
-		public static Task<string> CutMessage(string text, int minus = 0)
-			=> Task.FromResult((text.Length > DiscordConstants.MaximumCharsPerMessage)
+		public static async Task<string> CutMessageAsync(string text, int minus = 0, bool badchars = true)
+			=> ((text = (badchars) ? await FormatRawText(text) : text).Length > DiscordConstants.MaximumCharsPerMessage)
 											? text.Substring(0, (int)DiscordConstants.MaximumCharsPerMessage)
-											: text.Substring(0, text.Length - minus));
+											: text.Substring(0, text.Length - minus);
 
-		public static Task<string> CutMessage(string text, int limit, string append)
-			=> Task.FromResult((text.Length > limit)
+		public static async Task<string> CutMessageAsync(string text, int limit, string append, bool badchars = true)
+			=> ((text = (badchars) ? await FormatRawText(text) : text).Length > limit)
 										   ? text.Substring(0, limit) + append
-										   : text.Substring(0, text.Length));
+										   : text.Substring(0, text.Length);
 
 		public static Task<TimeSpan> GetUptime()
 			=> Task.FromResult(DateTime.Now - Process.GetCurrentProcess().StartTime);
@@ -550,6 +537,9 @@ namespace NeKzBot.Resources
 
 		public static Task<string> GetDuration(DateTime time)
 		{
+			if (time == default(DateTime))
+				return Task.FromResult(default(string));
+
 			var duration = DateTime.UtcNow - time;
 			var output = (duration.Days > 0)
 										? $"{duration.Days} Day{(duration.Days == 1 ? string.Empty : "s")} "
@@ -569,7 +559,56 @@ namespace NeKzBot.Resources
 								   : string.Empty;
 			return Task.FromResult((output != string.Empty)
 										   ? output
-										   : "_Unknown._");
+										   : default(string));
+		}
+
+		public static Task<User> GetBotUserObject(Discord.Server gui)
+			=> Task.FromResult(gui.Users.FirstOrDefault(x => x.Id == Bot.Client.CurrentUser.Id));
+
+		public static Task<User> GetBotUserObject(Channel cha)
+			=> Task.FromResult(cha.Users.FirstOrDefault(x => x.Id == Bot.Client.CurrentUser.Id));
+
+		public static async Task<bool> CheckRolesHasPermissionAsync(User usr, byte flag)
+		{
+			foreach (var role in usr.Roles)
+				if (await FlagIsSet(role.Permissions.RawValue, flag))
+					return true;
+			return false;
+		}
+
+		// I copied this from Voltana c:
+		public static Task<bool> FlagIsSet(uint value, byte flag)
+			=> Task.FromResult(((value >> flag) & 1U) == 1);
+
+		public static async Task<string> GenerateModuleListAsync(string title, string description = default(string), string footer = default(string), string specialprefix = default(string), params string[] commands)
+		{
+			var output = string.Empty;
+			foreach (var name in commands)
+			{
+				var command = await FindCommandByName((string.IsNullOrEmpty(specialprefix)) ? name : specialprefix + name);
+				if (command == null)
+					continue;
+				output += $"\n• `{Configuration.Default.PrefixCmd}{command.Text}";
+				if (command.Parameters.Any())
+				{
+					foreach (var parameter in command.Parameters)
+					{
+						if (parameter.Type == ParameterType.Multiple)
+							output += $" <{parameter.Name}> <etc.>";
+						else if (parameter.Type == ParameterType.Optional)
+							output += $" ({parameter.Name})";
+						else
+							output += $" <{parameter.Name}>";
+					}
+				}
+				output += "`";
+			}
+			var desc = (string.IsNullOrEmpty(description))
+							  ? string.Empty
+							  : $"\n{description}";
+			return (string.IsNullOrEmpty(footer))
+						  ? $"**[{title}]**{desc}{output}"
+						  : $"**[{title}]**{desc}{output}\n{footer}";
 		}
 		#endregion
 	}

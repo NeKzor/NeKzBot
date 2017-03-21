@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
@@ -15,11 +15,15 @@ namespace NeKzBot.Tasks
 		public static bool IsRunning { get; set; } = false;
 		public static InternalWatch Watch { get; } = new InternalWatch();
 		private static string _cacheKey;
+		private static uint _refreshTime;
+		private static uint _delayFactor;
 
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Twitch", LogColor.Init);
-			_cacheKey = _cacheKey ?? "twitchtv";
+			_cacheKey = "twitchtv";
+			_refreshTime = 5 * 60 * 1000;   // 5 minutes
+			_delayFactor = 10;
 		}
 
 		public static async Task StartAsync(int serverdelay = 8000)
@@ -30,17 +34,22 @@ namespace NeKzBot.Tasks
 			try
 			{
 				// Reserve cache memory
-				await Caching.CApplication.SaveCacheAsync(_cacheKey, new List<string>());
+				await Caching.CFile.AddKeyAsync(_cacheKey);
 
 				for (;;)
 				{
 					// Get cache
-					var cache = (await Caching.CApplication.GetCacheAsync(_cacheKey))[0] as List<string>;
+					var cache = (await Caching.CFile.GetFileAsync(_cacheKey))?.Split('|').ToList();
+					if (cache == null)
+					{
+						await Caching.CFile.SaveCacheAsync(_cacheKey, string.Empty);
+						continue;
+					}
 
-					foreach (var streamer in Data.TwitchStreamers)
+					foreach (var streamer in (await Data.Get<Simple>("streamers")).Value)
 					{
 						// Giving this a scanning rate because why not
-						await Task.Delay(1000);
+						await Task.Delay((int)_delayFactor * (await Data.Get<Simple>("streamers")).Value.Count);
 
 						dynamic api = await TwitchTv.GetStreamAsync(streamer);
 
@@ -73,18 +82,24 @@ namespace NeKzBot.Tasks
 
 							// Save preview image, upload to dropbox and create a link
 							var filename = $"{stream.ChannelName}.jpg";
-							var path = await Utils.GetPath() + $"/Resources/Cache/{filename}";
+							var path = await Utils.GetAppPath() + $"/Resources/Cache/{filename}";
 							await Fetching.GetFileAsync(stream.PreviewLink, path);
+
+							// Not sure if this is actually a good idea, it delays everything :c
+							await DropboxCom.DeleteFileAsync("TwitchCache", filename);
 							await DropboxCom.UploadAsync("TwitchCache", filename, path);
 
 							// Overwrite new preview link
-							stream.PreviewLink = $"{await DropboxCom.CreateLinkAsync($"TwitchCache/{filename}")}&raw=1";
+							var link = await DropboxCom.CreateLinkAsync($"TwitchCache/{filename}");
+							stream.PreviewLink = (link != null)
+													   ? $"{link}&raw=1"
+													   : stream.PreviewLink;
 
-							foreach (var item in Data.TwitchTvSubscribers)
+							foreach (var item in (await Data.Get<Subscribers>("twtvhook")).Subs)
 							{
 								await WebhookService.ExecuteWebhookAsync(item, new Webhook
 								{
-									UserName = item.UserName,
+									UserName = "TwitchTv",
 									AvatarUrl = "https://s3-us-west-2.amazonaws.com/web-design-ext-production/p/Glitch_474x356.png",
 									Embeds = new Embed[] { await CreateEmbed(stream) }
 								});
@@ -92,20 +107,21 @@ namespace NeKzBot.Tasks
 						}
 						else // Remove from cache when not streaming
 							if (cache.Contains(streamer))
-							cache.Remove(streamer);
+								cache.Remove(streamer);
 					}
 					// Save cache
-					await Caching.CApplication.SaveCacheAsync(_cacheKey, cache);
+					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(cache, delimiter: "|"));
 					cache = null;
 
-					// Check in 3 minutes again
-					await Task.Delay((3 * 60000) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> "));
+					// How can I improve this?
+					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> ");
+					await Task.Delay((delay > 0 ) ? delay : 0);
 					await Watch.RestartAsync();
 				}
 			}
 			catch (Exception e)
 			{
-				await Logger.SendAsync("Twitch.StartAsync Error", e);
+				await Logger.SendToChannelAsync("Twitch.StartAsync Error", e);
 			}
 			IsRunning = false;
 			await Logger.SendToChannelAsync("Twitch.StartAsync Ended", LogColor.Twitch);
@@ -123,11 +139,25 @@ namespace NeKzBot.Tasks
 
 		private static Task<Embed> CreateEmbed(TwitchStream stream)
 		{
+			var people = default(string);
+			switch (stream.ChannelViewers)
+			{
+				case 0:
+					people = string.Empty;
+					break;
+				case 1:
+					people = " for 1 viewer";
+					break;
+				default:
+					people = $" for {stream.ChannelViewers} viewers";
+					break;
+			}
+
 			return Task.FromResult(new Embed
 			{
 				Author = new EmbedAuthor(stream.ChannelName, stream.StreamLink, stream.AvatarLink),
 				Title = "Twitch Livestream",
-				Description = $"{stream.Game.Name} for {stream.ChannelViewers} viewers!\n\n_{stream.StreamTitle}_",
+				Description = $"{stream.Game.Name}{people}!\n\n_[{stream.StreamTitle}]({stream.StreamLink})_",
 				Url = stream.StreamLink,
 				Color = Data.TwitchColor.RawValue,
 				Thumbnail = new EmbedThumbnail(stream.Game.BoxArt),

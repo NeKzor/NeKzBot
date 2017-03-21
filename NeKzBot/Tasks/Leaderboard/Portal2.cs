@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using NeKzBot.Classes;
-using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Leaderboard
@@ -219,10 +218,10 @@ namespace NeKzBot.Tasks.Leaderboard
 			return null;
 		}
 
-		public static async Task<Portal2Entry> GetUserRankAsync(string url, int index)
+		public static async Task<Portal2Entry> GetUserRankAsync(string url, Portal2Map map)
 		{
 			// Check if map has a leaderboard
-			var mapid = Data.Portal2Maps[index, 0];
+			var mapid = map.BestTimeId;
 			if (mapid == string.Empty)
 				return null;	// "Map is not supported.";
 
@@ -237,7 +236,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					// First get all maps
 					var maps = doc.DocumentNode.SelectNodes("//div[@class='cell title']//a");
-					var map = Data.Portal2Maps[index, 2];
+					var mapname = map.Name;
 
 					// Find index map of all nodes
 					var idx = 0;
@@ -285,7 +284,7 @@ namespace NeKzBot.Tasks.Leaderboard
 							SteamAvatar = steamavatar
 						},
 						Date = date,
-						Map = map,
+						Map = mapname,
 						MapId = mapid,
 						Ranking = ranking,
 						Time = time,
@@ -298,6 +297,44 @@ namespace NeKzBot.Tasks.Leaderboard
 				{
 					await Logger.SendAsync("Portal2.GetUserRankAsync Error", LogColor.Error);
 					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
+				}
+			}
+			return null;
+		}
+
+		public static async Task<Portal2Leaderboard> GetMapEntriesAsync(string url, uint starting = 0, uint count = 10, uint max = 20)
+		{
+			var doc = await Cache.GetAsync(url);
+			if (doc != null)
+			{
+				try
+				{
+					var entries = new List<Portal2Entry>();
+					for (var i = (int)starting; i < (count > max ? max : count); i++)
+					{
+						var entry = new Portal2Entry()
+						{
+							Player = new Portal2User { Name = HttpUtility.HtmlDecode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='boardname']//a")?[i].FirstChild.InnerHtml) ?? string.Empty },
+							Ranking = await FormatRank(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='place']")?[i].FirstChild.InnerHtml ?? string.Empty),
+							Time = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//a[@class='score']")?[i].FirstChild.InnerHtml ?? string.Empty,
+							Date = doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div//div[@class='date']")?[i].Attributes["date"]?.Value?.ToString() ?? string.Empty
+						};
+
+						// Don't check date because this can sometimes be unknown
+						if (new List<string>() { entry.Ranking, entry.Time, entry.Player.Name }.Contains(string.Empty))
+							return await Logger.SendAsync("Leaderboard.GetMapEntriesAsync Node Empty", LogColor.Error) as Portal2Leaderboard;
+						entries.Add(entry);
+					}
+
+					return new Portal2Leaderboard()
+					{
+						MapName = doc.DocumentNode.SelectSingleNode("//head//title").InnerHtml,
+						Entries = entries
+					};
+				}
+				catch (Exception e)
+				{
+					await Logger.SendAsync("Portal2.GetMapEntriesAsync Error", e);
 				}
 			}
 			return null;

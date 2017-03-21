@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,22 +23,20 @@ namespace NeKzBot.Tasks.Leaderboard
 			{
 				await Logger.SendAsync("Initializing Portal2 Cache", LogColor.Init);
 				// Reserve cache memory
-				_cacheKey = _cacheKey ?? "lb";
-				await Caching.CApplication.SaveCacheAsync(_cacheKey, new Dictionary<string, HtmlDocument>());
+				_cacheKey = "lb";
+				await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);
 			}
 
 			// Get new or cached document
 			public static async Task<HtmlDocument> GetAsync(string url, bool ignore = false)
 			{
 				// Get cache
-				var cache = await Caching.CApplication.GetCacheAsync(_cacheKey);
+				var cache = (await Caching.CApplication.GetCache(_cacheKey))?.Cast<Tuple<string, HtmlDocument>>().ToList();
+				var index = cache?.FindIndex(c => c.Item1 == url) ?? -1;
 
 				// Search and find cached data
-				if (!(ignore))
-					if (cache != null)
-						foreach (Dictionary<string, HtmlDocument> item in cache)
-							if (item.ContainsKey(url))
-								return item.Values.FirstOrDefault();
+				if ((!(ignore)) && (index != -1))
+					return cache[index].Item2;
 
 				// Download data
 				var doc = new HtmlDocument();
@@ -51,12 +48,18 @@ namespace NeKzBot.Tasks.Leaderboard
 				}
 				catch (Exception e)
 				{
-					return await Logger.SendToChannelAsync("Fetching.GetDocumentAsync Error (Portal2.Cache.GetAsync)", e) as HtmlDocument;
+					return await Logger.SendAsync("Fetching.GetDocumentAsync Error (Portal2.Cache.GetAsync)", e) as HtmlDocument;
 				}
 
+				// Add if not found or replace if new was requested
+				if (index == -1)
+					cache.Add(new Tuple<string, HtmlDocument>(url, doc));
+				else
+					cache[index] = new Tuple<string, HtmlDocument>(url, doc);
+
 				// Save cache
-				await Logger.SendAsync($"Portal2.Cache.GetAsync Caching -> {await Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", LogColor.Caching);
-				await Caching.CApplication.AddCache(_cacheKey, new Dictionary<string, HtmlDocument> { [url] = doc });
+				await Caching.CApplication.AddOrUpdateCache(_cacheKey, cache);
+				cache = null;
 				return doc;
 			}
 
@@ -71,7 +74,8 @@ namespace NeKzBot.Tasks.Leaderboard
 				{
 					for (;;)
 					{
-						await Task.Delay(((int)Configuration.Default.CachingTime * 60000) - await Watch.GetElapsedTime(debugmsg: "Portal2.Cache.ResetAsync Delay Took -> "));
+						var delay = (int)(Configuration.Default.CachingTime * 60 * 1000) - await Watch.GetElapsedTime(debugmsg: "Portal2.Cache.ResetAsync Delay Took -> ");
+						await Task.Delay((delay > 0) ? delay : 0);
 						await Watch.RestartAsync();
 
 						// Cache stuff
@@ -79,7 +83,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						await Caching.CApplication.ClearDataAsync(_cacheKey);
 
 						// Use cache reset to set new game and status
-						await Task.Factory.StartNew(async () => Bot.Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string));
+						await Task.Factory.StartNew(async () => Bot.Client.SetGame(await Utils.RngAsync((await Data.Get<Simple>("games")).Value)));
 						await Task.Factory.StartNew(async () => Bot.Client.SetStatus(await Utils.RngAsync(Data.BotStatus) as UserStatus));
 					}
 				}

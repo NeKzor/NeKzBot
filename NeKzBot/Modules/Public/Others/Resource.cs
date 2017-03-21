@@ -4,40 +4,45 @@ using Discord.Commands;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using System.Collections.Generic;
+using NeKzBot.Internals;
+using NeKzBot.Classes;
 
 namespace NeKzBot.Modules.Public.Others
 {
-	public class Resource : Commands
+	public class Resource : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Resource Module", LogColor.Init);
-			await GetScriptAsync("scripts");
+			await GetScript("scripts");
 			await GetElevatorTiming("dialogue");
 			await GetPortalCvar("cvar");
 			await GetSegmentedRun(Data.SegmentedRunCommand);
 		}
 
-		public static async Task GetScriptAsync(string c)
+		public static Task GetScript(string c)
 		{
 			CService.CreateCommand(c)
 					.Alias("script")
-					.Description($"Gives you a specific AutoHotkey script. Available scripts: {await Utils.ArrayToList(Data.ScriptFiles, 0, "`")}")
+					.Description("Gives you a specific AutoHotkey script.")
 					.Parameter("name", ParameterType.Unparsed)
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (e.Args[0] != string.Empty)
+						if (!(string.IsNullOrEmpty(e.GetArg("name"))))
 						{
-							if (await Utils.SearchArray(Data.ScriptFiles, 0, e.Args[0], out var index))
-								await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/scripts/{Data.ScriptFiles[index, 1]}");
+							var scripts = await Data.Get<Complex>("scripts");
+							var script = scripts.Get(e.GetArg("name"));
+							if (script != null)
+								await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/scripts/{script.Value[1]}");
 							else
-								await e.Channel.SendMessage($"Unknown script. Try one of these: {await Utils.ArrayToList(Data.ScriptFiles, 0, "`")}");
+								await e.Channel.SendMessage($"Unknown script. Try one of these: {await Utils.CollectionToList(scripts.Cast(0), "`")}");
 						}
 						else
 							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
 					});
+			return Task.FromResult(0);
 		}
 
 		public static Task GetElevatorTiming(string c)
@@ -50,16 +55,15 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (e.Args[0] != string.Empty)
+						if (e.GetArg("mapname") != string.Empty)
 						{
-							if (await Utils.SearchArray(Data.Portal2Maps, 2, e.Args[0], out var index))
-								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
-							else if (await Utils.SearchArray(Data.Portal2Maps, 3, e.Args[0], out index))
-								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
-							else if (await Utils.SearchArray(Data.Portal2Maps, 5, e.Args[0], out index))
-								await e.Channel.SendMessage(Data.Portal2Maps[index, 4]);
-							else
-								await e.Channel.SendMessage("Unknown map name.");
+							var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(e.GetArg("mapname"));
+							if (result == null)
+							{
+								await e.Channel.SendMessage("Couldn't find that map.");
+								return;
+							}
+							await e.Channel.SendMessage(result.ElevatorTiming);
 						}
 						else
 							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
@@ -75,15 +79,18 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var rand = await Utils.RngAsync(Data.ProjectNames.GetLength(0));
-						if (e.Args[0] == string.Empty)
-							await e.Channel.SendMessage($"**{Data.ProjectNames[rand, 1]}**\n{Data.ProjectNames[rand, 2]}");
-						else if (await Utils.SearchArray(Data.ProjectNames, 0, e.Args[0], out var index))
-							await e.Channel.SendMessage($"**{Data.ProjectNames[index, 1]}**\n{Data.ProjectNames[index, 2]}");
-						else if (await Utils.SearchArray(Data.ProjectNames, 1, e.Args[0], out index))
-							await e.Channel.SendMessage($"**{Data.ProjectNames[index, 1]}**\n{Data.ProjectNames[index, 2]}");
+						var projects = await Data.Get<Complex>("projects");
+						var rand = projects.Values[await Utils.RngAsync(projects.Values.Count)].Value;
+						if (string.IsNullOrEmpty(e.GetArg("project")))
+							await e.Channel.SendMessage($"**{rand[1]}**\n{rand[2]}");
 						else
-							await e.Channel.SendMessage($"Unknown project. Try of one these: {await Utils.ArrayToList(Data.ProjectNames, 0, "`")}");
+						{
+							var result = default(Simple);
+							if ((result = projects.Get(e.GetArg("project"))) == null)
+								await e.Channel.SendMessage($"Unknown project. Try of one these: {await Utils.CollectionToList(projects.Cast(), "`")}");
+							else
+								await e.Channel.SendMessage($"**{result.Value[1]}**\n{result.Value[2]}");
+						}
 					});
 			return Task.FromResult(0);
 		}
@@ -98,13 +105,18 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var rand = await Utils.RngAsync(Data.Portal2Cvars.GetLength(0));
-						if (e.Args[0] == string.Empty)
-							await e.Channel.SendMessage($"**{Data.Portal2Cvars[rand, 0]}**{(Data.Portal2Cvars[rand, 3] != string.Empty ? $"\n{Data.Portal2Cvars[rand, 3]}" : string.Empty)}{(Data.Portal2Cvars[rand, 1] != string.Empty ? $"\n• Default Value: {Data.Portal2Cvars[rand, 1]}" : string.Empty)}{(Data.Portal2Cvars[rand, 2] != string.Empty ? $"\n• Flags: {Data.Portal2Cvars[rand, 2]}" : string.Empty)}");	// Sry
-						else if (await Utils.SearchArray(Data.Portal2Cvars, 0, e.Args[0], out var index))
-							await e.Channel.SendMessage($"**{Data.Portal2Cvars[index, 0]}**{(Data.Portal2Cvars[index, 3] != string.Empty ? $"\n{Data.Portal2Cvars[index, 3]}" : string.Empty)}{(Data.Portal2Cvars[index, 1] != string.Empty ? $"\n• Default Value: {Data.Portal2Cvars[index, 1]}" : string.Empty)}{(Data.Portal2Cvars[index, 2] != string.Empty ? $"\n• Flags: {Data.Portal2Cvars[index, 2]}" : string.Empty)}");
+						var cvars = await Data.Get<Complex>("p2cvars");
+						var rand = cvars.Values[await Utils.RngAsync(cvars.Values.Count)].Value;
+						if (string.IsNullOrEmpty(e.GetArg("cvar")))
+							await e.Channel.SendMessage($"**{rand[0]}**{(rand[3] != string.Empty ? $"\n{rand[3]}" : string.Empty)}{(rand[1] != string.Empty ? $"\n• Default Value: {rand[1]}" : string.Empty)}{(rand[2] != string.Empty ? $"\n• Flags: {rand[2]}" : string.Empty)}");	// Sry
 						else
-							await e.Channel.SendMessage("Unknown console variable.");
+						{
+							var result = default(Simple);
+							if ((result = cvars.Get(e.GetArg("cvar"))) == null)
+								await e.Channel.SendMessage("Unknown console variable.");
+							else
+								await e.Channel.SendMessage($"**{result.Value[0]}**{(result.Value[3] != string.Empty ? $"\n{result.Value[3]}" : string.Empty)}{(result.Value[1] != string.Empty ? $"\n• Default Value: {result.Value[1]}" : string.Empty)}{(result.Value[2] != string.Empty ? $"\n• Flags: {result.Value[2]}" : string.Empty)}");
+						}
 					});
 
 			CService.CreateCommand("find")
@@ -117,16 +129,17 @@ namespace NeKzBot.Modules.Public.Others
 							return;
 
 						var temp = new List<string>();
-						for (int i = 0; i < Data.Portal2Cvars.GetLength(0); i++)
-							temp.Add(Data.Portal2Cvars[i, 0]);
+						var cvars = (await Data.Get<Complex>("p2cvars")).Values;
+						for (int i = 0; i < cvars.Count; i++)
+							temp.Add(cvars[i].Value[0]);
 
-						var cvars = temp.Where(cvar => cvar.Length >= e.Args[0].Length);
+						var output = temp.Where(cvar => cvar.Length >= e.Args[0].Length);
 						if (temp?.Count() < 1)
 							return;
-						cvars = cvars.Where(cvar => cvar.Substring(0, e.Args[0].Length) == e.Args[0]);
+						output = output.Where(cvar => cvar.Substring(0, e.Args[0].Length) == e.Args[0]);
 						if (temp?.Count() < 1)
 							return;
-						await (await e.User.CreatePMChannel())?.SendMessage(await Utils.CutMessage(await Utils.ListToList(cvars.ToList())));
+						await (await e.User.CreatePMChannel())?.SendMessage(await Utils.CutMessageAsync(await Utils.CollectionToList(output.ToList())));
 					});
 			return Task.FromResult(0);
 		}

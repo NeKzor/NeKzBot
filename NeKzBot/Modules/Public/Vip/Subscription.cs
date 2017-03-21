@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Public.Vip
 {
-	public class Subscription : Commands
+	public class Subscription : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -30,6 +30,14 @@ namespace NeKzBot.Modules.Public.Vip
 						.AddCheck(Permissions.AdminOnly)
 						.Do(async e =>
 						{
+							// Check permission
+							if (!(await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag)))
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("The permission to manage webhooks is required.");
+								return;
+							}
+
 							if (!(ulong.TryParse(e.GetArg("channel_id"), out ulong id)))
 								id = e.Channel.Id;
 
@@ -42,7 +50,9 @@ namespace NeKzBot.Modules.Public.Vip
 							}
 
 							// Fail safe :)
-							var username = e.GetArg("username") ?? "NeKzHook";
+							var username = (string.IsNullOrEmpty(e.GetArg("username")))
+												  ? e.GetArg("username")
+												  : "NeKzHook";
 							if ((username.Length < 2)
 							|| (username.Length > 100)
 							|| (username.ToUpper().Contains("CLYDE")))
@@ -52,16 +62,16 @@ namespace NeKzBot.Modules.Public.Vip
 								return;
 							}
 
-							var hook = await WebhookService.CreateWebhookAsync(id, new WebhookData { UserName = username });
+							var hook = await WebhookService.CreateWebhookAsync(id, new WebhookData { Name = username });
 							if (hook == null)
 							{
 								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("**Failed** to create a webhook. The bot might not have the permissions to manage webhooks.");
+								await e.Channel.SendMessage("**Failed** to create a webhook.");
 								return;
 							}
 
 							await WebhookData.Watch.RestartAsync();
-							var data = new WebhookData(hook.Id, hook.Token, hook.Name, e.User.Id);
+							var data = new WebhookData(hook.Id, hook.Token, e.Server.Id, e.User.Id);
 
 							var result = default(bool);
 							switch (type.ToLower())
@@ -70,7 +80,7 @@ namespace NeKzBot.Modules.Public.Vip
 									result = await WebhookData.SubscribeAsync("p2hook", data);
 									break;
 								case Data.SpeedrunComSourceWebhookKeyword:
-									result = await WebhookData.SubscribeAsync("srcomsource2hook", data);
+									result = await WebhookData.SubscribeAsync("srcomsourcehook", data);
 									break;
 								case Data.SpeedrunComPortal2WebhookKeyword:
 									result = await WebhookData.SubscribeAsync("srcomportal2hook", data);
@@ -89,7 +99,7 @@ namespace NeKzBot.Modules.Public.Vip
 							else
 							{
 								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("**Failed** to subscribe to this service.");
+								await e.Channel.SendMessage("**Failed** to subscribe to this service. A webhook has been generated though.");
 							}
 						});
 
@@ -101,6 +111,14 @@ namespace NeKzBot.Modules.Public.Vip
 						.AddCheck(Permissions.AdminOnly)
 						.Do(async e =>
 						{
+							// Check permission
+							if (await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.ManageWebhooksFlag))
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("The permission to manage webhooks is required.");
+								return;
+							}
+
 							await e.Channel.SendIsTyping();
 							if (!(ulong.TryParse(e.GetArg("id"), out ulong id)))
 							{
@@ -109,20 +127,23 @@ namespace NeKzBot.Modules.Public.Vip
 							}
 							var data = new WebhookData { Id = id };
 
-							if (((await Data.GetDataByName("p2hook", out var index)).Data as List<WebhookData>).FindIndex(x => x.Id == id) == -1)
+							var result = default(Subscribers);
+							if ((result = await Data.Get<Subscribers>("p2hook")).Subs.FindIndex(x => x.Id == id) == -1)
 							{
-								if (((await Data.GetDataByName("srcomhook", out index)).Data as List<WebhookData>).FindIndex(x => x.Id == id) == -1)
+								if ((result = await Data.Get<Subscribers>("srcomsourcehook")).Subs.FindIndex(x => x.Id == id) == -1)
 								{
-									if (((await Data.GetDataByName("twtvhook", out index)).Data as List<WebhookData>).FindIndex(x => x.Id == id) == -1)
+									if ((result = await Data.Get<Subscribers>("srcomportal2hook")).Subs.FindIndex(x => x.Id == id) == -1)
 									{
-										await e.Channel.SendMessage("Could not find the given webhook id.");
-										return;
+										if ((result = await Data.Get<Subscribers>("twtvhook")).Subs.FindIndex(x => x.Id == id) == -1)
+										{
+											await e.Channel.SendMessage("Could not find the given webhook id.");
+											return;
+										}
 									}
 								}
 							}
 
-							// RIP 0.9 doesn't have webhook permissions :c
-							if ((e.User.Id != (Data.Manager[index].Data as List<WebhookData>)?.FirstOrDefault(x => x.Id == id)?.UserId)
+							if ((e.User.Id != result.Subs?.FirstOrDefault(x => x.Id == id)?.UserId)
 							|| (e.User.Id != Credentials.Default.DiscordBotOwnerId))
 							{
 								await e.Channel.SendMessage("You are not allowed to manage this webhook.");
@@ -131,12 +152,15 @@ namespace NeKzBot.Modules.Public.Vip
 
 							if (!(await WebhookData.UnsubscribeAsync("p2hook", data)))
 							{
-								if (!(await WebhookData.UnsubscribeAsync("srcomhook", data)))
+								if (!(await WebhookData.UnsubscribeAsync("srcomsourcehook", data)))
 								{
-									if (!(await WebhookData.UnsubscribeAsync("twtvhook", data)))
+									if (!(await WebhookData.UnsubscribeAsync("srcomportal2hook", data)))
 									{
-										await e.Channel.SendMessage("This id does not exist in any subscription list.");
-										return;
+										if (!(await WebhookData.UnsubscribeAsync("twtvhook", data)))
+										{
+											await e.Channel.SendMessage("This id does not exist in any subscription list.");
+											return;
+										}
 									}
 								}
 							}

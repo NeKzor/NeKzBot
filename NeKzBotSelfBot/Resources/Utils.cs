@@ -230,6 +230,9 @@ namespace NeKzBot.Resources
 
 		public static Task<string> GetDuration(DateTime time)
 		{
+			if (time == default(DateTime))
+				return Task.FromResult(default(string));
+
 			var duration = DateTime.UtcNow - time;
 			var output = (duration.Days > 0)
 										? $"{duration.Days} Day{(duration.Days == 1 ? string.Empty : "s")} "
@@ -246,7 +249,7 @@ namespace NeKzBot.Resources
 			output += ((duration.Days > 0)
 			&& (duration.TotalDays > 365))
 								   ? $" (about {Math.Round((decimal)duration.TotalDays / 365, 1)} Year{(Math.Round((decimal)duration.TotalDays / 365, 1) == (decimal)1.0 ? string.Empty : "s")})"
-								   : string.Empty;
+								   : default(string);
 			return Task.FromResult(output);
 		}
 	}

@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Internals;
@@ -9,7 +9,7 @@ using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Private.MainServer
 {
-	public class Giveaway : Commands
+	public class Giveaway : CommandModule
 	{
 		public static bool IsRunning { get; set; } = false;
 		public static InternalWatch Watch { get; } = new InternalWatch();
@@ -44,7 +44,7 @@ namespace NeKzBot.Modules.Private.MainServer
 		{
 			CService.CreateCommand(c)
 					.Description("Could give you a prize. Algorithm:\n• User requests random number\n• Checking if number equals value[index]\n• If it does index++ and tries--\n• Try again\n• If index == value.length, puzzle solved.\n• Good luck!\n• Notes: Solve status and value (code to solve) are hidden, this game isn't always available.")
-					.AddCheck(Permissions.MainServerOnly)
+					.AddCheck(Permissions.DevelopersOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
@@ -55,7 +55,7 @@ namespace NeKzBot.Modules.Private.MainServer
 								if (await CheckIfSolvedAsync())
 								{
 									await e.Channel.SendMessage("Ayy, congrats :grinning:");
-									await e.User.SendMessage($"Your prize: {Credentials.Default.GiveawayPrizeKey}");
+									await (await e.User.CreatePMChannel())?.SendMessage($"Your prize: {Credentials.Default.GiveawayPrizeKey}");
 									await Logger.SendAsync("Giveaway Solved", LogColor.Giveaway);
 								}
 								else
@@ -81,7 +81,7 @@ namespace NeKzBot.Modules.Private.MainServer
 						.Alias("tries")
 						.Description("Will set the amount of tries for each user.")
 						.Parameter("tries", ParameterType.Required)
-						.AddCheck(Permissions.MainServerOnly)
+						.AddCheck(Permissions.DevelopersOnly)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -99,7 +99,7 @@ namespace NeKzBot.Modules.Private.MainServer
 						.Alias("state")
 						.Description("Enables or disables the giveaway game.")
 						.Parameter("state", ParameterType.Required)
-						.AddCheck(Permissions.MainServerOnly)
+						.AddCheck(Permissions.DevelopersOnly)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -111,7 +111,7 @@ namespace NeKzBot.Modules.Private.MainServer
 				GBuilder.CreateCommand("status")
 						.Alias("debug")
 						.Description("Will log some information about the giveaway.")
-						.AddCheck(Permissions.MainServerOnly)
+						.AddCheck(Permissions.DevelopersOnly)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
@@ -135,7 +135,7 @@ namespace NeKzBot.Modules.Private.MainServer
 			{
 				while (Configuration.Default.GiveawayEnabled)
 				{
-					await Caching.CApplication.SaveCacheAsync(_cacheKey, new Dictionary<Discord.User, int>());
+					await Caching.CApplication.ReserverMemoryAsync<Tuple<ulong, int>>(_cacheKey);
 					_nextReset = Stopwatch.StartNew();
 					await Logger.SendAsync("Giveaway.ResetAsync Reset", LogColor.Giveaway);
 					await Task.Delay((int)_resetTime - await Watch.GetElapsedTime(debugmsg: "Giveaway.ResetAsync Delay Took -> "));
@@ -174,43 +174,34 @@ namespace NeKzBot.Modules.Private.MainServer
 		}
 
 		#region PUZZLE ALGORITHM
-		private static async Task<bool> HasTriesLeftAsync(Discord.User u)
+		private static async Task<bool> HasTriesLeftAsync(Discord.User usr)
 		{
 			// Get cache
-			var cache = (await Caching.CApplication.GetCacheAsync(_cacheKey))[0] as Dictionary<Discord.User, int>;
+			var cache = (await Caching.CApplication.GetCache(_cacheKey))?.Cast<Tuple<ulong, int>>().ToList();
+			var index = cache?.FindIndex(c => c.Item1 == usr.Id) ?? -1;
 
-			// Check if new user
 			var yes = true;
-			var found = false;
-
-			// Find user
-			foreach (var item in cache)
-			{
-				if (item.Key.Id != u.Id)
-					continue;
-				found = true;
-				break;
-			}
-
-			if (found)
+			if (index != -1)
 			{
 				// Check if user has tries left
-				if (cache[u] > 0)
+				var tries = cache[index].Item2;
+				if (tries > 0)
 				{
-					cache[u]--;
-					await Logger.SendToChannelAsync($"{u.Name} • {cache[u]}/{Configuration.Default.GiveawayMaxTries}", LogColor.Giveaway);
+					cache[index] = new Tuple<ulong, int>(usr.Id, tries - 1);
+					await Logger.SendToChannelAsync($"{usr.Name} • {cache[index].Item2}/{Configuration.Default.GiveawayMaxTries}", LogColor.Giveaway);
 				}
 				else
 					yes = false;
 			}
 			else
 			{
-				cache.Add(u, (int)Configuration.Default.GiveawayMaxTries - 1);
-				await Logger.SendToChannelAsync($"New: {u.Name} • {cache[u]}/{Configuration.Default.GiveawayMaxTries}", LogColor.Giveaway);
+				cache.Add(new Tuple<ulong, int>(usr.Id, (int)Configuration.Default.GiveawayMaxTries - 1));
+				await Logger.SendToChannelAsync($"New: {usr.Name} • {cache[cache.Count - 1].Item2}/{Configuration.Default.GiveawayMaxTries}", LogColor.Giveaway);
 			}
 
 			// Save cache
-			await Caching.CApplication.SaveCacheAsync(_cacheKey, cache);
+			await Caching.CApplication.AddOrUpdateCache(_cacheKey, cache);
+			cache = null;
 			return yes;
 		}
 

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using NeKzBot.Classes;
 
-// TODO: replace webclient with httpclient
 namespace NeKzBot.Server
 {
 	/// <summary>Used to download webpages.</summary>
@@ -18,24 +16,29 @@ namespace NeKzBot.Server
 		/// <param name="uri">Web address to download from.</param>
 		/// <param name="path">Folder path to store the file.</param>
 		public static async Task GetFileAsync(string uri, string path)
-			=> await (await CreateWebClient()).DownloadFileTaskAsync(new Uri(uri), path);
+		{
+			using (var client = await CreateHttpClient())
+			using (var request = new HttpRequestMessage(HttpMethod.Get, uri))
+			using (var content = await (await client.SendAsync(request)).Content.ReadAsStreamAsync())
+			using (var stream = new FileStream(path, FileMode.Create))
+				await content.CopyToAsync(stream);
+		}
 
 		/// <summary>Downloads the webpage as file and caches it as file.</summary>
 		/// <param name="uri">Web address to download from.</param>
-		/// <param name="key">Name of requester..</param>
+		/// <param name="key">Name of requester.</param>
 		public static async Task GetFileAndCacheAsync(string uri, string key)
-			=> await (await CreateWebClient()).DownloadFileTaskAsync(new Uri(uri), await Caching.CFile.GetPathAndSaveAsync(key));
+			=> await GetFileAsync(uri, await Caching.CFile.GetPathAndSaveAsync(key));
 
 		/// <summary>Downloads the webpage as string.</summary>
 		/// <param name="uri">Web address to download from.</param>
-		public static async Task<string> GetStringAsync(string uri)
-			=> await (await CreateWebClient()).DownloadStringTaskAsync(new Uri(uri));
-
-		/// <summary>Downloads the webpage as string.</summary>
-		/// <param name="uri">Web address to download from.</param>
-		/// /// <param name="wc">Http header for the web client.</param>
-		public static async Task<string> GetStringAsync(string uri, WebHeaderCollection wc)
-			=> await (await CreateWebClient(wc)).DownloadStringTaskAsync(new Uri(uri));
+		/// <param name="headers">Headers for the http client.</param>
+		public static async Task<string> GetStringAsync(string uri, List<WebHeader> headers = default(List<WebHeader>))
+		{
+			using (var client = await CreateHttpClient(headers))
+			using (var request = new HttpRequestMessage(HttpMethod.Get, uri))
+				return await (await client.SendAsync(request)).Content.ReadAsStringAsync();
+		}
 
 		/// <summary>Downloads the webpage as HtmlDocument (HtmlAgilityPack).</summary>
 		/// <param name="uri">Web address to download from.</param>
@@ -47,51 +50,27 @@ namespace NeKzBot.Server
 			return doc;
 		}
 
+		/// <summary>Creates a new client for downloading multiple things at the same time.</summary>
+		/// <param name="headers">Optional headers for the http client.</param>
+		public static Task<HttpClient> CreateHttpClient(List<WebHeader> headers = default(List<WebHeader>))
+		{
+			var client = new HttpClient();
+			if (headers == default(List<WebHeader>))
+				client.DefaultRequestHeaders.UserAgent.ParseAdd($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}");
+			else
+				foreach (var header in headers)
+					client.DefaultRequestHeaders.Add(header.GetHeader().Item1, header.GetHeader().Item2);
+			return Task.FromResult(client);
+		}
+
 		/// <summary>Returns data cache.</summary>
 		/// <param name="key">Name of requester.</param>
-		/// <param name="cachingtype">Caching system to choose.</param>
-		public static async Task<object> GetStringAsync(string key, Type cachingtype)
+		/// <param name="cachingtype">Caching type class to choose.</param>
+		public static async Task<object> GetStringFromCacheAsync(string key, Type cachingtype)
 			=> (cachingtype == typeof(Caching.CFile))
 							? await Caching.CFile.GetCacheAsync(key)
 							: (cachingtype == typeof(Caching.CApplication))
-										   ? await Caching.CApplication.GetCacheAsync(key)
+										   ? await Caching.CApplication.GetCache(key)
 										   : null as object;
-
-		/// <summary>Creates a new client for downloading multiple things at the same time.</summary>
-		public static Task<WebClient> CreateWebClient()
-		{
-			var client = new WebClient() { Encoding = Encoding.UTF8 };
-			client.Headers["User-Agent"] = $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}";
-			return Task.FromResult(client);
-		}
-
-		/// <summary>Creates a new client for downloading multiple things at the same time.</summary>
-		/// /// /// <param name="wc">Http header for the web client.</param>
-		public static Task<WebClient> CreateWebClient(WebHeaderCollection wc)
-		{
-			return Task.FromResult(new WebClient
-			{
-				Encoding = Encoding.UTF8,
-				Headers = wc
-			});
-		}
-
-		/// <summary>Creates a new client for downloading multiple things at the same time.</summary>
-		public static Task<HttpClient> CreateHttpClient()
-		{
-			var client = new HttpClient();
-			client.DefaultRequestHeaders.UserAgent.ParseAdd($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}");
-			return Task.FromResult(client);
-		}
-
-		/// <summary>Creates a new client for downloading multiple things at the same time.</summary>
-		/// /// /// <param name="headers">Http header for the http client.</param>
-		public static Task<HttpClient> CreateHttpClient(List<WebHeader> headers)
-		{
-			var client = new HttpClient();
-			foreach (var item in headers)
-				client.DefaultRequestHeaders.Add(item.GetHeader().Item1, item.GetHeader().Item2);
-			return Task.FromResult(client);
-		}
 	}
 }

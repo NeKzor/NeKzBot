@@ -2,12 +2,14 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using NeKzBot.Extensions;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Private.Owner
 {
-	public class Admin : Commands
+	public class Admin : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -24,7 +26,7 @@ namespace NeKzBot.Modules.Private.Owner
 						.Description("Sets a random playing game status.")
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
-						.Do(async e => Bot.Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string));
+						.Do(async e => Bot.Client.SetGame(await Utils.RngAsync((await Data.Get<Simple>("games")).Value)));
 
 				GBuilder.CreateCommand("setgame")
 						.Alias("play", "sg")
@@ -58,7 +60,7 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Utils.CutMessage(e.GetArg("message")));
+							await e.Channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
 						});
 
 				GBuilder.CreateCommand("send")
@@ -107,12 +109,38 @@ namespace NeKzBot.Modules.Private.Owner
 							else
 							{
 								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage(await Utils.CutMessage(e.GetArg("message")));
+								await e.Channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
 								return;
 							}
 
 							await channel.SendIsTyping();
-							await channel.SendMessage(await Utils.CutMessage(e.GetArg("message")));
+							await channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
+						});
+
+				GBuilder.CreateCommand("react")
+						.Parameter("channel_id", ParameterType.Required)
+						.Parameter("message_id", ParameterType.Required)
+						.Parameter("emoji", ParameterType.Required)
+						.AddCheck(Permissions.BotOwnerOnly)
+						.Hide()
+						.Do(async e =>
+						{
+							// Check permission
+							if (await Utils.CheckRolesHasPermissionAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
+							{
+								var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
+													  ? result
+													  : e.Channel.Id;
+								var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
+													  ? result
+													  : e.Message.Id;
+								await Bot.SendAsync(CustomRequest.AddReaction(channelid, messageid, e.GetArg("emoji")), null);
+							}
+							else
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("The permission to add reactions is required.");
+							}
 						});
 			});
 			return Task.FromResult(0);

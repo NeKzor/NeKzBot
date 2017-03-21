@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -32,9 +33,15 @@ namespace NeKzBot.Extensions
 		{
 			var field = new EmbedField();
 			action(field);
-			var temp = Fields.ToList(); // Didn't really know how to do this lol
+			var temp = Fields?.ToList() ?? new List<EmbedField>(); // Didn't really know how to do this lol
 			temp.Add(field);
 			Fields = temp.ToArray();
+			return this;
+		}
+
+		public Embed WithAuthor(EmbedAuthor author)
+		{
+			Author = author;
 			return this;
 		}
 	}

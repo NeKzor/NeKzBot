@@ -1,8 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NeKzBot.Classes
 {
+	public enum MapFilter
+	{
+		Any,
+		SinglePlayer,
+		MultiPlayer
+	}
+
+	public sealed class Portal2Maps
+	{
+		public List<Portal2Map> Maps { get; set; }
+
+		public Portal2Maps()
+			=> Maps = new List<Portal2Map>();
+
+		public Portal2Maps(List<Portal2Map> list)
+			=> Maps = list;
+
+		public Task<Portal2Map> Search(string value)
+		{
+			var index = -1;
+			if ((index = Maps.FindIndex(map => string.Equals(map.BestTimeId, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
+				if ((index = Maps.FindIndex(map => string.Equals(map.BestPortalsId, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
+					if ((index = Maps.FindIndex(map => string.Equals(map.Name, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
+						if ((index = Maps.FindIndex(map => string.Equals(map.ChallengeModeName, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
+							if ((index = Maps.FindIndex(map => string.Equals(map.ThreeLetterCode, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
+								return null;
+			return Task.FromResult(Maps[index]);
+		}
+	}
+
 	public sealed class Portal2Map
 	{
 		public string Name { get; set; }
@@ -11,6 +42,7 @@ namespace NeKzBot.Classes
 		public string BestPortalsId { get; set; }
 		public string ThreeLetterCode { get; set; }
 		public string ElevatorTiming { get; set; }
+		public MapFilter Filter { get; set; }
 	}
 
 	public sealed class Portal2Leaderboard
@@ -48,7 +80,12 @@ namespace NeKzBot.Classes
 						 : "_Unknown._";
 			set { _date = value; }
 		}
-		public DateTime DateTime { get => DateTime.Parse(_date); } // Useful for duration
+		public DateTime DateTime    // Useful for duration
+		{
+			get => (DateTime.TryParse(_date, out var result))
+							? result
+							: default(DateTime);
+		}
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
@@ -61,8 +98,14 @@ namespace NeKzBot.Classes
 		public string Name { get; set; }
 		public string SteamId { get; set; }
 		public string SteamAvatar { get; set; }
-		public string SteamLink { get => $"https://steamcommunity.com/profiles/{SteamId}"; }
-		public string BoardLink { get => $"https://board.iverb.me/profile/{SteamId}"; }
+		public string SteamLink
+		{
+			get => $"https://steamcommunity.com/profiles/{SteamId}";
+		}
+		public string BoardLink
+		{
+			get => $"https://board.iverb.me/profile/{SteamId}";
+		}
 		public string SinglePlayerPoints { get; set; }
 		public string CooperativePoints { get; set; }
 		public string OverallPoints { get; set; }

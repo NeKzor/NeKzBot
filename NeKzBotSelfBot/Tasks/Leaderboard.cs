@@ -110,7 +110,7 @@ namespace NeKzBot.Tasks
 				try
 				{
 					var entries = new List<Portal2Entry>();
-					for (int i = starting; i < count; i++)
+					for (int i = starting; i < (count > 20 ? 20 : count); i++)
 					{
 						var entry = new Portal2Entry()
 						{

@@ -3,19 +3,13 @@
 
 ## Features
 * Streaming audio in voice channel
+* Automated webhook subscription service
+* Message embeds
 * Initializing data from files
 * Advanced caching system
 * Data fetching system
-* Changing data with commands
-* Giveaway mini game
-* Basic system information feedback
-* Prefix handler
-* Error handler
-* Exit handler
-* Permission checks
-* Event logging
-* Custom help mode
 * Sending tweets to [twitter.com](https://twitter.com)
+* Automatic file uploader to [Dropbox](https://www.dropbox.com)
 * Fetching data from
   * [board.iverb.me](https://board.iverb.me)
   * [speedrun.com](https://www.speedrun.com)
@@ -25,8 +19,6 @@
   * board.iverb.me
   * speedrun.com
   * twitch.tv
-* Automatic file uploader to [Dropbox](https://www.dropbox.com)
-* Automated webhook subscription service
 * Works fine on Linux + [Mono](http://www.mono-project.com)
 
 ## Documentation

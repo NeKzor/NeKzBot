@@ -43,7 +43,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("$nekz")]
+        [global::System.Configuration.DefaultSettingValueAttribute("n$")]
         public string PrefixCmd {
             get {
                 return ((string)(this["PrefixCmd"]));

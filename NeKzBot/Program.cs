@@ -1,10 +1,28 @@
-﻿namespace NeKzBot
+﻿using System;
+using System.Threading.Tasks;
+
+namespace NeKzBot
 {
 	internal static class Program
 	{
 		private static void Main(string[] args)
-			=> new Bot().StartAsync()
-						.GetAwaiter()
-						.GetResult();
+		{
+			var nekzbot = default(Bot);
+			for (;;)
+			{
+				try
+				{
+					nekzbot = new Bot();
+					nekzbot.StartAsync().GetAwaiter().GetResult();
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"\nNeKzBot Stopped Working\n{ex}");
+				}
+				nekzbot = null;
+				Task.Delay(10 * 1000).GetAwaiter().GetResult();
+				Console.WriteLine("RESTART\n");
+			}
+		}
 	}
 }

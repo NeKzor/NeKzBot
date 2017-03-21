@@ -9,7 +9,7 @@
       <Value Profile="(Default)">https://github.com/NeKzor/NeKzBot</Value>
     </Setting>
     <Setting Name="PrefixCmd" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">$nekz</Value>
+      <Value Profile="(Default)">n$</Value>
     </Setting>
     <Setting Name="DropboxFolderName" Type="System.String" Scope="Application">
       <Value Profile="(Default)">SelfBot</Value>

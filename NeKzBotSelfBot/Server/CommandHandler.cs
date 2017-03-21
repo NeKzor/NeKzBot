@@ -45,6 +45,7 @@ namespace NeKzBot.Server
 			if ((result = await Service.ExecuteAsync(new CommandContext(Client, msg), pos, Map)).IsSuccess)
 				return;
 
+			// Error handler
 			switch (result.Error)
 			{
 				case CommandError.UnknownCommand:
@@ -70,7 +71,7 @@ namespace NeKzBot.Server
 															: $" <{parameter.Type.Name}: {parameter.Name}>";
 					}
 					// Return command info
-					await Message.EditAsync(msg, $"**Command** {(parameters != string.Empty ? $"`{command.Name}{parameters}`" : $"`{command.Name}` has no parameters.")}");
+					await Message.EditAsync(msg, $"`{Configuration.Default.PrefixCmd}{(parameters != string.Empty ? $"{command.Name}{parameters}`" : $"{command.Name}` has no parameters.")}");
 					await Logger.SendAsync("Error. Invalid parameter count!", LogColor.Error);
 					break;
 				default:

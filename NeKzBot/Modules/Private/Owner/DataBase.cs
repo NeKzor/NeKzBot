@@ -1,11 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
+using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Private.Owner
 {
-	public class DataBase : Commands
+	public class DataBase : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -13,12 +16,12 @@ namespace NeKzBot.Modules.Private.Owner
 			await DataBaseCommands(Configuration.Default.BotCmd);
 		}
 
-		private static Task DataBaseCommands(string name)
+		private static Task DataBaseCommands(string n)
 		{
-			CService.CreateGroup(name, GBuilder =>
+			CService.CreateGroup(n, GBuilder =>
 			{
 				GBuilder.CreateCommand("add")
-						.Description($"Adds a new command to the database. Use the separator _{Utils.Separator}_ for data arrays.")
+						.Description($"Adds a new command to the database. Use the separator '{Utils.Separator}' for data arrays.")
 						.Parameter("name", ParameterType.Required)
 						.Parameter("values", ParameterType.Unparsed)
 						.AddCheck(Permissions.BotOwnerOnly)
@@ -26,19 +29,18 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							if (await Data.DataExists(e.GetArg("name"), out var index))
+							if (await Data.Get(e.GetArg("name")) is IData data)
 							{
-								if ((Data.Manager[index].ReadingAllowed)
-								&& (Data.Manager[index].WrittingAllowed))
+								if (data.ReadWriteAllowed)
 								{
-									var result = await Utils.AddDataAsync(index, e.GetArg("values"));
-									await e.Channel.SendMessage(result == string.Empty ? "Data has been added." : result);
+									var result = await Utils.ChangeDataAsync(data, e.GetArg("values"), DataChangeMode.Add);
+									await e.Channel.SendMessage((string.IsNullOrEmpty(result)) ? "Data has been added." : result);
 								}
 								else
 									await e.Channel.SendMessage("This command doesn't allow to be changed.");
 							}
 							else
-								await e.Channel.SendMessage($"Invalid data name. Try one of these: {await Utils.ListToList(await Data.GetDataNames(), "`")}");
+								await e.Channel.SendMessage($"Invalid data name. Try one of these: {await Utils.CollectionToList(await Data.GetNames(), "`")}");
 						});
 
 				GBuilder.CreateCommand("delete")
@@ -51,27 +53,19 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							if (await Data.DataExists(e.GetArg("name"), out var index))
+							// Patter matching <3
+							if (await Data.Get(e.GetArg("name")) is IData data)
 							{
-								if ((Data.Manager[index].ReadingAllowed)
-								&& (Data.Manager[index].WrittingAllowed))
+								if (data.ReadWriteAllowed)
 								{
-									var msg = await Utils.DeleteDataAsync(index, e.GetArg("value"));
-									if (msg == string.Empty)
-									{
-										if (await Data.ReloadAsync(index))
-											await e.Channel.SendMessage("Data deleted.");
-										else
-											await e.Channel.SendMessage("Data deleted but **failed** to reload data.");
-									}
-									else
-										await e.Channel.SendMessage(msg);
+									var result = await Utils.ChangeDataAsync(data, e.GetArg("value"), DataChangeMode.Delete);
+									await e.Channel.SendMessage((string.IsNullOrEmpty(result)) ? "Data deleted." : result);
 								}
 								else
 									await e.Channel.SendMessage("This command doesn't allow to be changed.");
 							}
 							else
-								await e.Channel.SendMessage($"Invalid data name. Try one of these: {await Utils.ListToList(await Data.GetDataNames(), "`")}");
+								await e.Channel.SendMessage($"Invalid data name. Try one of these: {await Utils.CollectionToList(await Data.GetNames(), "`")}");
 						});
 
 				GBuilder.CreateCommand("reload")
@@ -89,47 +83,41 @@ namespace NeKzBot.Modules.Private.Owner
 				GBuilder.CreateCommand("showdata")
 						.Alias("debugdata")
 						.Description("Shows the data of a certain data array.")
-						.Parameter("name", ParameterType.Unparsed)
+						.Parameter("name", ParameterType.Required)
 						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							var index = 0;
-							var found = false;
 							var output = string.Empty;
 
-							// Find command
-							for (; index < Data.Manager.Count; index++)
+							if (await Data.Get(e.GetArg("name")) is IData data)
 							{
-								if (e.Args[0] != Data.Manager[index].Name)
-									continue;
-								found = true;
-								break;
-							}
-
-							if (found)
-							{
-								var obj = Data.Manager[index].Data;
-								if (obj.GetType() == typeof(string[]))
+								var memory = data.Memory;
+								if (memory is Simple simple)
 								{
-									foreach (var item in obj as string[])
+									foreach (var item in simple.Value)
 										output += $"{item}, ";
 								}
-								else if (obj.GetType() == typeof(string[,]))
+								else if (memory is Complex complex)
 								{
 									// Only show first dimension
-									for (int i = 0; i < (obj as string[,]).GetLength(0); i++)
-										output += $"{(obj as string[,])[i, 0]}, ";
+									for (int i = 0; i < complex.Values.Count; i++)
+										output += $"{complex.Values[i].Value[0]}, ";
+								}
+								else if (memory is Subscribers sub)
+								{
+									foreach (var hook in sub.Subs)
+										output += $"{hook.GuildId}, ";
 								}
 								else
-									await e.Channel.SendMessage("**Error**");
-
-								if (output != string.Empty)
-									await e.Channel.SendMessage(await Utils.CutMessage(output.Substring(0, output.Length - 2).Replace("_", "\\_")));
+									await e.Channel.SendMessage("Found unsupported type in data manager.");
+								await e.Channel.SendMessage((output != string.Empty)
+																	? await Utils.CutMessageAsync(output.Substring(0, output.Length - 2))
+																	: "Data is empty.");
 							}
 							else
-								await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {await Utils.ListToList(await Data.GetDataNames(), "`")}");
+								await e.Channel.SendMessage($"Invalid command parameter. Try one of these: {await Utils.CollectionToList(await Data.GetNames(), "`")}");
 						});
 
 				GBuilder.CreateCommand("datavars")
@@ -140,7 +128,7 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"**[Data Commands]**\n{await Utils.ListToList(await Data.GetDataNames(), "`", "\n")}");
+							await e.Channel.SendMessage($"**[Data Commands]**\n{await Utils.CollectionToList((await Data.GetNames()).OrderBy(name => name).ToList(), "`", "\n")}");
 						});
 			});
 			return Task.FromResult(0);

@@ -43,7 +43,7 @@ namespace NeKzBot.Server
 		{
 			ErrorCount++;
 			Console.ForegroundColor = (ConsoleColor)LogColor.Error;
-			Console.WriteLine($"{await Utils.GetLocalTime()} @ ROOT : {await FormatTime(await Utils.GetUptime())}{message} : {e.Source} : {e.Message}");
+			Console.WriteLine($"{await Utils.GetLocalTime()} @ ROOT : {await FormatTime(await Utils.GetUptime())}{message}\n{e.Source}\n{e.Message}");
 			Console.ResetColor();
 			return null;
 		}
@@ -52,14 +52,14 @@ namespace NeKzBot.Server
 		public static async Task<object> SendToChannelAsync(string message, LogColor color)
 		{
 			await SendAsync(message, color);
-			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage(await Utils.CutMessage($"**{await Utils.GetLocalTime()}**\n{message}"));
+			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{message}");
 			return null;
 		}
 
 		public static async Task<object> SendToChannelAsync(string message, Exception e)
 		{
 			await SendAsync(message, e);
-			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage(await Utils.CutMessage($"**{await Utils.GetLocalTime()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}"));
+			(await Utils.FindTextChannelByName(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
 			return null;
 		}
 

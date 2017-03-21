@@ -66,7 +66,7 @@ namespace NeKzBot.Tasks
 
 			var process = default(Process);
 			var path = (await Utils.IsLinux())
-								   ? Path.Combine(await Utils.GetPath(), Configuration.Default.AudioPath, file)
+								   ? Path.Combine(await Utils.GetAppPath(), Configuration.Default.AudioPath, file)
 								   : Path.Combine(Configuration.Default.AudioPath, file);
 			if (!(File.Exists(path)))
 				return AudioError.FileMissing;
@@ -133,6 +133,8 @@ namespace NeKzBot.Tasks
 
 			if (botchannel == null)
 				return Task.FromResult(AudioError.BotNotConneted);
+			if (requester.Id == Credentials.Default.DiscordBotOwnerId)	// So I can play without connecting *evil laugh* (might be a bad idea)
+				return Task.FromResult(AudioError.None);
 			if (userchannel == null)
 				return Task.FromResult(AudioError.InvalidRequest);
 			if (botchannel != userchannel)

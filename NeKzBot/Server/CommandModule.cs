@@ -3,7 +3,7 @@ using Discord.Commands;
 
 namespace NeKzBot.Server
 {
-	public abstract class Commands
+	public abstract class CommandModule
 	{
 		public static CommandService CService { get; private set; }
 

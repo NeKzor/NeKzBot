@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace NeKzBot.Classes
 {
@@ -49,10 +50,23 @@ namespace NeKzBot.Classes
 		public string Time { get; set; }
 		public string Player { get; set; }
 		public string Ranking { get; set; }
-		public string Date { get; set; }
+		public string Date
+		{
+			get => (_date != string.Empty)
+						 ? $"{_date} UTC"
+						 : "_Unknown._";
+			set { _date = value; }
+		}
+		public DateTime DateTime
+		{
+			get => (DateTime.TryParse(_date, out var result))
+							? result
+							: default(DateTime);
+		}
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
 		public string MapId { get; set; }
+		private string _date;
 	}
 }

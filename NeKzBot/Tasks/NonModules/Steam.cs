@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -19,7 +18,7 @@ namespace NeKzBot.Tasks.NonModules
 		{
 			await Logger.SendAsync("Initializing Steam", LogColor.Init);
 			_cacheKey = _cacheKey ?? "steam";
-			await Caching.CApplication.SaveCacheAsync(_cacheKey, new Dictionary<string, HtmlDocument>());
+			await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);
 		}
 
 		// Downloads Steam workshop item image
@@ -69,7 +68,7 @@ namespace NeKzBot.Tasks.NonModules
 
 				// Not the best check, but this should only support workshop items and not all the other shared files stuff
 				var temp = doc.DocumentNode.SelectSingleNode("//title").InnerHtml;
-				if (!(temp.Substring(0, "Steam Workshop".Length) != "Steam Workshop"))
+				if (temp.Substring(0, "Steam Workshop".Length) != "Steam Workshop")
 					return null;
 
 				const string cut = "ShowEnlargedImagePreview( '";
@@ -88,6 +87,7 @@ namespace NeKzBot.Tasks.NonModules
 							? $"\n{picture.Substring(cut.Length, picture.LastIndexOf("'") - cut.Length)}"
 							: picture;
 
+				doc = null;
 				return new SteamWorkshop()
 				{
 					UserLink = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//a[@class='friendBlockLinkOverlay']").Attributes["href"].Value,
@@ -104,7 +104,7 @@ namespace NeKzBot.Tasks.NonModules
 			}
 			catch (Exception e)
 			{
-				await Logger.SendAsync("Steam.GetSteamWorkshopAsync Error", e);
+				await Logger.SendToChannelAsync("Steam.GetSteamWorkshopAsync Error", e);
 			}
 			return null;
 		}
@@ -113,13 +113,12 @@ namespace NeKzBot.Tasks.NonModules
 		public static async Task<HtmlDocument> GetCacheAsync(string url)
 		{
 			// Get cache
-			var cache = await Caching.CApplication.GetCacheAsync(_cacheKey);
+			var cache = (await Caching.CApplication.GetCache(_cacheKey))?.Cast<Tuple<string, HtmlDocument>>().ToList();
 
-			// Search and find cached data
-			if (cache != null)
-				foreach (Dictionary<string, HtmlDocument> item in cache)
-					if (item.ContainsKey(url))
-						return item.Values.FirstOrDefault();
+			// Search cached data and return if it exists
+			var index = cache?.FindIndex(c => c.Item1 == url) ?? -1;
+			if (index != -1)
+				return cache[index].Item2;
 
 			// Download data
 			var doc = new HtmlDocument();
@@ -136,7 +135,8 @@ namespace NeKzBot.Tasks.NonModules
 
 			// Save cache
 			await Logger.SendAsync($"Steam.GetCacheAsync Caching -> {await Utils.StringInBytes(url, doc.DocumentNode.InnerText)} bytes", LogColor.Caching);
-			await Caching.CApplication.AddCache(_cacheKey, new Dictionary<string, HtmlDocument> { [url] = doc });
+			await Caching.CApplication.AddOrUpdateCache(_cacheKey, cache);
+			cache = null;
 			return doc;
 		}
 	}

@@ -29,11 +29,11 @@ namespace NeKzBot.Webhooks
 					var result = await client.PostAsync($"{DiscordConstants.BaseApiUrl}/channels/{channelid}/webhooks", new StringContent(JsonConvert.SerializeObject(new WebhookObject
 					{
 						ChannelId = channelid,
-						Name = data.UserName
+						Name = data.Name
 					}), Encoding.UTF8, "application/json"));
 
 					if (!(result.IsSuccessStatusCode))
-						return await Logger.SendAsync($"Webhook.CreateWebhookAsync POST Error ({data.UserName})(CHANNEL_ID {channelid})\n{result.Content}", LogColor.Error) as WebhookObject;
+						return await Logger.SendAsync($"Webhook.CreateWebhookAsync POST Error ({data.GuildId})(CHANNEL_ID {channelid})\n{result.Content}", LogColor.Error) as WebhookObject;
 					return JsonConvert.DeserializeObject<WebhookObject>(await result.Content.ReadAsStringAsync());
 				}
 			}
@@ -92,7 +92,7 @@ namespace NeKzBot.Webhooks
 					{
 						return (ispingtest)
 									? default(WebhookObject)
-									: await Logger.SendAsync($"WebhookService.GetWebhookAsync GET Error ({data.UserName})(ID {data.Id})\n{result.Content}", LogColor.Error) as WebhookObject;
+									: await Logger.SendAsync($"WebhookService.GetWebhookAsync GET Error ({data.GuildId})(ID {data.Id})\n{result.Content}", LogColor.Error) as WebhookObject;
 					}
 					return JsonConvert.DeserializeObject<WebhookObject>(await result.Content.ReadAsStringAsync());
 				}
@@ -162,7 +162,7 @@ namespace NeKzBot.Webhooks
 				{
 					var result = await client.PostAsync($"{DiscordConstants.BaseApiUrl}/webhooks/{data.Id}/{data.Token}", new StringContent(JsonConvert.SerializeObject(hook), Encoding.UTF8, "application/json"));
 					if (!(result.IsSuccessStatusCode))
-						await Logger.SendAsync($"WebhookService.ExecuteWebhookAsync POST Error ({data.UserName} ID {data.Id})\n{result.Content}", LogColor.Error);
+						await Logger.SendAsync($"WebhookService.ExecuteWebhookAsync POST Error ({data.GuildId} ID {data.Id})\n{result.Content}", LogColor.Error);
 					else
 						return true;
 				}

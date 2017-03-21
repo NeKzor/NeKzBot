@@ -1,36 +1,40 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
 
 namespace NeKzBot.Modules.Public.Vip
 {
-	public class Sound : Commands
+	public class Sound : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Sound Module", LogColor.Init);
 			await GetRandomYanniSound("yanni");
 			await GetRandomPortal2Sound("p2");
-			await Utils.CommandBuilder(() => PlaySoundInVoiceChannel(Utils.CBuilderGroup, Utils.CBuilderIndex), 0, Data.SoundNames, true, Data.AudioAliases);
+			await Utils.CommandBuilder(() => PlaySoundInVoiceChannel(Utils.CBuilderGroup, Utils.CBuilderIndex), 0, (await Data.Get<Complex>("sounds")).Cast(), true, (await Data.Get<Simple>("aa")).Value);
 			await BotVipCommands(Configuration.Default.BotCmd);
 		}
 
 		public static Task PlaySoundInVoiceChannel(string s, int i)
 		{
-			CService.CreateGroup(s, GBuilder =>
+			CService.CreateGroup(s, async GBuilder =>
 			{
-				GBuilder.CreateCommand(Data.SoundNames[i, 0])
-						.Description(Data.SoundNames[i, 1])
+				var sound = (await Data.Get<Complex>("sounds")).Values[i].Value;
+				GBuilder.CreateCommand(sound[0])
+						.Description(sound[1])
 						.AddCheck(Permissions.VipGuildsOnly)
 						.Do(async e =>
 						{
 							var check = await VoiceChannel.ConnectionCheck(e.Server, e.User);
 							if (check == AudioError.None)
 							{
-								var result = await VoiceChannel.PlayAsync(e.Server.Id, Data.SoundNames[i, 2]);
+								var result = await VoiceChannel.PlayAsync(e.Server.Id, sound[2]);
+								if (result == AudioError.AlreadyPlaying)
+									return;
 								if (result != AudioError.None)
 									await e.Channel.SendMessage(result);
 							}
@@ -51,7 +55,9 @@ namespace NeKzBot.Modules.Public.Vip
 						var check = await VoiceChannel.ConnectionCheck(e.Server, e.User);
 						if (check == AudioError.None)
 						{
-							var result = await VoiceChannel.PlayAsync(e.Server.Id, Data.SoundNames[await Utils.Rng(24, 31), 2]); // Array range of P2 sounds
+							var result = await VoiceChannel.PlayAsync(e.Server.Id, (await Data.Get<Complex>("sounds")).Values[await Utils.Rng(24, 31)].Value[2]); // Array range of P2 sounds
+							if (result == AudioError.AlreadyPlaying)
+								return;
 							if (result != AudioError.None)
 								await e.Channel.SendMessage(result);
 						}
@@ -71,7 +77,9 @@ namespace NeKzBot.Modules.Public.Vip
 						var check = await VoiceChannel.ConnectionCheck(e.Server, e.User);
 						if (check == AudioError.None)
 						{
-							var result = await VoiceChannel.PlayAsync(e.Server.Id, Data.SoundNames[await Utils.Rng(0, 24), 2]); // Array range of P2 sounds
+							var result = await VoiceChannel.PlayAsync(e.Server.Id, (await Data.Get<Complex>("sounds")).Values[await Utils.Rng(0, 24)].Value[2]); // Array range of P2 sounds
+							if (result == AudioError.AlreadyPlaying)
+								return;
 							if (result != AudioError.None)
 								await e.Channel.SendMessage(result);
 						}

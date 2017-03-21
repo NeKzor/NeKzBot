@@ -86,7 +86,7 @@ namespace NeKzBot.Tasks.Leaderboard
 								foreach (var update in sendUpdates)
 								{
 									// RIP channel messages, webhooks are the future
-									foreach (var item in Data.P2Subscribers)
+									foreach (var item in (await Data.Get<Subscribers>("p2hook")).Subs)
 									{
 										await WebhookService.ExecuteWebhookAsync(item, new Webhook
 										{
@@ -130,7 +130,8 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						// Wait then refresh
 						_refreshWatch?.Restart();
-						await Task.Delay(((int)_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Portal2.AutoUpdater.StartAsync Delay Took -> "));
+						var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Portal2.AutoUpdater.StartAsync Delay Took -> ");
+						await Task.Delay((delay > 0) ? delay : 0);	// I don't think this will ever happen but who knows...
 						await Watch.RestartAsync();
 					}
 				}
@@ -152,7 +153,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				Configuration.Default.Save();
 				return (s == string.Empty)
 						  ? "Saved. Board parameter isn't set."
-						  : await Utils.CutMessage($"Saved. New board parameter is to **{s}** now.");
+						  : await Utils.CutMessageAsync($"Saved. New board parameter is to **{s}** now.", badchars: false);
 			}
 
 			// Embedding <3

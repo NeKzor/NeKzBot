@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
+using NeKzBot.Internals;
 using NeKzBot.Modules.Private.MainServer;
 using NeKzBot.Modules.Private.Owner;
 using NeKzBot.Modules.Public;
@@ -74,7 +75,7 @@ namespace NeKzBot
 				await Logger.SendAsync("Initialization", LogColor.Init);
 				await Audio.InitAsync();
 				await Logger.InitAsync();
-				await Commands.InitAsync();
+				await CommandModule.InitAsync();
 				await Data.InitAsync();
 				await Data.InitMangerAsync();
 				await Caching.InitAsync();
@@ -101,6 +102,7 @@ namespace NeKzBot
 				await Logger.SendAsync("Loading Modules", LogColor.Default);
 				// Private
 				await Admin.LoadAsync();
+				await Cloud.LoadAsync();
 				await DataBase.LoadAsync();
 				await Debugging.LoadAsync();
 				await Giveaway.LoadAsync();
@@ -116,6 +118,8 @@ namespace NeKzBot
 				await Resource.LoadAsync();
 				await Rest.LoadAsync();
 				await Subscription.LoadAsync();
+				// ^Load these before generating module lists
+				await Data.GenerateModuleListsAsync();
 			}
 			catch (Exception e)
 			{
@@ -132,7 +136,7 @@ namespace NeKzBot
 					await Logger.SendAsync("Connecting", LogColor.Default);
 					await Client.Connect(Credentials.Default.DiscordBotToken, TokenType.Bot);
 					await Logger.SendAsync("Connected", LogColor.Default);
-					Client.SetGame(await Utils.RngAsync(Data.RandomGames) as string);
+					Client.SetGame(await Utils.RngAsync((await Data.Get<Simple>("games")).Value));
 					await LoadTasksAndWaitAsync();
 				});
 			}

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -66,17 +65,18 @@ namespace NeKzBot.Modules
 			{
 				field.IsInline = true;
 				field.Name = "Date";
-				field.Value = $"{entry.Date} UTC";
-			})
-			.AddField(async field =>
-			{
-				field.Name = "Duration";
-				var duration = await Utils.GetDuration(DateTime.ParseExact(entry.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
-				field.Value = (duration != string.Empty)
-										? duration
-										: "Unknown.";
+				field.Value = $"{entry.Date}";
 			});
 
+			var duration = await Utils.GetDuration(entry.DateTime);
+			if (duration != default(string))
+			{
+				embed.AddField(field =>
+				{
+					field.Name = "Duration";
+					field.Value = duration;
+				});
+			}
 			if ((entry.Demo != string.Empty)
 			|| (entry.YouTube != string.Empty))
 			{
@@ -208,7 +208,7 @@ namespace NeKzBot.Modules
 			await Message.EditAsync(Context.Message, new EmbedBuilder
 			{
 				Color = Data.BoardColor,
-				Title = $"Portal 2 Top {top}",
+				Title = $"Portal 2 Top {leaderboard.Entries.Count}",
 				Url = url,
 				ImageUrl = $"https://board.iverb.me/images/chambers_full/{id}.jpg",
 				Footer = new EmbedFooterBuilder
@@ -222,7 +222,7 @@ namespace NeKzBot.Modules
 				field.Name = leaderboard.MapName;
 				var output = string.Empty;
 				foreach (var item in leaderboard.Entries)
-					output += $"\n{item.Ranking} {item.Time} by {item.Player.Replace("_", "\\_")} ({item.Date} UTC)";
+					output += $"\n{item.Ranking} {item.Time} by {item.Player.Replace("_", "\\_")} ({item.Date.Replace(".", "")})";
 				field.Value = (output != string.Empty)
 									  ? output
 									  : "Data not found.";
@@ -330,17 +330,18 @@ namespace NeKzBot.Modules
 			{
 				field.IsInline = true;
 				field.Name = "Date";
-				field.Value = $"{entry.Date} UTC";
-			})
-			.AddField(async field =>
-			{
-				field.Name = "Duration";
-				var duration = await Utils.GetDuration(DateTime.ParseExact(entry.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
-				field.Value = (duration != string.Empty)
-										? duration
-										: "Unknown.";
+				field.Value = $"{entry.Date}";
 			});
 
+			var duration = await Utils.GetDuration(entry.DateTime);
+			if (duration != default(string))
+			{
+				embed.AddField(field =>
+				{
+					field.Name = "Duration";
+					field.Value = duration;
+				});
+			}
 			if ((entry.Demo != string.Empty)
 			|| (entry.YouTube != string.Empty))
 			{

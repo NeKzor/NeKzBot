@@ -132,7 +132,7 @@ namespace NeKzBot.Modules
 				},
 				Color = await Utils.GetUserColor(Context.User, Context.Guild),
 				Title = Configuration.Default.AppName,
-				Description = $"Loaded {Bot.Handler.Service.Modules.Count()} modules with at total of {Bot.Handler.Service.Commands.Count()} commands.",
+				Description = $"Loaded {Bot.Handler.Service.Modules.Count()} modules with a total of {Bot.Handler.Service.Commands.Count()} commands.",
 				Url = Configuration.Default.AppUrl
 			};
 

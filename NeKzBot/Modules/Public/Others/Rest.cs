@@ -2,13 +2,14 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Classes;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
 
 namespace NeKzBot.Modules.Public.Others
 {
-	public class Rest : Commands
+	public class Rest : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -58,7 +59,7 @@ namespace NeKzBot.Modules.Public.Others
 							await e.Channel.SendMessage("Streamer is offline.");
 						else
 						{
-							var path = $"{await Utils.GetPath()}/Resources/Cache/{e.Args[0]}-stream.jpg";
+							var path = $"{await Utils.GetAppPath()}/Resources/Cache/{e.Args[0]}-stream.jpg";
 							await Fetching.GetFileAsync(preview, path);
 							await e.Channel.SendFile(path);
 						}
@@ -82,7 +83,7 @@ namespace NeKzBot.Modules.Public.Others
 			CService.CreateCommand(c)
 					.Description("Shows you a list of people who deserve some credit. It will be sent as a DM because the list is kinda long.")
 					.Hide()
-					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.ArrayToList(Data.SpecialThanks.OrderBy(name => name).ToArray(), string.Empty, "\n", "• ")}\n\nNote: Names are sorted in alphabetical order."));
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**Special Thanks To**\n{await Utils.CollectionToList((await Data.Get<Simple>("credits")).Value.OrderBy(name => name).ToArray(), string.Empty, "\n", "• ")}\n\nNote: Names are sorted in alphabetical order."));
 			return Task.FromResult(0);
 		}
 
@@ -95,16 +96,27 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (e.Args[0] == string.Empty)
-							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/pics/maps/{await Utils.RngAsync(Data.Portal2Maps, 0) as string}.jpg");
-						else if (await Utils.SearchArray(Data.Portal2Maps, 2, e.Args[0], out var index))
-							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/pics/maps/{Data.Portal2Maps[index, 0]}.jpg");
-						else if (await Utils.SearchArray(Data.Portal2Maps, 3, e.Args[0], out index))
-							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/pics/maps/{Data.Portal2Maps[index, 0]}.jpg");
-						else if (await Utils.SearchArray(Data.Portal2Maps, 5, e.Args[0], out index))
-							await e.Channel.SendFile($"{await Utils.GetPath()}/Resources/Private/pics/maps/{Data.Portal2Maps[index, 0]}.jpg");
+						var list = await Data.Get<Portal2Maps>("p2maps");
+						if (string.IsNullOrEmpty(e.GetArg("mapname")))
+						{
+							var random = await Utils.RngAsync(list.Maps.Select(map => map.BestTimeId)
+																	   .Where(id => !(string.IsNullOrEmpty(id)))
+																	   .ToArray()) as string;
+							await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/pics/maps/{random}.jpg");
+						}
 						else
-							await e.Channel.SendMessage("Couldn't find that map.");
+						{
+							var map = await list.Search(e.GetArg("mapname"));
+							if (map != null)
+							{
+								if (map.BestTimeId != null)
+									await e.Channel.SendFile($"{await Utils.GetAppPath()}/Resources/Private/pics/maps/{map.BestTimeId}.jpg");
+								else
+									await e.Channel.SendMessage("Map is not supported.");
+							}
+							else
+								await e.Channel.SendMessage("Couldn't find that map.");
+						}
 					});
 			return Task.FromResult(0);
 		}

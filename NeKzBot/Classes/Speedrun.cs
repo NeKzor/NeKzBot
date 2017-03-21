@@ -62,8 +62,8 @@ namespace NeKzBot.Classes
 		public SpeedrunPlayerProfile Author
 		{
 			get =>  (Type != SpeedrunNotificationType.Resource)
-						 ? new SpeedrunPlayerProfile { Name = ContentText.Split(' ')[0] }
-						 : null;
+						  ? new SpeedrunPlayerProfile { Name = ContentText.Split(' ')[0] }
+						  : null;
 		}
 
 		public Task BuildGame()
@@ -140,18 +140,30 @@ namespace NeKzBot.Classes
 		public string PlayerLocation { get; set; }
 	}
 
+	public class SpeedrunVariable
+	{
+		public string Name { get; set; }
+		public string Value { get; set; }
+	}
+
 	public class SpeedrunWorldRecord
 	{
-		public SpeedrunPlayerProfile Player { get; set; }
+		public IEnumerable<SpeedrunPlayerProfile> Players { get; set; }
 		public SpeedrunGame Game { get; set; }
 		public string CategoryName { get; set; }
 		public string Platform { get; set; }
+		public string EntryId { get; set; }
+		public string EntryLink
+		{
+			get => $"https://www.speedrun.com/run/{EntryId}";
+		}
 		public string EntryVideo { get; set; }
 		public string EntryTime { get; set; }
 		public string EntryDate { get; set; }
 		public string EntryStatus { get; set; }
 		public string EntryComment { get; set; }
 		public DateTimeOffset EntryDateTime { get; set; }
+		public IEnumerable<SpeedrunVariable> Variables { get; set; }
 	}
 
 	public class SpeedrunGame
@@ -169,6 +181,7 @@ namespace NeKzBot.Classes
 		}
 		public DateTime? CreationDateTime { get; set; }
 		public List<SpeedrunPlayerProfile> Moderators { get; set; }
+		public List<SpeedrunGameCategory> Categories { get; set; }
 		public bool IsRom { get; set; }
 		public string DefaultTimingMethod { get; set; }
 		public bool EmulatorsAllowed { get; set; }
@@ -188,6 +201,13 @@ namespace NeKzBot.Classes
 		}
 	}
 
+	public class SpeedrunGameCategory
+	{
+		public string Name { get; set; }
+		public string Id { get; set; }
+		public SpeedrunCategoryType Type { get; set; }
+	}
+
 	public enum SpeedrunNotificationType
 	{
 		Post,
@@ -204,5 +224,11 @@ namespace NeKzBot.Classes
 	{
 		Read,
 		Unread
+	}
+
+	public enum SpeedrunCategoryType
+	{
+		FullGame,
+		Game
 	}
 }

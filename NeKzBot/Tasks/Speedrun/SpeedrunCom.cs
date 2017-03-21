@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SpeedrunComSharp;
@@ -13,7 +12,7 @@ namespace NeKzBot.Tasks.Speedrun
 	public static partial class SpeedrunCom
 	{
 		private static SpeedrunComClient _client;
-		private static WebHeaderCollection _headers;
+		private static List<WebHeader> _headers;
 
 		private const int _maxnfcount = 10;
 		private const int _maxnffetchcount = 100;
@@ -24,49 +23,70 @@ namespace NeKzBot.Tasks.Speedrun
 			_client = new SpeedrunComClient($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", Credentials.Default.SpeedruncomToken, 5);
 
 			// Make custom header
-			_headers = new WebHeaderCollection
+			_headers = new List<WebHeader>()
 			{
-				["Host"] = "www.speedrun.com",
-				["Accept"] = "application/json",
-				["X-API-Key"] = Credentials.Default.SpeedruncomToken,
-				["User-Agent"] = $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}"
+				new WebHeader("Host", "www.speedrun.com"),
+				new WebHeader("Accept", "application/json"),
+				new WebHeader("X-API-Key", Credentials.Default.SpeedruncomToken),
+				new WebHeader("User-Agent", $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}")
 			};
 			if (!_client.IsAccessTokenValid)
-				await Logger.SendAsync("Invalid Token", LogColor.Error);
+				await Logger.SendAsync("Invalid Token", LogColor.Default);
 		}
 
-		public static async Task<SpeedrunWorldRecord> GetGameWorldRecordAsync(string gamename)
+		public static async Task<SpeedrunWorldRecord> GetGameWorldRecordAsync(string gamename, string categoryname = default(string))
 		{
 			var game = _client.Games.SearchGame(gamename);
 			if (game != null)
 			{
-				var wr = game.Categories.FirstOrDefault(category => (category.Type == CategoryType.PerGame) && (category.Runs.Any()))?.WorldRecord;
+				var category = (categoryname == null)
+									   ? game.Categories.FirstOrDefault(cat => (cat.Type == CategoryType.PerGame)
+																			&& (cat.Runs.Any()))
+									   : game.Categories.FirstOrDefault(cat => (cat.Type == CategoryType.PerGame)
+																			&& (cat.Runs.Any())
+																			&& (string.Equals(cat.Name, categoryname, StringComparison.CurrentCultureIgnoreCase)));
+				var wr = category?.WorldRecord;
 				if (wr == null)
-				{
-					await Logger.SendAsync("SpeedrunCom.GetGameWorldRecordAsync Category Error", LogColor.Error);
 					return new SpeedrunWorldRecord();
-				}
 
 				try
 				{
+					var players = new List<SpeedrunPlayerProfile>();
+					foreach (var player in wr.Players)
+					{
+						players.Add(new SpeedrunPlayerProfile
+						{
+							Name = player.Name,
+							CountryCode = (player.IsUser)
+												 ? player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
+												 : string.Empty
+						});
+					}
+
+					var variables = new List<SpeedrunVariable>();
+					foreach (var variable in wr.VariableValues)
+					{
+						variables.Add(new SpeedrunVariable
+						{
+							Name = variable.Name,
+							Value = variable.Value
+						});
+					}
+
 					return new SpeedrunWorldRecord()
 					{
-						Player = new SpeedrunPlayerProfile
-						{
-							Name = wr.Player.Name,
-							CountryCode = (wr.Player.IsUser)
-													? wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
-													: string.Empty
-						},
 						Game = new SpeedrunGame
 						{
 							Name = game.Name,
 							Link = game.WebLink.AbsoluteUri,
 							CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri
 						},
+						Players = players,
+						Variables = variables,
 						CategoryName = wr.Category.Name,
+						EntryId = wr.ID,
 						EntryTime = await FormatTime(wr.Times.Primary.Value),
-						EntryVideo = wr.Videos.Links.FirstOrDefault().OriginalString,
+						EntryVideo = wr.Videos?.Links?.FirstOrDefault()?.OriginalString,
 						Platform = wr.Platform.Name,
 						EntryDateTime = wr.DateSubmitted.Value,
 						EntryDate = (wr.DateSubmitted == null)
@@ -156,17 +176,24 @@ namespace NeKzBot.Tasks.Speedrun
 						if (wr == null)
 							continue;
 
+						var players = new List<SpeedrunPlayerProfile>();
+						foreach (var player in wr.Players)
+						{
+							players.Add(new SpeedrunPlayerProfile
+							{
+								Name = player.Name,
+								CountryCode = (player.IsUser)
+													 ? player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
+													 : string.Empty
+							});
+						}
+
 						records.Add(new SpeedrunWorldRecord()
 						{
 							CategoryName = wr.Category.Name,
+							EntryId = wr.ID,
 							EntryTime = await FormatTime(wr.Times.Primary.Value),
-							Player =  new SpeedrunPlayerProfile
-							{
-								Name = wr.Player.Name,
-								CountryCode = (wr.Player.IsUser)
-														? wr.Player.User.Location?.Country?.Code?.ToLower() ?? string.Empty
-														: string.Empty
-							},
+							Players =  players,
 							Platform = wr.Platform.Name,
 							EntryDate = (wr.Date == null)
 												 ? string.Empty
@@ -288,6 +315,41 @@ namespace NeKzBot.Tasks.Speedrun
 					Link = game.WebLink.AbsoluteUri,
 					CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri,
 					Moderators = moderators
+				};
+			}
+			catch (Exception e)
+			{
+				return await Logger.SendToChannelAsync("SpeedrunCom.GetModeratorsAsync Error", e) as SpeedrunGame;
+			}
+		}
+
+		public static async Task<SpeedrunGame> GetCategoriesAsync(string gamename)
+		{
+			try
+			{
+				var output = string.Empty;
+				var game = _client.Games.SearchGame(gamename);
+				if (game == null)
+					return null;
+
+				var categories = new List<SpeedrunGameCategory>();
+				foreach (var item in game.Categories.ToArray())
+				{
+					categories.Add(new SpeedrunGameCategory
+					{
+						Name = item.Name,
+						Id = item.ID,
+						Type = (SpeedrunCategoryType)item.Type
+					});
+				}
+
+				return new SpeedrunGame
+				{
+					Name = game.Name,
+					Id = game.ID,
+					Link = game.WebLink.AbsoluteUri,
+					CoverLink = game.Assets.CoverMedium.Uri.AbsoluteUri,
+					Categories = categories
 				};
 			}
 			catch (Exception e)
@@ -462,12 +524,12 @@ namespace NeKzBot.Tasks.Speedrun
 
 				// Read
 				if (string.IsNullOrEmpty(json))
-					return null;
+					return await Logger.SendToChannelAsync("SpeedrunCom.GetNotificationUpdatesAsync JSON Error", LogColor.Error) as List<SpeedrunNotification>;
 
 				// Read json string
 				dynamic api = JsonConvert.DeserializeObject(json);
 				if (string.IsNullOrEmpty(api?.ToString()))
-					return null;
+					return await Logger.SendToChannelAsync("SpeedrunCom.GetNotificationUpdatesAsync API Error", LogColor.Error) as List<SpeedrunNotification>;
 
 				// Parse data
 				var updates = new List<SpeedrunNotification>();
@@ -482,7 +544,7 @@ namespace NeKzBot.Tasks.Speedrun
 						ContentText = data?.text.ToString() ?? string.Empty,
 						Type = (SpeedrunNotificationType)data?.item?.rel,
 						ContentLink = data?.item?.uri?.ToString() ?? string.Empty,
-						Status = data?.item?.status == "read" ? SpeedrunNotificationStatus.Read : SpeedrunNotificationStatus.Unread
+						Status = (data?.item?.status == "read") ? SpeedrunNotificationStatus.Read : SpeedrunNotificationStatus.Unread
 					};
 
 					// Filtering

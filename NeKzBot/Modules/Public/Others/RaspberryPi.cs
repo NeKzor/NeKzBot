@@ -4,7 +4,7 @@ using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Public.Others
 {
-	public class RaspberryPi : Commands
+	public class RaspberryPi : CommandModule
 	{
 		public static async Task LoadAsync()
 		{

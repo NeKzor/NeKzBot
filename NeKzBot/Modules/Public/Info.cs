@@ -7,7 +7,7 @@ using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Public
 {
-	public class Info : Commands
+	public class Info : CommandModule
 	{
 		public static async Task LoadAsync()
 		{

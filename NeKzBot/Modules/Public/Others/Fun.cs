@@ -2,12 +2,13 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Public.Others
 {
-	public class Fun : Commands
+	public class Fun : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -25,7 +26,7 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(await Utils.RngAsync(Data.ConsoleCommands) as string);
+						await e.Channel.SendMessage(await Utils.RngAsync((await Data.Get<Simple>("cc")).Value));
 					});
 			return Task.FromResult(0);
 		}
@@ -38,8 +39,9 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var rand = await Utils.RngAsync(Data.Portal2Exploits.GetLength(0));
-						await e.Channel.SendMessage($"**{Data.Portal2Exploits[rand, 0]}**\n{Data.Portal2Exploits[rand, 1]}");
+						var data = (await Data.Get<Complex>("exploits")).Values;
+						var rand = data[await Utils.RngAsync(data.Count)].Value;
+						await e.Channel.SendMessage($"**{rand[0]}**\n{rand[1]}");
 					});
 			return Task.FromResult(0);
 		}
@@ -48,12 +50,13 @@ namespace NeKzBot.Modules.Public.Others
 		{
 			CService.CreateCommand(c)
 					.Alias("fact")
-					.Description("Gives you a random text about a random topic.")
+					.Description("Gives you a random text about a random topic. Note: These quotes might not be exact and can sometimes be false.")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"*{await Utils.RngAsync(Data.QuoteNames, 1) as string}*");
+						var data = (await Data.Get<Complex>("quotes")).Values;
+						await e.Channel.SendMessage($"*{data[await Utils.RngAsync(data.Count)].Value[1]}*");
 					});
 			return Task.FromResult(0);
 		}
@@ -76,7 +79,7 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(await Utils.RngStringAsync(Data.BotFeelings));
+						await e.Channel.SendMessage(e.Args[0] != "kys" ? await Utils.RngStringAsync(Data.BotFeelings) : await Utils.RisAsync("hopes deleted") + " :robot:");
 					});
 
 			// Convert text to symbols
@@ -101,6 +104,7 @@ namespace NeKzBot.Modules.Public.Others
 					});
 
 			CService.CreateCommand("routecredit")
+					.Alias("rootcredit")
 					.Description("Gives somebody route credit for no reason.")
 					.AddCheck(Permissions.DisallowBots)
 					.Do(async e =>
@@ -115,7 +119,7 @@ namespace NeKzBot.Modules.Public.Others
 						do
 							rand = e.Server.Users.ElementAt(await Utils.RngAsync(e.Server.UserCount));
 						while (rand.IsBot);
-						await msg.Edit($"{credit} **{rand.Name}**");
+						await msg.Edit($"{credit} **{((string.IsNullOrEmpty(rand.Nickname)) ? rand.Name : rand.Nickname)}**");
 					});
 
 			CService.CreateCommand("question")
@@ -128,10 +132,11 @@ namespace NeKzBot.Modules.Public.Others
 						var question = e.Args[0];
 						if (string.IsNullOrEmpty(question))
 							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
-						else if (question[question.Length - 1] == '?')
+						else if (question[question.Length - 1] == '?'
+						&& (question.Any(c => char.IsLetter(c))))
 							await e.Channel.SendMessage(await Utils.RngStringAsync(Data.BotAnswers));
 						else
-							await e.Channel.SendMessage(await Utils.RngStringAsync("Is this a question?", "This isn't a question.", "Please..."));
+							await e.Channel.SendMessage(await Utils.RngStringAsync("Is this a question?", "This isn't a question.", "Please...", "lol"));
 					});
 			return Task.FromResult(0);
 		}

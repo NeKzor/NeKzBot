@@ -38,7 +38,7 @@ namespace NeKzBot.Classes
 			}
 			catch (Exception e)
 			{
-				return await Logger.SendToChannelAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamAsync)", e);
+				return await Logger.SendAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamAsync)", e);
 			}
 
 			// Read
@@ -63,7 +63,7 @@ namespace NeKzBot.Classes
 			}
 			catch (Exception e)
 			{
-				return await Logger.SendToChannelAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamerAsync)", e);
+				return await Logger.SendAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamerAsync)", e);
 			}
 
 			// Read
@@ -88,7 +88,7 @@ namespace NeKzBot.Classes
 			}
 			catch (Exception e)
 			{
-				return await Logger.SendToChannelAsync("Fetching.GetGameAsync Error (TwitchTv.GetStreamerAsync)", e);
+				return await Logger.SendAsync("Fetching.GetGameAsync Error (TwitchTv.GetStreamerAsync)", e);
 			}
 
 			// Read

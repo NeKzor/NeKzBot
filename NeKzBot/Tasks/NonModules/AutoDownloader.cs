@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Classes;
+using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.NonModules
@@ -10,8 +11,8 @@ namespace NeKzBot.Tasks.NonModules
 	{
 		private static string _cacheKey;
 
-		private const int _maxfilesperfolder = 20;
-		private const int _maxfilesize = 5000 * 1024;   // 5KB
+		public const uint MaxFilesPerFolder = 20;
+		private const uint _maxfilesize = 5000 * 1024;   // 5KB
 
 		// Upload to Dropbox.com
 		public static async Task<bool> CheckDropboxAsync(MessageEventArgs args)
@@ -33,7 +34,7 @@ namespace NeKzBot.Tasks.NonModules
 							// Maximum 5000KB
 							if (file.Size > _maxfilesize)
 							{
-								await args.Channel.SendMessage($"File {file.Filename} is too big to upload (max. {_maxfilesize}KB).");
+								await args.Channel.SendMessage($"File {file.Filename} is too large for an upload (max. {_maxfilesize}KB).");
 								continue;
 							}
 							else if (file.Size == 0)
@@ -58,30 +59,33 @@ namespace NeKzBot.Tasks.NonModules
 							var cacheFile = await Caching.CFile.GetPathAndSaveAsync(_cacheKey);
 							if (string.IsNullOrEmpty(cacheFile))
 							{
-								await args.Channel.SendMessage("**Caching Error**");
-								await Logger.SendAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckDropboxAsync)", LogColor.Error);
+								await Logger.SendToChannelAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckDropboxAsync)", LogColor.Error);
 								break;
 							}
 
-							// Every user has its on folder
-							var path = Configuration.Default.DropboxFolderName + args.User.Id;
+							// Every user has his own folder
+							var path = $"{Configuration.Default.DropboxFolderName}/{args.User.Id}";
 
-							// Check if folder full
+							// Check if folder is full
 							var files = await DropboxCom.ListFilesAsync(path);
 							if ((files != "No files found.")
-							&& (files != "**Error**")
-							&& (files.Split('\n').Length > _maxfilesperfolder))
+							&& (files != "**Error.**")
+							&& (files.Split('\n').Length > MaxFilesPerFolder))
 							{
-								await args.Channel.SendMessage($"Your folder is full. Try to list all files with {Configuration.Default.PrefixCmd}dbfolder and delete one with {Configuration.Default.PrefixCmd}dbdelete <filename>");
+								await args.Channel.SendMessage($"Your folder is full. Try to list all files with `{Configuration.Default.PrefixCmd}dbfolder` and delete one with `{Configuration.Default.PrefixCmd}dbdelete <filename>`.");
 								continue;
 							}
 
 							// Send file to Dropbox
-							await args.Channel.SendMessage("Uploading...");
+							var msg = await args.Channel.SendMessage("Uploading...");
 							if (await DropboxCom.UploadAsync(path, filename, cacheFile))
-								await args.Channel.SendMessage($"Uploaded {filename} to Dropbox.");
+								await msg.Edit($"Uploaded {await Utils.FormatRawText(filename)} to Dropbox.");
 							else
-								await args.Channel.SendMessage("**Error**");
+								await msg.Edit("**Upload error.**");
+
+							var link = await DropboxCom.CreateLinkAsync($"{path}/{filename}");
+							if (!(string.IsNullOrEmpty(link)))
+								await msg.Edit($"{msg.RawText}\nDownload: <{link}>");
 						}
 					}
 				}
@@ -91,7 +95,7 @@ namespace NeKzBot.Tasks.NonModules
 			catch (Exception e)
 			{
 				await Logger.SendToChannelAsync("AutoDownloader.CheckDropboxAsync Error", e);
-				await args.Channel.SendMessage("**Error**");
+				await args.Channel.SendMessage("**Error.**");
 			}
 			return true;
 		}

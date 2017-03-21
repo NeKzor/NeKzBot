@@ -1,5 +1,16 @@
 ﻿# Changelog
 
+## Version 1.6.0
+* Added new commands for speedrun module
+* Added developer only commands for leaderboard module
+* Added automatic restarter on unhandled class exception
+* Changed cloud module permission to vip only
+* Added a task to generate module lists automatically
+* Replaced WebClients with HttpClients in fetching system
+* Fixed caching system and improved its logic
+* Improved internal data manager
+* Lots of bug fixes
+
 ## Version 1.5.0
 * Added support for playing audio streams on multiple servers
 * Added VIP guild permission

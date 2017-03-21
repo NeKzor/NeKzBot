@@ -34,7 +34,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.5.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.6.0")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -52,7 +52,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-")]
+        [global::System.Configuration.DefaultSettingValueAttribute("!")]
         public char PrefixCmd {
             get {
                 return ((char)(this["PrefixCmd"]));
@@ -154,7 +154,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Demos/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Demos")]
         public string DropboxFolderName {
             get {
                 return ((string)(this["DropboxFolderName"]));

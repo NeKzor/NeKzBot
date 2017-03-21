@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Modules.Public
 {
-	public class Help : Commands
+	public class Help : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
@@ -118,7 +119,7 @@ namespace NeKzBot.Modules.Public
 
 			CService.CreateCommand("development")
 					.Alias("developer", "dev")
-					.AddCheck(Permissions.MainServerOnly)
+					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
 					.Do(async e =>
 					{
@@ -132,63 +133,61 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"{Data.MainServerOnly}\n{Data.LeaderboardPrivate}\n{Data.BotOwnerOnly}");
+						await e.Channel.SendMessage($"{Data.LeaderboardPrivate}\n{Data.BotOwnerOnly}");
 					});
 
 			CService.CreateCommand("hidden")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Hide()
-					.Do(async e =>
-					{
-						await (await e.User.CreatePMChannel())?.SendMessage("**[Hidden Commands & Neat Shortcuts]**\n• `10=tick` converts 10 ticks into seconds with the default Portal 2 tickrate 60.\n"
-																		  + "• `1=sec` converts 1 second into ticks with the default Portal 2 tickrate 60.\n"
-																		  + "• You can also set a custom tickrate like this: `1=sec66`.\n"
-																		  + "• You can create a startdemos command very quickly with this: `10->demo_`.\n"
-																		  + "• You can view the image preview of a Steam workshop item by just sending a valid uri which should have `https` or `http` in the beginning.\n"
-																		  + $"• You can execute commands at the end of your text too: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n"
-																		  + $"• You can also use a mention to execute commands: `{Bot.Client.CurrentUser.Mention} commands`.\n"
-																		  + "• Every Portal 2 challenge mode map has its own abbreviation e.g. `PGN` means Portal Gun, you don't have to write it in caps.");
-					});
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage(Data.HiddenMessage));
 
 			CService.CreateCommand("sound")
+					.Alias("sounds")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Hide()
-					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage($"**[Sound Commands - VIP Servers Only]**\nUsage: `{Configuration.Default.PrefixCmd}sound <name>`. All available names:\n{await Utils.ArrayToList(Data.SoundNames, 0, string.Empty, ", ", string.Empty, 2)}"));
+					.Do(async e => await (await e.User.CreatePMChannel())?.SendMessage("**[Sound Commands - VIP Servers Only]**\n" +
+																					   $"Usage: `{Configuration.Default.PrefixCmd}sound <name>`. All available names:\n" +
+																					   $"{await Utils.CollectionToList((await Data.Get<Complex>("sounds")).Cast(), string.Empty, ", ", string.Empty, 2)}\n\n" +
+																					   $"Known aliases: {await Utils.CollectionToList((await Utils.FindCommandByName("sound")).Aliases, "`")}"));
 
 			// Hints
 			CService.CreateCommand("meme")
-					.AddCheck(Permissions.VipGuildsOnly)
+					.Alias("memes")
 					.Description("Hints you a meme command.")
+					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync(Data.MemeCommands, 0) as string}`.");
+						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync((await Data.Get<Complex>("memes")).Values)}`.");
 					});
 
 			CService.CreateCommand("tool")
-					.AddCheck(Permissions.VipGuildsOnly)
+					.Alias("tools")
 					.Description("Hints you a tool command.")
+					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync(Data.ToolCommands, 0) as string}`.");
+						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync((await Data.Get<Complex>("tools")).Values)}`.");
 					});
 
 			CService.CreateCommand("link")
+					.Alias("links")
 					.Description("Hints you a link command.")
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync(Data.LinkCommands, 0) as string}`.");
+						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}{await Utils.RngAsync((await Data.Get<Complex>("links")).Values)}`.");
 					});
 
 			CService.CreateCommand("quote")
-					.AddCheck(Permissions.VipGuildsOnly)
+					.Alias("quotes")
 					.Description("Hints you a quote command.")
+					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}quote {await Utils.RngAsync(Data.QuoteNames, 0) as string}`.");
+						await e.Channel.SendMessage($"Try `{Configuration.Default.PrefixCmd}quote {await Utils.RngAsync((await Data.Get<Complex>("quotes")).Values)}`.");
 					});
 
 			return Task.FromResult(0);

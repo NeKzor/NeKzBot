@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NeKzBot.Resources;
@@ -45,7 +47,7 @@ namespace NeKzBot.Server
 			{
 				_fileCache = _fileCache ?? new List<string>();
 				_fileName = "c4ch3";
-				_cachePath = await Utils.GetPath() + "/Resources/Cache/";
+				_cachePath = await Utils.GetAppPath() + "/Resources/Cache/";
 				_fileExtension = ".tmp";
 			}
 
@@ -161,82 +163,99 @@ namespace NeKzBot.Server
 		}
 
 		/// <summary>Caching system of internal application.</summary>
+		/// <typeparam name="T">Type class.</typeparam>
 		internal static class CApplication
 		{
 			/// <summary>Contains the names of the requesters (methods) with the data to store.</summary>
-			private static Dictionary<string, List<object>> _appCache;
+			private static ConcurrentDictionary<string, List<object>> _appCache;
 
 			/// <summary>Used for class initialization.</summary>
 			public static Task Init()
 			{
-				_appCache = _appCache ?? new Dictionary<string, List<object>>();
+				_appCache = _appCache ?? new ConcurrentDictionary<string, List<object>>();
 				return Task.FromResult(0);
 			}
 
 			/// <summary>Used to reset cache.</summary>
 			public static Task ResetCache()
 			{
-				_appCache = new Dictionary<string, List<object>>();
+				_appCache = new ConcurrentDictionary<string, List<object>>();
 				return Task.FromResult(0);
 			}
 
-			/// <summary>Save new data to cache.</summary>
+			/// <summary>Reserve memory to cache. Returns true on success.</summary>
+			/// <typeparam name="T">Object type.</typeparam>
 			/// <param name="key">Name of requester.</param>
-			/// <param name="data">Data to store.</param>
-			public static async Task SaveCacheAsync(string key, object data)
+			/// <param name="newdata">Data to store.</param>
+			public static async Task<bool> ReserverMemoryAsync<T>(string key) where T : class
 			{
-				await ClearKeyAsync(key);
-				_appCache.Add(key, await ToList(data));
+				await ClearKey(key);
+				return _appCache.TryAdd(key, new List<T>().Cast<object>().ToList());
 			}
 
-			/// <summary>Add data to existing cache.</summary>
+			/// <summary>Add new data or update existing data to the cache. Returns true on success.</summary>
+			/// <typeparam name="T">Object type.</typeparam>
 			/// <param name="key">Name of requester.</param>
 			/// <param name="data">Data to store.</param>
-			public static Task AddCache(string key, object data)
+			public static Task AddOrUpdateCache<T>(string key, List<T> data) where T : class
 			{
-				_appCache[key]?.Add(data);
+				var cache = data.Cast<object>().ToList();
+				_appCache.AddOrUpdate(key, cache, (k, c) => cache);
 				return Task.FromResult(0);
 			}
 
-			/// <summary>Returns data if the key exists in the cache list.</summary>
+			/// <summary>Add data to cache. Returns false if it already exists.</summary>
 			/// <param name="key">Name of requester.</param>
-			public static async Task<List<object>> GetCacheAsync(string key)
-				=> ((bool)(await CacheExists(key)))
-					? _appCache[key]
-					: null;
-
-			/// <summary>Removes key from the cache list.</summary>
-			/// <param name="key">Name of requester.</param>
-			public static async Task ClearKeyAsync(string key)
+			/// <param name="data">Data to store.</param>
+			public static async Task<bool> AddDataAsync(string key, object data)
 			{
-				if ((bool)(await CacheExists(key)))
-					_appCache.Remove(key);
+				var cache = (await GetCache(key)).Cast<object>().ToList();
+				if (!(cache.Contains(data)))
+					cache.Add(data);
+				else
+					return false;
+				return _appCache.TryUpdate(key, cache, cache);
 			}
 
-			/// <summary>Clears data cache of specific requester.</summary>
+			/// <summary>Returns data with the given key on success.</summary>
 			/// <param name="key">Name of requester.</param>
-			public static async Task ClearDataAsync(string key)
+			public static Task<List<object>> GetCache(string key)
+				=> Task.FromResult(_appCache.TryGetValue(key, out var cache)
+											? cache
+											: null);
+
+			/// <summary>Removes the given key from the cache list. Returns true on success.</summary>
+			/// <param name="key">Name of requester.</param>
+			public static Task<bool> ClearKey(string key)
+				=> Task.FromResult(_appCache.TryRemove(key, out var _));
+
+			/// <summary>Clears data cache with the given key. Returns true on success.</summary>
+			/// <param name="key">Name of requester.</param>
+			public static async Task<bool> ClearDataAsync(string key)
 			{
 				if ((bool)(await CacheExists(key)))
 					_appCache[key] = new List<object>();
+				else
+					return false;
+				return true;
 			}
 
-			/// <summary>Clears specific data cache of specific requester.</summary>
+			/// <summary>Clears specific data cache with the given key. Returns true on success.</summary>
 			/// <param name="key">Name of requester.</param>
 			/// <param name="data">Data to delete.</param>
-			public static async Task ClearValueAsync(string key, string data)
+			public static async Task<bool> ClearValueAsync(string key, string data)
 			{
 				if ((bool)(await CacheExists(key)))
 					_appCache[key].Remove(data);
+				else
+					return false;
+				return true;
 			}
 
 			/// <summary>Checks if cache contains the given key already.</summary>
 			/// <param name="key">Name of requester in the cache list.</param>
 			public static Task<bool?> CacheExists(string key)
 				=> Task.FromResult(_appCache?.ContainsKey(key));
-
-			private static Task<List<object>> ToList(object data)
-				=> Task.FromResult(new List<object> { data });
 		}
 	}
 }

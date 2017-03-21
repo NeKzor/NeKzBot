@@ -24,7 +24,7 @@ namespace NeKzBot.Internals
 		/// <param name="stop">If true, stops the internal timer.</param>
 		/// <param name="debugmsg">If not null or empty, logs the message text with the value.</param>
 		/// <returns></returns>
-		public Task<int> GetElapsedTime(Time unit = Time.Seconds, bool stop = true, string debugmsg = "")
+		public Task<int> GetElapsedTime(Time unit = Time.Milliseconds, bool stop = true, string debugmsg = "")
 		{
 			if ((_watch == null)
 			|| !((bool)_watch?.IsRunning))
