@@ -44,11 +44,11 @@ namespace NeKzBot.Modules.Public
 						await e.Channel.SendIsTyping();
 						var filter = e.GetArg("filter");
 						var url = default(string);
-						if (filter == string.Empty)
+						if (string.IsNullOrEmpty(filter))
 							url = "http://board.iverb.me/changelog?wr=1";
-						else if (filter == "yt")
+						else if (string.Equals(filter, "yt", StringComparison.CurrentCultureIgnoreCase))
 							url = "http://board.iverb.me/changelog?wr=1&yt=1";
-						else if (filter == "demo")
+						else if (string.Equals(filter, "demo", StringComparison.CurrentCultureIgnoreCase))
 							url = "http://board.iverb.me/changelog?wr=1&demo=1";
 						else
 						{
@@ -95,7 +95,7 @@ namespace NeKzBot.Modules.Public
 									if (entry.Demo != string.Empty)
 										output += $"[Demo Download]({entry.Demo})";
 									if (entry.YouTube != string.Empty)
-										output += $"{(entry.Demo != string.Empty ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
 									field.Value = output;
 								});
 							}
@@ -126,11 +126,11 @@ namespace NeKzBot.Modules.Public
 						await e.Channel.SendIsTyping();
 						var filter = e.GetArg("filter");
 						var url = default(string);
-						if (filter == string.Empty)
+						if (string.IsNullOrEmpty(filter))
 							url = "http://board.iverb.me/changelog";
-						else if (filter == "yt")
+						else if (string.Equals(filter, "yt", StringComparison.CurrentCultureIgnoreCase))
 							url = "http://board.iverb.me/changelog?yt=1";
-						else if (filter == "demo")
+						else if (string.Equals(filter, "demo", StringComparison.CurrentCultureIgnoreCase))
 							url = "http://board.iverb.me/changelog?demo=1";
 						else
 						{
@@ -177,7 +177,7 @@ namespace NeKzBot.Modules.Public
 									if (entry.Demo != string.Empty)
 										output += $"[Demo Download]({entry.Demo})";
 									if (entry.YouTube != string.Empty)
-										output += $"{(entry.Demo != string.Empty ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
 									field.Value = output;
 								});
 							}
@@ -260,7 +260,7 @@ namespace NeKzBot.Modules.Public
 									if (entry.Demo != string.Empty)
 										output += $"[Demo Download]({entry.Demo})";
 									if (entry.YouTube != string.Empty)
-										output += $"{(entry.Demo != string.Empty ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
 									field.Value = output;
 								});
 							}
@@ -331,7 +331,7 @@ namespace NeKzBot.Modules.Public
 								return;
 							}
 
-							var entry = await Portal2.GetLatestEntryAsync($"{url}{result.BestTimeId}");
+							var entry = await Portal2.GetUserRankAsync(url, result);
 							if (entry != null)
 							{
 								var embed = new Embed
@@ -370,7 +370,7 @@ namespace NeKzBot.Modules.Public
 										if (entry.Demo != string.Empty)
 											output += $"[Demo Download]({entry.Demo})";
 										if (entry.YouTube != string.Empty)
-											output += $"{(entry.Demo != string.Empty ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+											output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
 										field.Value = output;
 									});
 								}
@@ -439,7 +439,7 @@ namespace NeKzBot.Modules.Public
 								return;
 							}
 
-							var entry = await Portal2.GetLatestEntryAsync($"{url}{result.BestTimeId}");
+							var entry = await Portal2.GetUserRankAsync(url, result);
 							if (entry != null)
 							{
 								var embed = new Embed
@@ -478,7 +478,7 @@ namespace NeKzBot.Modules.Public
 										if (entry.Demo != string.Empty)
 											output += $"[Demo Download]({entry.Demo})";
 										if (entry.YouTube != string.Empty)
-											output += $"{(entry.Demo != string.Empty ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+											output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
 										field.Value = output;
 									});
 								}
