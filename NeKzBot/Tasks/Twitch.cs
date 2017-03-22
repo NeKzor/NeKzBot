@@ -158,7 +158,7 @@ namespace NeKzBot.Tasks
 			{
 				Author = new EmbedAuthor(stream.ChannelName, stream.StreamLink, stream.AvatarLink),
 				Title = "Twitch Livestream",
-				Description = $"{await Utils.AsRawText(stream.Game.Name)}{people}!\n\n_[{await Utils.AsRawText(stream.StreamTitle)}]({stream.StreamLink})_",
+				Description = $"{await Utils.AsRawText(stream.Game.Name)}{people}!\n\n_{await Utils.AsRawText($"[{stream.StreamTitle}]({stream.StreamLink})")}_",
 				Url = stream.StreamLink,
 				Color = Data.TwitchColor.RawValue,
 				Thumbnail = new EmbedThumbnail(stream.Game.BoxArt),
