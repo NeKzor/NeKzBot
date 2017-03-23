@@ -87,13 +87,13 @@ namespace NeKzBot.Classes
 					// TODO: parse notification type "guide"
 					// TODO: could fix escaping here too
 					if (Type == SpeedrunNotificationType.Thread)
-						return $"Posted a new thread:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length, ContentText.Length - ContentText.IndexOf(" forum: ") - " forum: ".Length)}]({ContentLink})_";
+						return $"Posted a new thread:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length)}]({ContentLink})_";
 					if (Type == SpeedrunNotificationType.Post)
 						return $"Responded to the thread:\n_[{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}]({ContentLink})_";
 					if (Type == SpeedrunNotificationType.Resource)
 						return $"The resource _{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}_ has been updated or added.";
 					if (Type == SpeedrunNotificationType.Run)
-						return $"Sets a new {(ContentText.Contains(" beat the WR in ") ? "world record" : "personal best")} in [{Game.Name}]({Game.Link})\nwith a time of {ContentText.Substring(ContentText.LastIndexOf(". The new WR is ") + ". The new WR is ".Length, ContentText.Length - ContentText.LastIndexOf(". The new WR is ") - ". The new WR is ".Length)}";
+						return $"Sets a new {(ContentText.Contains(" beat the WR in ") ? "world record" : "personal best")} in [{Game.Name}]({Game.Link})\nwith a time of {ContentText.Substring(ContentText.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
 					if (Type == SpeedrunNotificationType.Moderator)
 						return "Is now a moderator.\nCongrats.";
 				}

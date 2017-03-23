@@ -91,7 +91,7 @@ namespace NeKzBot.Tasks.NonModules
 				// Set custom tickrate
 				if (msg.Length != find + separator.Length + keyword.Length)
 				{
-					if (!(int.TryParse(msg.Substring(find + separator.Length + keyword.Length, msg.Length - find - separator.Length - keyword.Length), out tickrate)))
+					if (!(int.TryParse(msg.Substring(find + separator.Length + keyword.Length), out tickrate)))
 					{
 						var values = msg.Split(new string[] { separator, keyword, " " }, StringSplitOptions.None);
 						var index = -1;
@@ -144,7 +144,7 @@ namespace NeKzBot.Tasks.NonModules
 			{
 				// Get string name
 				if (msg.Length != find + separator.Length + keyword.Length)
-					name = msg.Substring(find + separator.Length + keyword.Length, msg.Length - find - separator.Length - keyword.Length);
+					name = msg.Substring(find + separator.Length + keyword.Length);
 
 				// Try to parse a value
 				if (!(int.TryParse(msg.Substring(0, find), out value)))

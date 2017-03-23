@@ -72,7 +72,7 @@ namespace NeKzBot.Tasks
 								Game = new TwitchGame
 								{
 									Name = (gamename != null) ? $"Playing {gamename}" : "Streaming",
-									BoxArt = (await Classes.TwitchTv.GetGameAsync(gamename))?.games[0]?.box?.medium?.ToString() ?? string.Empty
+									BoxArt = (await TwitchTv.GetGameAsync(gamename))?.games[0]?.box?.medium?.ToString() ?? string.Empty
 								},
 								StreamTitle = api?.stream?.channel?.status?.ToString() ?? "ERROR",
 								StreamLink = api?.stream?.channel?.url?.ToString() ?? "ERROR",

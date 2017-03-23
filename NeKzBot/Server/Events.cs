@@ -160,7 +160,7 @@ namespace NeKzBot.Server
 					var gameafter = e.After.CurrentGame.Value;
 					if (gameafter.Type == GameType.Twitch)
 					{
-						var channel = gameafter.Url.Substring(gameafter.Url.LastIndexOf('/') + 1, gameafter.Url.Length - gameafter.Url.LastIndexOf('/') - 1);
+						var channel = gameafter.Url.Substring(gameafter.Url.LastIndexOf('/') + 1);
 						// Add streamer
 						if ((await Data.Get("streamers") is IData data)
 						&& (data.ReadWriteAllowed)

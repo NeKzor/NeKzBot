@@ -45,11 +45,10 @@ namespace NeKzBot.Tasks.Leaderboard
 						? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='comment']//i").Attributes["data-content"].Value)
 						: string.Empty;
 
-					var temp = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
-					var mapid = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length);
+					var mapid = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value.Substring("/chamber/".Length);
 
-					temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
-					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
+					var temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
+					var steamid = temp.Substring(temp.LastIndexOf('/') + 1);
 					var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
 					node = null;
@@ -116,11 +115,10 @@ namespace NeKzBot.Tasks.Leaderboard
 							? HttpUtility.HtmlDecode(node.SelectSingleNode("//div[@class='comment']//i").Attributes["data-content"].Value)
 							: string.Empty;
 
-						var temp = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value;
-						var mapid = temp.Substring("/chamber/".Length, temp.Length - "/chamber/".Length);
+						var mapid = node.SelectSingleNode("//div[@class='map']//a")?.Attributes["href"].Value.Substring("/chamber/".Length);
 
-						temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
-						var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
+						var temp = node.SelectSingleNode("//div[@class='profileIcon']//a").Attributes["href"].Value;
+						var steamid = temp.Substring(temp.LastIndexOf('/') + 1);
 						var avatar = node.SelectSingleNode("//div[@class='profileIcon']//a//img").Attributes["src"].Value;
 
 						node = null;
@@ -178,7 +176,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
 					var user = new Portal2User()
 					{
-						SteamId = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1),
+						SteamId = temp.Substring(temp.LastIndexOf('/') + 1),
 						SteamAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value,
 						BestPlaceMap = (doc.DocumentNode.SelectNodes("//div[@class='block-container bestworst']//div[@class='block']//div[@class='block-inner']//div[@class='title']//span")[0].Descendants("a")
 							.Any())
@@ -273,7 +271,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					node = null;
 					var temp = doc.DocumentNode.SelectNodes("//div[@class='usericons']//a").Last().Attributes["href"].Value;
-					var steamid = temp.Substring(temp.LastIndexOf('/') + 1, temp.Length - temp.LastIndexOf('/') - 1);
+					var steamid = temp.Substring(temp.LastIndexOf('/') + 1);
 					var steamavatar = doc.DocumentNode.SelectSingleNode("//div[@class='general-wrapper']//img").Attributes["src"].Value;
 
 					doc = null;

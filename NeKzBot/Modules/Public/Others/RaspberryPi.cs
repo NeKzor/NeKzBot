@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -52,7 +53,7 @@ namespace NeKzBot.Modules.Public.Others
 						{
 							await e.Channel.SendIsTyping();
 							var temp = await Utils.GetCommandOutputAsync("vcgencmd", "measure_temp");
-							await e.Channel.SendMessage($"SoC Temperature = **{temp.Substring(5, temp.Length - 5).Replace("'", "°")}**");
+							await e.Channel.SendMessage($"SoC Temperature = **{temp.Substring(5).Replace("'", "°")}**");
 						});
 
 				GBuilder.CreateCommand("os")
@@ -64,7 +65,7 @@ namespace NeKzBot.Modules.Public.Others
 							var os = await Utils.GetCommandOutputAsync("cat", "/etc/os-release");
 							var output = string.Empty;
 							foreach (var item in os.Split('\n'))
-								output += $"{await Utils.GetRestAfter(item, '=')}\n";
+								output += $"{item.Split('=').Last()}\n";
 							await e.Channel.SendMessage(output.Substring(0, output.Length - 1).Replace("\"", string.Empty));
 						});
 			});

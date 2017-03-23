@@ -622,21 +622,29 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						// Parsing
-						var count = default(uint);
-						var mapname = default(string);
-						if (uint.TryParse(e.GetArg("mapname").Split(' ').First(), out var parsed))
+						var mapname = e.GetArg("mapname");
+						if (string.IsNullOrEmpty(mapname))
 						{
-							count = parsed;
-							mapname = await Utils.GetRest(e.GetArg("mapname").Split(' '), 1, sep: " ");
-						}
-						else
-						{
-							count = 5;
-							mapname = e.GetArg("mapname");
+							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
+							return;
 						}
 
-						var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(e.GetArg("mapname"));
+						// Parsing
+						var count = 5U;
+						if (uint.TryParse(mapname.Split(' ')[0], out var parsed))
+						{
+							count = parsed;
+							var index = mapname.IndexOf(' ');
+							if (index != -1)
+								mapname = mapname.Substring(index + 1);
+							else
+							{
+								await e.Channel.SendMessage("You didn't define a map.");
+								return;
+							}
+						}
+
+						var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(mapname);
 						if (result == null)
 						{
 							await e.Channel.SendMessage("Couldn't find that map.");

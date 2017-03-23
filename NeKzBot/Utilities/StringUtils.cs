@@ -28,24 +28,6 @@ namespace NeKzBot.Utilities
 			return Task.FromResult(!(s.Length > maxlength));
 		}
 
-		public static Task<string> GetRest(string[] s, int from, int to = 0, string sep = "")
-		{
-			to = (to == 0)
-					 ? s.Length
-					 : to;
-			var output = string.Empty;
-			for (; from < to; from++)
-			{
-				output += s[from];
-				if (from + 1 != to)
-					output += sep;
-			}
-			return Task.FromResult(output);
-		}
-
-		public static Task<string> GetRestAfter(string s, char l)
-			=> Task.FromResult(s.Split(l).Last());
-
 		public static Task<string> StringInBytes(params string[] s)
 		{
 			var size = 0;
