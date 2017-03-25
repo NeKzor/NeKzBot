@@ -79,10 +79,10 @@ namespace NeKzBot.Tasks.Speedrun
 									// I really hope API v2 is better :s
 									if ((notification.Game.Name.Contains("Portal 2"))       // Should include Aperture Tag too
 									|| (notification.Game.Name.Contains("Portal Stories"))) // Rip other game mods
-										foreach (var subscriber in (await Data.Get<Subscribers>("srcomportal2hook")).Subs)
+										foreach (var subscriber in (await Data.Get<Subscription>("srcomportal2hook")).Subscribers)
 											await WebhookService.ExecuteWebhookAsync(subscriber, hook);
 
-									foreach (var subscriber in (await Data.Get<Subscribers>("srcomsourcehook")).Subs)
+									foreach (var subscriber in (await Data.Get<Subscription>("srcomsourcehook")).Subscribers)
 										await WebhookService.ExecuteWebhookAsync(subscriber, hook);
 								}
 								// Save cache

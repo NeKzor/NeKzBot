@@ -16,6 +16,7 @@ using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Tasks.NonModules;
 using NeKzBot.Tasks.Speedrun;
 using NeKzBot.Utilities;
+using NeKzBot.Webhooks;
 
 namespace NeKzBot
 {
@@ -79,6 +80,7 @@ namespace NeKzBot
 				await CommandModule.InitAsync();
 				await Data.InitMangerAsync();
 				await Caching.InitAsync();
+				await WebhookService.InitAsync();
 				// ^Important stuff first
 				await Portal2.Cache.InitAsync();
 				await Portal2.AutoUpdater.InitAsync();
@@ -117,7 +119,7 @@ namespace NeKzBot
 				await RaspberryPi.LoadAsync();
 				await Resource.LoadAsync();
 				await Rest.LoadAsync();
-				await Subscription.LoadAsync();
+				await Service.LoadAsync();
 				// ^Load these before generating module lists
 				await Data.GenerateModuleListsAsync();
 			}

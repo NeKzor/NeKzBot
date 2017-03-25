@@ -18,10 +18,12 @@ namespace NeKzBot.Tasks
 		private static string _cacheKey;
 		private static uint _refreshTime;
 		private static uint _delayFactor;
+		private static Fetcher _fetchClient;
 
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Twitch", LogColor.Init);
+			_fetchClient = new Fetcher();
 			_cacheKey = "twitchtv";
 			_refreshTime = 5 * 60 * 1000;   // 5 minutes
 			_delayFactor = 10;
@@ -84,7 +86,7 @@ namespace NeKzBot.Tasks
 							// Save preview image, upload to dropbox and create a link
 							var filename = $"{stream.ChannelName}.jpg";
 							var path = await Utils.GetAppPath() + $"/Resources/Cache/{filename}";
-							await Fetching.GetFileAsync(stream.PreviewLink, path);
+							await _fetchClient.GetFileAsync(stream.PreviewLink, path);
 
 							// Not sure if this is actually a good idea, it delays everything :c
 							await DropboxCom.DeleteFileAsync("TwitchCache", filename);
@@ -96,7 +98,7 @@ namespace NeKzBot.Tasks
 													   ? $"{link}&raw=1"
 													   : stream.PreviewLink;
 
-							foreach (var item in (await Data.Get<Subscribers>("twtvhook")).Subs)
+							foreach (var item in (await Data.Get<Subscription>("twtvhook")).Subscribers)
 							{
 								await WebhookService.ExecuteWebhookAsync(item, new Webhook
 								{

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
@@ -16,70 +15,66 @@ namespace NeKzBot.Resources
 		public static Task<T> Get<T>(string name)
 			where T : class, new()
 		{
-			var index = Manager.FindIndex(data => PatternMatching(data) == name);
+			var index = Manager.FindIndex(data => (data as IData).Name == name);
 			return Task.FromResult((index != -1)
 										  ? (T)((InternalData<T>)Manager[index]).Memory
-										  : null);
+										  : default(T));
 		}
 
 		public static Task<IData> Get(string name)
 		{
-			var index = Manager.FindIndex(data => PatternMatching(data) == name);
+			var index = Manager.FindIndex(data => (data as IData).Name == name);
 			return Task.FromResult((index != -1)
 										  ? (IData)Manager[index]
-										  : null);
+										  : default(IData));
 		}
 
 		public static async Task InitAsync<T>(string name)
 			where T : class, new()
 		{
-			await ((InternalData<T>)Manager[Manager.FindIndex(data => PatternMatching(data) == name)]).Init();
+			await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.InitAsync();
 		}
 
-		public static Task<List<string>> GetNames()
-			=> Task.FromResult(Manager.Select(data => PatternMatching(data))
-									  .ToList());
+		public static async Task ChangeAsync<T>(string name, object newdata)
+			where T : class, new()
+		{
+			await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.Change(newdata);
+		}
 
-		private static Func<object, string> PatternMatching;
+		public static async Task<bool> ExportAsync<T>(string name)
+			where T : class, new()
+		{
+			return await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.ExportAsync();
+		}
+
+		public static Task<IEnumerable<string>> GetNames()
+			=> Task.FromResult(Manager.Select(data => (data as IData).Name));
 
 		public static async Task InitMangerAsync()
 		{
 			await Logger.SendAsync("Initializing Data Manger", LogColor.Init);
-			PatternMatching = obj =>
-			{
-				if (obj is InternalData<Simple> simple)
-					return simple.Name;
-				if (obj is InternalData<Complex> complex)
-					return complex.Name;
-				if (obj is InternalData<Subscribers> subs)
-					return subs.Name;
-				if (obj is InternalData<Portal2Maps> p2map)
-					return p2map.Name;
-				else
-					return null;
-			};
 			Manager = new List<object>
 			{
-				new InternalData<Simple>("cc", true, true, "consolecmds.dat"),
-				new InternalData<Simple>("aa", false, false, "audioaliases.dat"),
-				new InternalData<Simple>("games", true, true, "playingstatus.dat"),
-				new InternalData<Simple>("credits", true, true, "credits.dat"),
-				new InternalData<Simple>("streamers", true, true, "streamers.dat"),
-				new InternalData<Simple>("vips", true, true, "vip.dat"),
-				new InternalData<Complex>("scripts", false, false, "scripts.dat"),
-				new InternalData<Complex>("memes", true, true, "memes.dat"),
-				new InternalData<Complex>("tools", true, true, "tools.dat"),
-				new InternalData<Complex>("links", true, true, "links.dat"),
-				new InternalData<Complex>("projects", true, true, "runs.dat"),
-				new InternalData<Complex>("quotes", true, true, "quotes.dat"),
-				new InternalData<Complex>("sounds", false, false, "sounds.dat"),
-				new InternalData<Complex>("exploits", true, true, "exploits.dat"),
-				new InternalData<Complex>("p2cvars", true, true, "p2cvars.dat"),
-				new InternalData<Subscribers>("p2hook", true, true, "p2subs.dat", Parsers.WebhookDataParser),
-				new InternalData<Subscribers>("srcomsourcehook", true, true, "srsourcesubs.dat", Parsers.WebhookDataParser),
-				new InternalData<Subscribers>("twtvhook", true, true, "twtvsubs.dat", Parsers.WebhookDataParser),
-				new InternalData<Subscribers>("srcomportal2hook", true, true, "srportal2subs.dat", Parsers.WebhookDataParser),
-				new InternalData<Portal2Maps>("p2maps", true, false, "p2maps.dat", Parsers.Portal2MapListParser)
+				new InternalData<Simple>("cc", true, true, "consolecmds"),
+				new InternalData<Simple>("aa", true, false, "audioaliases"),
+				new InternalData<Simple>("games", true, true, "playingstatus"),
+				new InternalData<Simple>("credits", true, true, "credits"),
+				new InternalData<Simple>("streamers", true, true, "streamers"),
+				new InternalData<Simple>("vips", true, true, "vip"),
+				new InternalData<Complex>("scripts", true, true, "scripts"),
+				new InternalData<Complex>("memes", true, true, "memes"),
+				new InternalData<Complex>("tools", true, true, "tools"),
+				new InternalData<Complex>("links", true, true, "links"),
+				new InternalData<Complex>("projects", true, true, "runs"),
+				new InternalData<Complex>("quotes", true, true, "quotes"),
+				new InternalData<Complex>("sounds", true, true, "sounds"),
+				new InternalData<Complex>("exploits", true, true, "exploits"),
+				new InternalData<Complex>("p2cvars", true, true, "p2cvars"),
+				new InternalData<Subscription>("p2hook", true, true, "p2subs"),
+				new InternalData<Subscription>("srcomsourcehook", true, true, "srsourcesubs"),
+				new InternalData<Subscription>("twtvhook", true, true, "twtvsubs"),
+				new InternalData<Subscription>("srcomportal2hook", true, true, "srportal2subs"),
+				new InternalData<Portal2Maps>("p2maps", true, false, "p2maps")
 			};
 		}
 	}

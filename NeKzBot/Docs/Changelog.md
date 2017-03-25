@@ -1,5 +1,15 @@
 ﻿# Changelog
 
+## Version 1.7.0
+* Replaced data pattern matching with data interface casting
+* Replaced data parsing system with json serialization
+* New data changing system
+* New fetching system
+* Added new filter parameter to a speedrun command
+* Added new index parameter to a debug command
+* Added new data statistics command for debugging
+* Small improvements and bug fixes
+
 ## Version 1.6.0
 * Added new commands for speedrun module
 * Added developer only commands for leaderboard module

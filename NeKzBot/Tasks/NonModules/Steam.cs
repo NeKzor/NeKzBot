@@ -13,11 +13,13 @@ namespace NeKzBot.Tasks.NonModules
 {
 	public static class Steam
 	{
+		private static Fetcher _fetchClient;
 		private static string _cacheKey;
 
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing Steam", LogColor.Init);
+			_fetchClient = new Fetcher();
 			_cacheKey = "steam";
 			await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);
 		}
@@ -127,7 +129,7 @@ namespace NeKzBot.Tasks.NonModules
 			var doc = new HtmlDocument();
 			try
 			{
-				doc = await Fetching.GetDocumentAsync(url);
+				doc = await _fetchClient.GetDocumentAsync(url);
 				if (doc == null)
 					return null;
 			}

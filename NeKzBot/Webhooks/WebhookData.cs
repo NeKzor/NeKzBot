@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NeKzBot.Extensions;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
@@ -8,23 +9,31 @@ using NeKzBot.Utilities;
 
 namespace NeKzBot.Webhooks
 {
-	public class Subscribers
+	[JsonObject("subscription")]
+	public class Subscription
 	{
-		public List<WebhookData> Subs { get; set; }
-		public Subscribers()
-			=> Subs = new List<WebhookData>();
-		public Subscribers(List<WebhookData> subs)
-			=> Subs = subs;
+		[JsonProperty("subs")]
+		public List<WebhookData> Subscribers { get; set; }
+		public Subscription()
+			=> Subscribers = new List<WebhookData>();
+		public Subscription(List<WebhookData> subs)
+			=> Subscribers = subs;
 	}
 
+	[JsonObject("webhook")]
 	public class WebhookData
 	{
 		public static InternalWatch Watch { get; set; } = new InternalWatch();
 
+		[JsonProperty("id")]
 		public ulong Id { get; set; }
+		[JsonProperty("token")]
 		public string Token { get; set; }
+		[JsonProperty("guild_id")]
 		public ulong GuildId { get; set; }
+		[JsonProperty("user_id")]
 		public ulong UserId { get; set; }
+		[JsonProperty("name")]
 		public string Name { get; set; }
 
 		public WebhookData()
@@ -39,35 +48,18 @@ namespace NeKzBot.Webhooks
 			UserId = userid;
 		}
 
-		public static async Task<List<WebhookData>> ParseDataAsync(string file)
-		{
-			var list = new List<WebhookData>();
-			var temp = await Utils.ReadFromFileAsync(file) as string[,];
-			for (int i = 0; i < temp.GetLength(0); i++)
-			{
-				list.Add(new WebhookData
-				{
-					Id = ulong.Parse(temp[i, 0]),
-					Token = temp[i, 1],
-					GuildId = ulong.Parse(temp[i, 2]),
-					UserId = ulong.Parse(temp[i, 3])
-				});
-			}
-			return list;
-		}
-
 		public static async Task<bool> SubscribeAsync(string subscription, WebhookData data)
 		{
-			if (await Data.Get<Subscribers>(subscription) is IData sub)
-				if (await Utils.ChangeDataAsync(sub, $"{data.Id}{Utils.DataSeparator}{data.Token}{Utils.DataSeparator}{data.GuildId}{Utils.DataSeparator}{data.UserId}", DataChangeMode.Add) == string.Empty)
+			if (await Data.Get(subscription) != null)
+				if (await Utils.ChangeDataAsync(subscription, $"{data.Id}{Utils.DataSeparator}{data.Token}{Utils.DataSeparator}{data.GuildId}{Utils.DataSeparator}{data.UserId}", DataChangeMode.Add) == DataChangeResult.Success)
 					return await SendTestPing(data);
 			return false;
 		}
 
 		public static async Task<bool> UnsubscribeAsync(string subscription, WebhookData data)
 		{
-			if (await Data.Get<Subscribers>(subscription) is IData sub)
-				if (await Utils.ChangeDataAsync(sub, $"{data.Id}", DataChangeMode.Add) == string.Empty)
+			if (await Data.Get(subscription) != null)
+				if (await Utils.ChangeDataAsync(subscription, data.Id.ToString(), DataChangeMode.Delete) == DataChangeResult.Success)
 					return true;
 			return false;
 		}
@@ -77,8 +69,8 @@ namespace NeKzBot.Webhooks
 			return (bool)(await WebhookService.ExecuteWebhookAsync(data, new Webhook
 			{
 				UserName = (string.IsNullOrEmpty(data.Name))
-								  ? data.Name
-								  : "NeKzHook",
+								  ? "NeKzHook"
+								  : data.Name,
 				AvatarUrl = Bot.Client.CurrentUser.AvatarUrl,
 				Embeds = new Embed[]
 				{

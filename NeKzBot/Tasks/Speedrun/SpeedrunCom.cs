@@ -13,6 +13,7 @@ namespace NeKzBot.Tasks.Speedrun
 	{
 		private static SpeedrunComClient _client;
 		private static List<WebHeader> _headers;
+		private static Fetcher _fetchClient;
 
 		private const int _maxnfcount = 10;
 		private const int _maxnffetchcount = 100;
@@ -20,7 +21,7 @@ namespace NeKzBot.Tasks.Speedrun
 		public static async Task InitAsync()
 		{
 			await Logger.SendAsync("Initializing SpeedrunCom Client", LogColor.Init);
-			_client = new SpeedrunComClient($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", Credentials.Default.SpeedruncomToken, 5);
+			_client = new SpeedrunComClient($"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}", Credentials.Default.SpeedruncomToken);
 
 			// Make custom header
 			_headers = new List<WebHeader>()
@@ -30,6 +31,7 @@ namespace NeKzBot.Tasks.Speedrun
 				new WebHeader("X-API-Key", Credentials.Default.SpeedruncomToken),
 				new WebHeader("User-Agent", $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}")
 			};
+			_fetchClient = new Fetcher(_headers);
 			if (!_client.IsAccessTokenValid)
 				await Logger.SendAsync("Invalid Token", LogColor.Default);
 		}
@@ -110,18 +112,33 @@ namespace NeKzBot.Tasks.Speedrun
 			return null;
 		}
 
-		public static async Task<SpeedrunPlayerProfile> GetPersonalBestOfPlayerAsync(string name)
+		public static async Task<SpeedrunPlayerProfile> GetPersonalBestOfPlayerAsync(string name, PersonalBestFilter filter = default(PersonalBestFilter))
 		{
 			var player = _client.Users.GetUsers(name)?.FirstOrDefault();
 			if (player != null)
 			{
 				try
 				{
-					var pbs = default(Record[]);
-					if (player.PersonalBests.Count > 0)
-						pbs = player.PersonalBests.ToArray();
-					else
+					if (player.PersonalBests.Count <= 0)
 						return new SpeedrunPlayerProfile();
+
+					// Filter
+					var pbs = default(List<Record>);
+					switch (filter)
+					{
+						case PersonalBestFilter.DontCare:
+							pbs = player.PersonalBests.ToList();
+							break;
+						case PersonalBestFilter.Best:
+							pbs = player.PersonalBests.OrderBy(pb => pb.Rank).ToList();
+							break;
+						case PersonalBestFilter.Worst:
+							pbs = player.PersonalBests.OrderByDescending(pb => pb.Rank).ToList();
+							break;
+						case PersonalBestFilter.Oldest:
+							pbs = player.PersonalBests.OrderBy(pb => pb.Date).ToList();
+							break;
+					}
 
 					var profile = new SpeedrunPlayerProfile()
 					{
@@ -131,21 +148,41 @@ namespace NeKzBot.Tasks.Speedrun
 											: string.Empty
 					};
 
+					// Best 5 full game runs
 					var records = new List<SpeedrunPlayerPersonalBest>();
-					foreach (var pb in pbs)
+					foreach (var fullgamepb in pbs.Where(pb => pb.Level == null).Take(5))
 					{
 						var record = new SpeedrunPlayerPersonalBest()
 						{
-							CategoryName = pb.Category.Name,
-							LevelName = pb.Level?.Name,
+							CategoryName = fullgamepb.Category.Name,
+							LevelName = fullgamepb.Level?.Name,
 							Game = new SpeedrunGame
 							{
-								Name = pb.Game.Name,
-								Link = pb.Game.WebLink.AbsoluteUri,
-								CoverLink = pb.Game.Assets.CoverMedium.Uri.AbsoluteUri
+								Name = fullgamepb.Game.Name,
+								Link = fullgamepb.Game.WebLink.AbsoluteUri,
+								CoverLink = fullgamepb.Game.Assets.CoverMedium.Uri.AbsoluteUri
 							},
-							PlayerRank = await TopTenFormat(pb.Rank.ToString()),
-							EntryTime = await FormatTime(pb.Times.Primary.Value)
+							PlayerRank = await TopTenFormat(fullgamepb.Rank.ToString()),
+							EntryTime = await FormatTime(fullgamepb.Times.Primary.Value)
+						};
+						records.Add(record);
+					}
+
+					// Best 5 level runs
+					foreach (var levelrunpb in pbs.Where(pb => pb.Level != null).Take(5))
+					{
+						var record = new SpeedrunPlayerPersonalBest()
+						{
+							CategoryName = levelrunpb.Category.Name,
+							LevelName = levelrunpb.Level?.Name,
+							Game = new SpeedrunGame
+							{
+								Name = levelrunpb.Game.Name,
+								Link = levelrunpb.Game.WebLink.AbsoluteUri,
+								CoverLink = levelrunpb.Game.Assets.CoverMedium.Uri.AbsoluteUri
+							},
+							PlayerRank = await TopTenFormat(levelrunpb.Rank.ToString()),
+							EntryTime = await FormatTime(levelrunpb.Times.Primary.Value)
 						};
 						records.Add(record);
 					}
@@ -454,6 +491,16 @@ namespace NeKzBot.Tasks.Speedrun
 
 		public static async Task<List<SpeedrunNotification>> GetLastNotificationAsync(string scount = "x", string nftype = null)
 		{
+			var json = default(string);
+			try
+			{
+				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}");
+			}
+			catch (Exception e)
+			{
+				return await Logger.SendToChannelAsync("Fetching.GetStringAsync Error (SpeedrunCom.GetLastNotificationAsync)", e) as List<SpeedrunNotification>;
+			}
+
 			try
 			{
 				if (string.Equals(scount, "x", StringComparison.CurrentCultureIgnoreCase))
@@ -463,8 +510,6 @@ namespace NeKzBot.Tasks.Speedrun
 					return null;
 
 				nftype = nftype ?? "any";
-
-				var json = await Fetching.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}", _headers);
 
 				// Read
 				if (string.IsNullOrEmpty(json))
@@ -512,24 +557,32 @@ namespace NeKzBot.Tasks.Speedrun
 			}
 			catch (Exception e)
 			{
-				return await Logger.SendToChannelAsync("SpeedrunCom.GetLastNotificationAsync Error", e) as List<SpeedrunNotification>;
+				return await Logger.SendAsync("SpeedrunCom.GetLastNotificationAsync Error", e) as List<SpeedrunNotification>;
 			}
 		}
 
 		public static async Task<List<SpeedrunNotification>> GetNotificationUpdatesAsync(uint count)
 		{
+			var json = default(string);
 			try
 			{
-				var json = await Fetching.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}", _headers);
+				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}");
+			}
+			catch (Exception e)
+			{
+				return await Logger.SendAsync("Fetching.GetStringAsync Error (SpeedrunCom.GetNotificationUpdatesAsync)", e) as List<SpeedrunNotification>;
+			}
 
+			try
+			{
 				// Read
 				if (string.IsNullOrEmpty(json))
-					return await Logger.SendToChannelAsync("SpeedrunCom.GetNotificationUpdatesAsync JSON Error", LogColor.Error) as List<SpeedrunNotification>;
+					return await Logger.SendAsync("SpeedrunCom.GetNotificationUpdatesAsync JSON Error", LogColor.Error) as List<SpeedrunNotification>;
 
 				// Read json string
 				dynamic api = JsonConvert.DeserializeObject(json);
 				if (string.IsNullOrEmpty(api?.ToString()))
-					return await Logger.SendToChannelAsync("SpeedrunCom.GetNotificationUpdatesAsync API Error", LogColor.Error) as List<SpeedrunNotification>;
+					return await Logger.SendAsync("SpeedrunCom.GetNotificationUpdatesAsync API Error", LogColor.Error) as List<SpeedrunNotification>;
 
 				// Parse data
 				var updates = new List<SpeedrunNotification>();
@@ -566,7 +619,7 @@ namespace NeKzBot.Tasks.Speedrun
 			}
 			catch (Exception e)
 			{
-				return await Logger.SendToChannelAsync("SpeedrunCom.GetNotificationUpdatesAsync Error", e) as List<SpeedrunNotification>;
+				return await Logger.SendAsync("SpeedrunCom.GetNotificationUpdatesAsync Error", e) as List<SpeedrunNotification>;
 			}
 		}
 

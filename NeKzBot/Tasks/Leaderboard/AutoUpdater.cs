@@ -56,7 +56,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					for (;;)
 					{
-						await Logger.SendAsync("Portal2.AutoUpdater.StartAsync Checking", LogColor.Leaderboard);
+						await Logger.SendAsync("Portal2 AutoUpdater Checking", LogColor.Leaderboard);
 						// Get cache from file
 						var cache = await Caching.CFile.GetFileAsync(_cacheKey);
 						if (cache == null)
@@ -88,7 +88,7 @@ namespace NeKzBot.Tasks.Leaderboard
 								foreach (var update in sendupdates)
 								{
 									// RIP channel messages, webhooks are the future
-									foreach (var item in (await Data.Get<Subscribers>("p2hook")).Subs)
+									foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
 									{
 										await WebhookService.ExecuteWebhookAsync(item, new Webhook
 										{

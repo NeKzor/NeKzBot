@@ -81,8 +81,6 @@ namespace NeKzBot.Tasks.Leaderboard
 
 		public static async Task<List<Portal2EntryUpdate>> GetEntryUpdateAsync(string url, uint count)
 		{
-			await Logger.SendAsync("Portal 2 Entry Update Request", LogColor.Leaderboard);
-
 			var doc = await Cache.GetAsync(url, true);
 			if (doc != null)
 			{

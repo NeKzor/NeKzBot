@@ -9,6 +9,7 @@ namespace NeKzBot.Tasks.NonModules
 {
 	public static class AutoDownloader
 	{
+		private static readonly Fetcher _fetchClient = new Fetcher();
 		private static string _cacheKey;
 
 		public const uint MaxFilesPerFolder = 20;
@@ -31,15 +32,16 @@ namespace NeKzBot.Tasks.NonModules
 						if ((extension == ".dem")
 						|| (extension == ".sav"))
 						{
+							var mention = args.User.Mention;
 							// Maximum 5000KB
 							if (file.Size > _maxfilesize)
 							{
-								await args.Channel.SendMessage($"File {await Utils.AsRawText(filename)} is too large for an upload (max. {_maxfilesize}KB).");
+								await args.Channel.SendMessage($"{mention} File {await Utils.AsRawText(filename)} is too large for an upload (max. {_maxfilesize}KB).");
 								continue;
 							}
 							else if (file.Size == 0)
 							{
-								await args.Channel.SendMessage($"File {await Utils.AsRawText(filename)} seems to be broken.");
+								await args.Channel.SendMessage($"{mention} File {await Utils.AsRawText(filename)} seems to be broken.");
 								continue;
 							}
 
@@ -47,7 +49,7 @@ namespace NeKzBot.Tasks.NonModules
 							_cacheKey = _cacheKey ?? "dropbox";
 							try
 							{
-								await Fetching.GetFileAndCacheAsync(file.Url, _cacheKey);
+								await _fetchClient.GetFileAndCacheAsync(file.Url, _cacheKey);
 							}
 							catch (Exception e)
 							{
@@ -77,15 +79,16 @@ namespace NeKzBot.Tasks.NonModules
 							}
 
 							// Send file to Dropbox
-							var msg = await args.Channel.SendMessage("Uploading...");
+							var msg = await args.Channel.SendMessage($"{mention} Uploading...");
+							var sent = $"{mention} Uploaded {await Utils.AsRawText(filename)} to Dropbox.";
 							if (await DropboxCom.UploadAsync(path, filename, cacheFile))
-								await msg.Edit($"Uploaded {await Utils.AsRawText(filename)} to Dropbox.");
+								await msg.Edit(sent);
 							else
-								await msg.Edit("**Upload error.**");
+								await msg.Edit($"{mention} **Upload error.**");
 
 							var link = await DropboxCom.CreateLinkAsync($"{path}/{filename}");
 							if (!(string.IsNullOrEmpty(link)))
-								await msg.Edit($"{msg.RawText}\nDownload: <{link}>");
+								await msg.Edit($"{sent}\nDownload: <{link}>");
 						}
 					}
 				}

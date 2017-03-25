@@ -26,6 +26,7 @@ namespace NeKzBot.Classes
 	public static class TwitchTv
 	{
 		private static readonly string _twitchApi = "https://api.twitch.tv";
+		private static readonly Fetcher _fetchClient = new Fetcher();
 
 		public static async Task<dynamic> GetStreamAsync(string channel)
 		{
@@ -34,7 +35,7 @@ namespace NeKzBot.Classes
 			try
 			{
 				// Download
-				json = await Fetching.GetStringAsync($"{_twitchApi}/kraken/streams/{channel}?client_id={Credentials.Default.TwitchClientId}");
+				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/streams/{channel}?client_id={Credentials.Default.TwitchClientId}");
 			}
 			catch (Exception e)
 			{
@@ -59,7 +60,7 @@ namespace NeKzBot.Classes
 			try
 			{
 				// Download
-				json = await Fetching.GetStringAsync($"{_twitchApi}/kraken/channels/{channel}?client_id={Credentials.Default.TwitchClientId}");
+				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/channels/{channel}?client_id={Credentials.Default.TwitchClientId}");
 			}
 			catch (Exception e)
 			{
@@ -84,7 +85,7 @@ namespace NeKzBot.Classes
 			try
 			{
 				// Download
-				json = await Fetching.GetStringAsync($"{_twitchApi}/kraken/search/games?query={WebUtility.UrlEncode(game)}&client_id={Credentials.Default.TwitchClientId}&type=suggest");
+				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/search/games?query={WebUtility.UrlEncode(game)}&client_id={Credentials.Default.TwitchClientId}&type=suggest");
 			}
 			catch (Exception e)
 			{

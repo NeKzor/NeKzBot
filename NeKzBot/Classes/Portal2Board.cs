@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace NeKzBot.Classes
 {
+	[JsonObject("portal2maps")]
 	public sealed class Portal2Maps
 	{
+		[JsonProperty("map_list")]
 		public List<Portal2Map> Maps { get; set; }
 
 		public Portal2Maps()
@@ -27,14 +30,22 @@ namespace NeKzBot.Classes
 		}
 	}
 
+	[JsonObject("map")]
 	public sealed class Portal2Map
 	{
+		[JsonProperty("name")]
 		public string Name { get; set; }
+		[JsonProperty("cm_name")]
 		public string ChallengeModeName { get; set; }
+		[JsonProperty("best_time_id")]
 		public string BestTimeId { get; set; }
+		[JsonProperty("best_portals_id")]
 		public string BestPortalsId { get; set; }
+		[JsonProperty("three_letter_code")]
 		public string ThreeLetterCode { get; set; }
+		[JsonProperty("elevator_timing")]
 		public string ElevatorTiming { get; set; }
+		[JsonProperty("map_filter")]
 		public MapFilter Filter { get; set; }
 	}
 

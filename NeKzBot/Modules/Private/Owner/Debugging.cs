@@ -145,10 +145,10 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							var p2hooks = (await Data.Get<Subscribers>("p2hook")).Subs;
-							var srcomsourcehooks = (await Data.Get<Subscribers>("srcomsourcehook")).Subs;
-							var srcomportal2hooks = (await Data.Get<Subscribers>("srcomportal2hook")).Subs;
-							var twtvhooks = (await Data.Get<Subscribers>("twtvhook")).Subs;
+							var p2hooks = (await Data.Get<Subscription>("p2hook"))?.Subscribers;
+							var srcomsourcehooks = (await Data.Get<Subscription>("srcomsourcehook"))?.Subscribers;
+							var srcomportal2hooks = (await Data.Get<Subscription>("srcomportal2hook"))?.Subscribers;
+							var twtvhooks = (await Data.Get<Subscription>("twtvhook"))?.Subscribers;
 							if (new List<List<WebhookData>> { p2hooks, srcomsourcehooks, srcomportal2hooks, twtvhooks }.Contains(null))
 							{
 								await e.Channel.SendMessage("**Failed** to load data from data manager.");
@@ -162,7 +162,8 @@ namespace NeKzBot.Modules.Private.Owner
 							var errorcount = 0;
 							var totalhooks = p2hooks?.Count + srcomsourcehooks?.Count + srcomportal2hooks?.Count + twtvhooks?.Count;
 
-							foreach (var data in p2hooks)
+							// Converting to array, whatever lol
+							foreach (var data in p2hooks.ToArray())
 							{
 								if (await WebhookService.GetWebhookAsync(data, true) == null)
 								{
@@ -175,7 +176,7 @@ namespace NeKzBot.Modules.Private.Owner
 										errorcount++;
 								}
 							}
-							foreach (var data in srcomsourcehooks)
+							foreach (var data in srcomsourcehooks.ToArray())
 							{
 								if (await WebhookService.GetWebhookAsync(data, true) == null)
 								{
@@ -188,7 +189,7 @@ namespace NeKzBot.Modules.Private.Owner
 										errorcount++;
 								}
 							}
-							foreach (var data in srcomportal2hooks)
+							foreach (var data in srcomportal2hooks.ToArray())
 							{
 								if (await WebhookService.GetWebhookAsync(data, true) == null)
 								{
@@ -201,7 +202,7 @@ namespace NeKzBot.Modules.Private.Owner
 										errorcount++;
 								}
 							}
-							foreach (var data in twtvhooks)
+							foreach (var data in twtvhooks.ToArray())
 							{
 								if (await WebhookService.GetWebhookAsync(data, true) == null)
 								{

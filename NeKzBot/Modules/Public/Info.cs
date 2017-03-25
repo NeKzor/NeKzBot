@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Resources;
@@ -44,21 +46,24 @@ namespace NeKzBot.Modules.Public
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"\n**Log Level** {Bot.Client.Config.LogLevel}"
-													  + $"\n**Total Shards** {Bot.Client.Config.TotalShards}"
-													  + $"\n**Cache Dir** {Bot.Client.Config.CacheDir}"
-													  + $"\n**User Discriminator** {Bot.Client.CurrentUser.Discriminator.ToString("D4")}"
-													  + $"\n**User Id** {Bot.Client.CurrentUser.Id}"
-													  + $"\n**GatewaySocket Hosts** {Bot.Client.GatewaySocket.Host.Count()}"
-													  + $"\n**Current Game** {await Utils.AsRawText(Bot.Client.CurrentGame.Name)}"
-													  + $"\n**Regions** {Bot.Client.Regions.Count()}"
-													  + $"\n**Servers** {Bot.Client.Servers.Count()}"
-													  + $"\n**Commands** {CService.AllCommands.Count()}"
-													  + $"\n**Services** {Bot.Client.Services.Count()}"
-													  + $"\n**Error Count** {Logger.ErrorCount}"
-													  + $"\n**Heap Size** {Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB"
-													  + $"\n**Application Uptime** {(await Utils.GetUptime()).ToString(@"hh\:mm\:ss")}"
-							);
+							var workers = 0;
+							var ports = 0;
+							await Task.Run(() => ThreadPool.GetMaxThreads(out workers, out ports));
+							await e.Channel.SendMessage($"\n**Log Level** {Bot.Client.Config.LogLevel}" +
+														$"\n**Total Shards** {Bot.Client.Config.TotalShards}" +
+														$"\n**Cache Dir** {Bot.Client.Config.CacheDir}" +
+														$"\n**User Discriminator** {Bot.Client.CurrentUser.Discriminator.ToString("D4")}" +
+														$"\n**User Id** {Bot.Client.CurrentUser.Id}" +
+														$"\n**GatewaySocket Hosts** {Bot.Client.GatewaySocket.Host.Count()}" +
+														$"\n**Current Game** {await Utils.AsRawText(Bot.Client.CurrentGame.Name)}" +
+														$"\n**Regions** {Bot.Client.Regions.Count()}" +
+														$"\n**Servers** {Bot.Client.Servers.Count()}" +
+														$"\n**Commands** {CService.AllCommands.Count()}" +
+														$"\n**Services** {Bot.Client.Services.Count()}" +
+														$"\n**Error Count** {Logger.ErrorCount}" +
+														$"\n**Heap Size** {Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB" +
+														$"\n**Application Uptime** {(await Utils.GetUptime()).ToString(@"hh\:mm\:ss")}" +
+														$"\n**Thread Count** {Process.GetCurrentProcess().Threads.Count}/{workers}/{ports}");
 						});
 
 				GBuilder.CreateCommand("version")
@@ -74,9 +79,9 @@ namespace NeKzBot.Modules.Public
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"**Version {Configuration.Default.AppVersion}**"
-													  + Data.LatestChangelog
-													  + $"\nRead more here: <{Configuration.Default.AppUrl}/blob/master/NeKzBot/Docs/Changelog.md#version-{Configuration.Default.AppVersion.Replace(".", string.Empty)}>");
+							await e.Channel.SendMessage($"**Version {Configuration.Default.AppVersion}**" +
+														Data.LatestChangelog +
+														$"\nRead more here: <{Configuration.Default.AppUrl}/blob/master/NeKzBot/Docs/Changelog.md#version-{Configuration.Default.AppVersion.Replace(".", string.Empty)}>");
 						});
 
 				GBuilder.CreateCommand("guilds")
@@ -87,10 +92,10 @@ namespace NeKzBot.Modules.Public
 							var guilds = Bot.Client.Servers.OrderBy(server => server.Name).ToList();
 							foreach (var guild in guilds)
 							{
-								output += $"\n• {await Utils.AsRawText(guild.Name)} (ID {guild.Id})"
-										+ $"\n\t• Owner {await Utils.AsRawText(guild.Owner?.Name) ?? "_Unknown._"} (ID {guild.Owner.Id})"
-										+ $"\n\t• Users {guild.Users.Count(user => !(user.IsBot))}"
-										+ $"\n\t• Bots {guild.Users.Count(user => user.IsBot)}";
+								output += $"\n• {await Utils.AsRawText(guild.Name)} (ID {guild.Id})" +
+										  $"\n\t• Owner {await Utils.AsRawText(guild.Owner?.Name) ?? "_Unknown._"} (ID {guild.Owner.Id})" +
+										  $"\n\t• Users {guild.Users.Count(user => !(user.IsBot))}" +
+										  $"\n\t• Bots {guild.Users.Count(user => user.IsBot)}";
 							}
 							var msg = await Utils.CutMessageAsync($"**Guild Count: {Bot.Client.Servers.Count()}**{output}", badchars: false);
 							if (guilds.Count > 3)
@@ -160,10 +165,9 @@ namespace NeKzBot.Modules.Public
 						foreach (var item in highestids)
 							output2 += $"• {await Utils.AsRawText(item.Name)}#{item.Discriminator.ToString("D4")}\n";
 
-						await e.Channel.SendMessage($"{(lowestids.Count > 1 ? $"Lowest IDs\n{output1}" : $"Lowest ID • {await Utils.AsRawText(lowestid.Name)}#{lowestid.Discriminator.ToString("D4")}\n")}"
-												  + $"{(highestids.Count > 1 ? $"Highest IDs\n{output2}" : $"Highest ID • {await Utils.AsRawText(highestid.Name)}#{highestid.Discriminator.ToString("D4")}\n")}"
-												  + $"Average ID • #{((ulong)Math.Round((decimal)sumids / users.Length, 0)).ToString("D4")}"
-						);
+						await e.Channel.SendMessage($"{(lowestids.Count > 1 ? $"Lowest IDs\n{output1}" : $"Lowest ID • {await Utils.AsRawText(lowestid.Name)}#{lowestid.Discriminator.ToString("D4")}\n")}" +
+													$"{(highestids.Count > 1 ? $"Highest IDs\n{output2}" : $"Highest ID • {await Utils.AsRawText(highestid.Name)}#{highestid.Discriminator.ToString("D4")}\n")}" +
+													$"Average ID • #{((ulong)Math.Round((decimal)sumids / users.Length, 0)).ToString("D4")}");
 					});
 			return Task.FromResult(0);
 		}

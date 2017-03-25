@@ -34,7 +34,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.6.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.7.0")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));

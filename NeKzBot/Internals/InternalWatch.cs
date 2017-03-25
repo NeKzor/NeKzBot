@@ -87,8 +87,7 @@ namespace NeKzBot.Internals
 
 		private Task Stop()
 		{
-			if (_watch != null)
-				_watch.Stop();
+			_watch?.Stop();
 			return Task.FromResult(0);
 		}
 	}

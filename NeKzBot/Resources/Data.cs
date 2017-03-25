@@ -98,15 +98,14 @@ namespace NeKzBot.Resources
 		public const string SpeedrunComSourceWebhookKeyword = "source";
 		public const string SpeedrunComPortal2WebhookKeyword = "portal2";
 		public const string TwitchTvWebhookKeyword = "twitch";
-		public const string LatestChangelog = "\n• Added new commands for speedrun module" +
-											  "\n• Added developer only commands for leaderboard module" +
-											  "\n• Added automatic restarter on unhandled class exception" +
-											  "\n• Changed cloud module permission to vip only" +
-											  "\n• Added a task to generate module lists automatically" +
-											  "\n• Replaced WebClients with HttpClients in fetching system" +
-											  "\n• Fixed caching system and improved its logic" +
-											  "\n• Improved internal data manager" +
-											  "\n• Lots of bug fixes";
+		public const string LatestChangelog = "\n• Replaced data pattern matching with data interface casting" +
+											  "\n• Replaced data parsing system with json serialization" +
+											  "\n• New data changing system" +
+											  "\n• New fetching system" +
+											  "\n• Added new filter parameter to a speedrun command" +
+											  "\n• Added new index parameter to a debug command" +
+											  "\n• Added new data statistics command for debugging" +
+											  "\n• Small improvements and bug fixes";
 
 		public static async Task GenerateModuleListsAsync()
 		{

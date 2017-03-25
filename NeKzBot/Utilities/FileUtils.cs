@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using NeKzBot.Classes;
+using Newtonsoft.Json;
 using NeKzBot.Internals;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -16,185 +15,227 @@ namespace NeKzBot.Utilities
 		public const char DataSeparator = '|';
 		private const int _maxarraycount = 128;
 
-		public static async Task<object> ReadFromFileAsync(string name)
+		public static async Task<T> ReadJson<T>(string file)
+			where T : class, new()
 		{
-			var file = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, name);
-			if (!(File.Exists(file)))
-				return null;
-
-			var input = new string[_maxarraycount];
-			var array = default(string[,]);
-
-			try
+			var path = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, file);
+			if (File.Exists(path))
 			{
-				using (var fs = new FileStream(file, FileMode.Open))
-				using (var sr = new StreamReader(fs))
+				try
 				{
-					while (!sr.EndOfStream)
-						input = (await sr.ReadToEndAsync()).Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-					if (input[0].Contains(DataSeparator))
-						array = new string[input.Length, input[0].Split(DataSeparator).Length];
-					else
-						return input;
-
-					for (int i = 0; i < input.Length; i++)
-						for (int j = 0; j < input[i].Split(DataSeparator).Length; j++)
-							array[i, j] = input[i].Split(DataSeparator)[j];
+					return JsonConvert.DeserializeObject<T>(File.ReadAllText(path));
+				}
+				catch (Exception e)
+				{
+					await Logger.SendAsync("Utils.ReadJson Error", e);
 				}
 			}
-			catch
-			{
-				return null;
-			}
-			return array;
+			return default(T);
 		}
 
-		public static async Task<string> ChangeDataAsync(IData data, string value, DataChangeMode mode)
+		public static async Task<bool> WriteJson(object obj, string file)
 		{
-			// Fail safe
-			var file = data.FileName;
-			var filepath = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, file);
-			if (!(File.Exists(filepath)))
-				return DataError.FileNotFound;
-
-			var values = default(List<string>);
-			if (mode == DataChangeMode.Add)
+			var path = Path.Combine(await GetAppPath(), Configuration.Default.DataPath, file);
+			try
 			{
-				values = value.Split(DataSeparator)
-							  .ToList();
-				foreach (var item in values)
-					if (item == string.Empty)
-						return DataError.InvalidValues;
+				File.WriteAllText(path, JsonConvert.SerializeObject(obj));
+				return true;
 			}
-
-			// Pattern matching
-			var dimensions = 1;
-			var collection = default(List<string>);
-			var foundindex = default(int);
-			var memory = data.Memory;
-			if (memory == null)
-				return DataError.DataMissing;
-			if (memory is Complex complex)
+			catch (Exception e)
 			{
-				var count = 0;
-				for (; count < complex.Values.Count; count++)
-					if (await SearchCollection(complex.Values[count].Value, value, out foundindex))
-						break;
+				await Logger.SendAsync("Utils.WriteJson Error", e);
+			}
+			return false;
+		}
 
-				if ((foundindex != -1)
-				&& (mode == DataChangeMode.Delete))
+		public static async Task<DataChangeResult> ChangeDataAsync(string name, string values, DataChangeMode mode)
+		{
+			switch (mode)
+			{
+				case DataChangeMode.Add:
+					return await AddDataAsync(name, values);
+				case DataChangeMode.Delete:
+					return await RemoveDataAsync(name, values);
+			}
+			return default(DataChangeResult);
+		}
+
+		public static async Task<DataChangeResult> AddDataAsync(string name, string values)
+		{
+			if (await Data.Get(name) is IData data)
+			{
+				if (data.ReadWriteAllowed)
 				{
-					foundindex += count;
-					var temp = await ReadFromFileAsync(file) as string[,];
-					dimensions = temp.GetLength(1);
-					collection = temp.Cast<string>()
-									 .ToList();
-					for (int i = 0; i < dimensions; i++)
-						collection.RemoveAt(foundindex * dimensions);
-				}
-				else if ((foundindex == -1)
-				&& (mode == DataChangeMode.Add))
-				{
-					var temp = await ReadFromFileAsync(file) as string[,];
-					if (temp.GetLength(1) != values.Count)
-						return DataError.InvalidDimensions;
-					collection = temp.Cast<string>()
-									 .ToList();
-					foreach (var item in values)
-						collection.Add(item);
+					var memory = data.Memory;
+					if (memory is Simple simple)
+					{
+						if (values.Contains(DataSeparator))
+							return DataChangeResult.InvalidInput;
+						else
+						{
+							if (simple.Search(values) != null)
+								return DataChangeResult.Dupulicate;
+							else
+							{
+								simple.Value.Add(values);
+								await Data.ChangeAsync<Simple>(name, simple);
+								if (await Data.ExportAsync<Simple>(name))
+									return DataChangeResult.Success;
+								else
+									return DataChangeResult.ExportFailed;
+							}
+						}
+					}
+					else if (memory is Complex complex)
+					{
+						if (!(values.Contains(DataSeparator)))
+							return DataChangeResult.SeparatorNotFound;
+						else
+						{
+							if (complex.Values.Find(temp => temp.Value.FirstOrDefault() == values.Split('|').First()) != null)
+								return DataChangeResult.Dupulicate;
+							else
+							{
+								var temp = values.Split('|').ToList();
+								if (temp.Count != complex.Values.First().Value.Count)
+									return DataChangeResult.InvalidCount;
+								else
+								{
+									complex.Values.Add(new Simple(temp));
+									await Data.ChangeAsync<Complex>(name, complex);
+									if (await Data.ExportAsync<Complex>(name))
+										return DataChangeResult.Success;
+									else
+										return DataChangeResult.ExportFailed;
+								}
+							}
+						}
+					}
+					else if (memory is Subscription subscription)
+					{
+						var temp = values.Split(DataSeparator).ToList();
+						if (temp?.Count == 4)
+						{
+							if ((ulong.TryParse(temp[0], out var id))
+							&& (ulong.TryParse(temp[2], out var guildid))
+							&& (ulong.TryParse(temp[3], out var userid))
+							&& !(string.IsNullOrEmpty(temp[1])))
+							{
+								if (subscription.Subscribers.Find(sub => sub.Id == id) != null)
+									return DataChangeResult.Dupulicate;
+								else
+								{
+									subscription.Subscribers.Add(new WebhookData
+									{
+										Id = id,
+										Token = temp[1],
+										GuildId = guildid,
+										UserId = userid
+									});
+									await Data.ChangeAsync<Subscription>(name, subscription);
+									if (await Data.ExportAsync<Subscription>(name))
+										return DataChangeResult.Success;
+									else
+										return DataChangeResult.ExportFailed;
+								}
+							}
+							else
+								return DataChangeResult.IncorrectType;
+						}
+						else
+							return DataChangeResult.IncorrectValues;
+					}
+					else
+						return DataChangeResult.NotImplemented;
 				}
 				else
-					return DataError.NameNotFound;
-				var result = await WriteToFileAsync(collection, dimensions, filepath);
-				if (!(string.IsNullOrEmpty(result)))
-					return result;
-				await Data.InitAsync<Complex>(data.Name);
-			}
-			else if (memory is Simple simple)
-			{
-				await SearchCollection(simple.Value, value, out foundindex);
-				if ((foundindex != -1)
-				&& (mode == DataChangeMode.Delete))
-				{
-					collection = (await ReadFromFileAsync(file) as string[]).ToList();
-					for (int i = 0; i < dimensions; i++)
-						collection.RemoveAt(foundindex * dimensions);
-				}
-				else if ((foundindex == -1)
-				&& (mode == DataChangeMode.Add))
-				{
-					collection = (await ReadFromFileAsync(file) as string[]).ToList();
-					foreach (var item in values)
-						collection.Add(item);
-				}
-				else
-					return DataError.NameNotFound;
-				var result = await WriteToFileAsync(collection, dimensions, filepath);
-				if (!(string.IsNullOrEmpty(result)))
-					return result;
-				await Data.InitAsync<Simple>(data.Name);
-			}
-			else if (memory is Subscribers sub)
-			{
-				if (((foundindex = sub.Subs.FindIndex(s => s.Id.ToString() == value)) != -1)
-				&& (mode == DataChangeMode.Delete))
-				{
-					var temp = await ReadFromFileAsync(file) as string[,];
-					dimensions = temp.GetLength(1);
-					collection = temp.Cast<string>()
-									 .ToList();
-					for (int i = 0; i < dimensions; i++)
-						collection.RemoveAt(foundindex * dimensions);
-				}
-				else if ((foundindex == -1)
-				&& (mode == DataChangeMode.Add))
-				{
-					var temp = await ReadFromFileAsync(file) as string[,];
-					if (temp.GetLength(1) != values.Count)
-						return DataError.InvalidDimensions;
-					collection = temp.Cast<string>()
-									 .ToList();
-					foreach (var item in values)
-						collection.Add(item);
-				}
-				else
-					return DataError.NameNotFound;
-				var result = await WriteToFileAsync(collection, dimensions, filepath);
-				if (!(string.IsNullOrEmpty(result)))
-					return result;
-				await Data.InitAsync<Subscribers>(data.Name);
+					return DataChangeResult.NotAllowed;
 			}
 			else
-				return DataError.Unknown;
-			return null;
+				return DataChangeResult.NameNotFound;
 		}
 
-		private static async Task<string> WriteToFileAsync(List<string> collection, int dimensions, string filepath)
+		public static async Task<DataChangeResult> RemoveDataAsync(string name, string value)
 		{
-			try
+			if (await Data.Get(name) is IData data)
 			{
-				using (var fs = new FileStream(filepath, FileMode.Create))
-				using (var sw = new StreamWriter(fs))
+				if (data.ReadWriteAllowed)
 				{
-					for (int i = 0; i < collection.Count; i += dimensions)
+					var memory = data.Memory;
+					if (memory is Simple simple)
 					{
-						for (int j = 0; j < dimensions; j++)
+						if (simple.Search(value) == null)
+							return DataChangeResult.NoMatch;
+						else
 						{
-							await sw.WriteAsync(collection[i + j]);
-							if (j + 1 != dimensions)
-								await sw.WriteAsync(DataSeparator);
+							simple.Value.Remove(value);
+							await Data.ChangeAsync<Simple>(name, simple);
+							if (await Data.ExportAsync<Simple>(name))
+								return DataChangeResult.Success;
+							else
+								return DataChangeResult.ExportFailed;
 						}
-						if (i + dimensions != collection.Count)
-							await sw.WriteAsync("\n");
 					}
+					else if (memory is Complex complex)
+					{
+						var found = complex.Values.Find(temp => temp.Value.FirstOrDefault() == value);
+						if (found == null)
+							return DataChangeResult.NoMatch;
+						else
+						{
+							complex.Values.Remove(found);
+							await Data.ChangeAsync<Complex>(name, complex);
+							if (await Data.ExportAsync<Complex>(name))
+								return DataChangeResult.Success;
+							else
+								return DataChangeResult.ExportFailed;
+						}
+					}
+					else if (memory is Subscription subscription)
+					{
+						if (ulong.TryParse(value, out var id))
+						{
+							var found = subscription.Subscribers.Find(sub => sub.Id == id);
+							if (found == null)
+								return DataChangeResult.NoMatch;
+							else
+							{
+								subscription.Subscribers.Remove(found);
+								await Data.ChangeAsync<Subscription>(name, subscription);
+								if (await Data.ExportAsync<Subscription>(name))
+									return DataChangeResult.Success;
+								else
+									return DataChangeResult.ExportFailed;
+							}
+						}
+						else
+							return DataChangeResult.IncorrectType;
+					}
+					else
+						return DataChangeResult.NotImplemented;
 				}
+				else
+					return DataChangeResult.NotAllowed;
 			}
-			catch
-			{
-				return DataError.InvalidStream;
-			}
-			return null;
+			else
+				return DataChangeResult.NameNotFound;
 		}
+	}
+
+	public enum DataChangeResult
+	{
+		Error,
+		Success,
+		InvalidInput,
+		Dupulicate,
+		ExportFailed,
+		SeparatorNotFound,
+		IncorrectType,
+		IncorrectValues,
+		NotAllowed,
+		NotImplemented,
+		NameNotFound,
+		NoMatch,
+		InvalidCount
 	}
 }

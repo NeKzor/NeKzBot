@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
@@ -253,14 +254,34 @@ namespace NeKzBot.Modules.Public
 		{
 			CService.CreateCommand(c)
 					.Alias($"{Configuration.Default.PrefixCmd}pb")
-					.Description("Shows you the personal bests of a player.")
+					.Description("Shows you the personal bests of a player (best five of full game runs and level runs). You can filter your records with these keywords: `best`, `worst`, `oldest`.")
 					.Parameter("player", ParameterType.Required)
+					.Parameter("filter", ParameterType.Optional)
 					.Do(async e =>
 					{
 						if (!(string.IsNullOrEmpty(e.Args[0])))
 						{
 							await e.Channel.SendIsTyping();
-							var result = await SpeedrunCom.GetPersonalBestOfPlayerAsync(e.Args[0]);
+							var result = default(SpeedrunPlayerProfile);
+							var player = e.GetArg("player");
+							var filter = e.GetArg("filter");
+							if (!(string.IsNullOrEmpty(filter)))
+							{
+								if (string.Equals(filter, "best", StringComparison.CurrentCultureIgnoreCase))
+									result = await SpeedrunCom.GetPersonalBestOfPlayerAsync(player, PersonalBestFilter.Best);
+								else if (string.Equals(filter, "worst", StringComparison.CurrentCultureIgnoreCase))
+									result = await SpeedrunCom.GetPersonalBestOfPlayerAsync(player, PersonalBestFilter.Worst);
+								else if (string.Equals(filter, "oldest", StringComparison.CurrentCultureIgnoreCase))
+									result = await SpeedrunCom.GetPersonalBestOfPlayerAsync(player, PersonalBestFilter.Oldest);
+								else
+								{
+									await e.Channel.SendMessage("This filter name does not exist. Try one of these: `best`, `worst`, `oldest`.");
+									return;
+								}
+							}
+							else
+								result = await SpeedrunCom.GetPersonalBestOfPlayerAsync(player);
+
 							if (result == null)
 								await e.Channel.SendMessage("Couldn't parse a profile with this name.");
 							else if (result.PersonalBests == null)
@@ -280,7 +301,7 @@ namespace NeKzBot.Modules.Public
 								foreach (var item in result.PersonalBests)
 								{
 									var temp = $"\n{item.PlayerRank} • {await Utils.AsRawText(item.Game.Name)} • {await Utils.AsRawText(item.CategoryName)} • {await Utils.AsRawText(item.LevelName)} in {item.EntryTime}";
-									if ((item.LevelName == null)
+									if ((item.LevelName != null)
 									&& ((levelruns.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField))
 										levelruns += temp;
 								}

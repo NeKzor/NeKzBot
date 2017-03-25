@@ -9,11 +9,11 @@ using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Public.Vip
 {
-	public class Subscription : CommandModule
+	public class Service : CommandModule
 	{
 		public static async Task LoadAsync()
 		{
-			await Logger.SendAsync("Loading Subscription Module", LogColor.Init);
+			await Logger.SendAsync("Loading Service Module", LogColor.Init);
 			await SubscriptionCommands(Configuration.Default.BotCmd);
 		}
 
@@ -52,8 +52,8 @@ namespace NeKzBot.Modules.Public.Vip
 
 							// Fail safe :)
 							var username = (string.IsNullOrEmpty(e.GetArg("username")))
-												  ? e.GetArg("username")
-												  : "NeKzHook";
+												  ? "NeKzHook"
+												  : e.GetArg("username");
 							if ((username.Length < 2)
 							|| (username.Length > 100)
 							|| (username.ToUpper().Contains("CLYDE")))
@@ -89,10 +89,6 @@ namespace NeKzBot.Modules.Public.Vip
 								case Data.TwitchTvWebhookKeyword:
 									result = await WebhookData.SubscribeAsync("twtvhook", data);
 									break;
-								default:
-									await e.Channel.SendIsTyping();
-									await e.Channel.SendMessage(Data.SubscriptionListMessage);
-									return;
 							}
 
 							if (result)
@@ -128,14 +124,14 @@ namespace NeKzBot.Modules.Public.Vip
 							}
 							var data = new WebhookData { Id = id };
 
-							var result = default(Subscribers);
-							if ((result = await Data.Get<Subscribers>("p2hook")).Subs.FindIndex(x => x.Id == id) == -1)
+							var result = default(Subscription);
+							if ((result = await Data.Get<Subscription>("p2hook")).Subscribers.FindIndex(x => x.Id == id) == -1)
 							{
-								if ((result = await Data.Get<Subscribers>("srcomsourcehook")).Subs.FindIndex(x => x.Id == id) == -1)
+								if ((result = await Data.Get<Subscription>("srcomsourcehook")).Subscribers.FindIndex(x => x.Id == id) == -1)
 								{
-									if ((result = await Data.Get<Subscribers>("srcomportal2hook")).Subs.FindIndex(x => x.Id == id) == -1)
+									if ((result = await Data.Get<Subscription>("srcomportal2hook")).Subscribers.FindIndex(x => x.Id == id) == -1)
 									{
-										if ((result = await Data.Get<Subscribers>("twtvhook")).Subs.FindIndex(x => x.Id == id) == -1)
+										if ((result = await Data.Get<Subscription>("twtvhook")).Subscribers.FindIndex(x => x.Id == id) == -1)
 										{
 											await e.Channel.SendMessage("Could not find the given webhook id.");
 											return;
@@ -144,7 +140,7 @@ namespace NeKzBot.Modules.Public.Vip
 								}
 							}
 
-							if ((e.User.Id != result.Subs?.FirstOrDefault(x => x.Id == id)?.UserId)
+							if ((e.User.Id != result.Subscribers?.FirstOrDefault(x => x.Id == id)?.UserId)
 							|| (e.User.Id != Credentials.Default.DiscordBotOwnerId))
 							{
 								await e.Channel.SendMessage("You are not allowed to manage this webhook.");

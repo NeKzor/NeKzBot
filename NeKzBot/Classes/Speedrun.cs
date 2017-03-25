@@ -147,6 +147,14 @@ namespace NeKzBot.Classes
 		public string Value { get; set; }
 	}
 
+	public enum PersonalBestFilter
+	{
+		DontCare,
+		Best,
+		Worst,
+		Oldest
+	}
+
 	public sealed class SpeedrunWorldRecord
 	{
 		public IEnumerable<SpeedrunPlayerProfile> Players { get; set; }

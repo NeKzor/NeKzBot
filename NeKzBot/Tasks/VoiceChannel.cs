@@ -76,7 +76,7 @@ namespace NeKzBot.Tasks
 				process = Process.Start(new ProcessStartInfo
 				{
 					FileName = "ffmpeg",
-					Arguments = $"-i {path} -f s16le -ar 48000 -ac 2 pipe:1 -hide_banner -loglevel panic",
+					Arguments = $"-i {path} -ac 2 -f s16le -ar 48000 -ac 2 pipe:1 -hide_banner -loglevel panic",
 					UseShellExecute = false,
 					RedirectStandardOutput = true
 				});

@@ -18,10 +18,12 @@ namespace NeKzBot.Tasks.Leaderboard
 			public static InternalWatch Watch { get; } = new InternalWatch();
 			private static Stopwatch _cacheWatch;
 			private static string _cacheKey;
+			private static Fetcher _fetchClient;
 
 			public static async Task InitAsync()
 			{
 				await Logger.SendAsync("Initializing Portal2 Cache", LogColor.Init);
+				_fetchClient = new Fetcher();
 				// Reserve cache memory
 				_cacheKey = "lb";
 				await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);
@@ -42,7 +44,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				var doc = new HtmlDocument();
 				try
 				{
-					doc = await Fetching.GetDocumentAsync(url);
+					doc = await _fetchClient.GetDocumentAsync(url);
 					if (doc == null)
 						return null;
 				}

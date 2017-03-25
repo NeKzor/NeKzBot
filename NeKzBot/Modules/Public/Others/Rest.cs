@@ -12,6 +12,8 @@ namespace NeKzBot.Modules.Public.Others
 {
 	public class Rest : CommandModule
 	{
+		private static readonly Fetcher _fetchClient = new Fetcher();
+
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Rest Module", LogColor.Init);
@@ -61,7 +63,7 @@ namespace NeKzBot.Modules.Public.Others
 						else
 						{
 							var path = $"{await Utils.GetAppPath()}/Resources/Cache/{e.Args[0]}-stream.jpg";
-							await Fetching.GetFileAsync(preview, path);
+							await _fetchClient.GetFileAsync(preview, path);
 							await e.Channel.SendFile(path);
 						}
 					});

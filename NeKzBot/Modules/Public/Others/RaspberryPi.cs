@@ -12,6 +12,7 @@ namespace NeKzBot.Modules.Public.Others
 		{
 			await Logger.SendAsync("Loading RaspberryPi Module", LogColor.Init);
 			await GetServerInfo("rpi");
+			await GetServerInfo("raspberry");
 		}
 
 		private static Task GetServerInfo(string s)
