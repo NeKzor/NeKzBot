@@ -2,6 +2,7 @@
 using Discord.Commands;
 using NeKzBot.Classes;
 using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public.Vip
 {
@@ -34,9 +35,25 @@ namespace NeKzBot.Modules.Public.Vip
 					{
 						await e.Channel.SendIsTyping();
 						var path = $"{Configuration.Default.DropboxFolderName}/{e.User.Id}";
-						var link = await DropboxCom.CreateLinkAsync(path);
-						var list = await DropboxCom.ListFilesAsync(path);
-						await e.Channel.SendMessage((string.IsNullOrEmpty(link)) ? list : $"<{link}>\n{list}");
+						var files = await DropboxCom.GetFilesAsync(path);
+						if (files != null)
+						{
+							if (files.Count > 0)
+							{
+								var output = string.Empty;
+								foreach (var file in files)
+								{
+									var duration = await Utils.GetDuration(file.ModifiedDate);
+									output += $"\n{await Utils.AsRawText(file.Name)}{((duration != default(string)) ? $" (modified {duration} ago)" : string.Empty)}";
+								}
+								var link = await DropboxCom.CreateLinkAsync(path);
+								await e.Channel.SendMessage((string.IsNullOrEmpty(link)) ? output : $"<{link}>{output}");
+							}
+							else
+								await e.Channel.SendMessage("You don't have any files in your folder.");
+						}
+						else
+							await e.Channel.SendMessage("Could not find your folder.");
 					});
 
 			CService.CreateCommand("dbdelete")

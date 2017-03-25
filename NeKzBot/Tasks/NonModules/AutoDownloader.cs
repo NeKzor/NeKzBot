@@ -69,10 +69,8 @@ namespace NeKzBot.Tasks.NonModules
 							var path = $"{Configuration.Default.DropboxFolderName}/{args.User.Id}";
 
 							// Check if folder is full
-							var files = await DropboxCom.ListFilesAsync(path);
-							if ((files != "No files found.")
-							&& (files != "**Error.**")
-							&& (files.Split('\n').Length > MaxFilesPerFolder))
+							var files = await DropboxCom.GetFilesAsync(path);
+							if (files?.Count >= MaxFilesPerFolder)
 							{
 								await args.Channel.SendMessage($"Your folder is full. Try to list all files with `{Configuration.Default.PrefixCmd}dbfolder` and delete one with `{Configuration.Default.PrefixCmd}dbdelete <filename>`.");
 								continue;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,12 @@ using NeKzBot.Utilities;
 
 namespace NeKzBot.Classes
 {
+	public sealed class DropboxComFile
+	{
+		public string Name;
+		public DateTime ModifiedDate;
+	}
+
 	public static class DropboxCom
 	{
 		private static DropboxClient _client;
@@ -44,37 +51,35 @@ namespace NeKzBot.Classes
 			return false;
 		}
 
-		public static async Task<string> ListFilesAsync(string folder)
+		public static async Task<List<DropboxComFile>> GetFilesAsync(string folder)
 		{
 			await Logger.SendAsync("Dropbox Reading Folder", LogColor.Dropbox);
-			if (!(await DataExists(folder)))
-				return "Your folder does not exist.";
-
-			try
+			if (await DataExists(folder))
 			{
-				var output = string.Empty;
-				foreach (var file in (await _client.Files.ListFolderAsync($"/{folder}")).Entries)
+				try
 				{
-					if (file.IsFile)
+					var response = await _client.Files.ListFolderAsync($"/{folder}");
+					var list = new List<DropboxComFile>();
+					foreach (var item in response?.Entries.Where(entry => entry.IsFile))
 					{
-						var duration = await Utils.GetDuration(file.AsFile.ServerModified);
-						output += $"{await Utils.AsRawText(file.Name)}{((duration != default(string)) ? $" (modified {duration} ago)": string.Empty)}\n";
+						list.Add(new DropboxComFile
+						{
+							Name = item.Name,
+							ModifiedDate = item.AsFile.ServerModified
+						});
 					}
+					return list;
 				}
-
-				return (output != string.Empty)
-							   ? output.Substring(0, output.Length - 1)
-							   : "No files found.";
+				catch (ApiException<ListFolderError> api)
+				{
+					await Logger.SendAsync("DropboxCom.ListFilesAsync API Error", api);
+				}
+				catch (Exception e)
+				{
+					await Logger.SendAsync("DropboxCom.ListFilesAsync Error", e);
+				}
 			}
-			catch (ApiException<ListFolderError> api)
-			{
-				await Logger.SendAsync("DropboxCom.ListFilesAsync API Error", api);
-			}
-			catch (Exception e)
-			{
-				await Logger.SendAsync("DropboxCom.ListFilesAsync Error", e);
-			}
-			return "**Error.**";
+			return default(List<DropboxComFile>);
 		}
 
 		public static async Task<string> DeleteFileAsync(string folder, string file, bool asadmin = false)
@@ -144,13 +149,9 @@ namespace NeKzBot.Classes
 				await _client.Files.GetMetadataAsync($"/{path}");
 				return true;
 			}
-			catch (ApiException<GetMetadataError> api)
+			catch
 			{
-				await Logger.SendAsync("DropboxCom.DataExists API Error", api);
-			}
-			catch (Exception e)
-			{
-				await Logger.SendAsync("DropboxCom.DataExists Error", e);
+				// Doesn't count as a real error
 			}
 			return false;
 		}
