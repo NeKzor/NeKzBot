@@ -197,7 +197,7 @@
     <None Include="Resources\Cache\cache.tmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\Private\private.dat">
+    <None Include="Resources\Private\private.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Server\Credentials.settings">

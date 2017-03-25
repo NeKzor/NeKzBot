@@ -62,3 +62,4 @@
 /NeKzBotSelfBot/Modules/Unused.cs
 *.cache
 /NeKzBot/obj/Debug/NeKzBot.csprojResolveAssemblyReference.cache
+/.vs/config/applicationhost.config

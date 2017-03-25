@@ -44,20 +44,9 @@
 | Name | Description |
 | --- | --- |
 | /Resources/Cache | Create this folder for the file caching system. |
-| /Resources/Private | All the data files are in there, [see below](#data-example). |
-
-
+| /Resources/Private | All your json files are in there. |
 
 ## Other Settings
-* The default internal separator '|' can be changed in this class [Utils.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Resources/Utils.cs#L25).
-* The default caching extension '.tmp' can be changed in this class [Caching.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Caching.cs#L49).
-* The default data file extension '.dat' can be changed in this class [Data.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Resources/Data.cs#L62).
+* The default internal separator '|' can be changed in this class [Utils.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Utilities/FileUtils.cs#L15).
+* The default caching extension '.tmp' can be changed in this class [Caching.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Caching.cs#L37).
 * Don't forget to change the [assembly information](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Properties/AssemblyInfo.cs) too.
-
-## Data Example
-| Type | Array |
-| --- | :-: |
-| Single-Dimensional | Channel1<br>Channel2<br>Channel3 |
-| Multidimensional | Command1\|Description1\|Something1<br>Command2\|Description2\|Something2<br>Command3\|Description3\|Something3|
-
-Oh well, not the best data [parsing algorithm](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Resources/Utils.cs#L149) but it works.
