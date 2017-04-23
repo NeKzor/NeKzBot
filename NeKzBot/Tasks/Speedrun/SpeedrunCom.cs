@@ -33,7 +33,7 @@ namespace NeKzBot.Tasks.Speedrun
 			};
 			_fetchClient = new Fetcher(_headers);
 			if (!_client.IsAccessTokenValid)
-				await Logger.SendAsync("Invalid Token", LogColor.Default);
+				await Logger.SendAsync("Invalid Token");
 		}
 
 		public static async Task<SpeedrunWorldRecord> GetGameWorldRecordAsync(string gamename, string categoryname = default(string))
@@ -579,10 +579,8 @@ namespace NeKzBot.Tasks.Speedrun
 				if (string.IsNullOrEmpty(json))
 					return await Logger.SendAsync("SpeedrunCom.GetNotificationUpdatesAsync JSON Error", LogColor.Error) as List<SpeedrunNotification>;
 
-				// Read json string
+				// De-serialize json string
 				dynamic api = JsonConvert.DeserializeObject(json);
-				if (string.IsNullOrEmpty(api?.ToString()))
-					return await Logger.SendAsync("SpeedrunCom.GetNotificationUpdatesAsync API Error", LogColor.Error) as List<SpeedrunNotification>;
 
 				// Parse data
 				var updates = new List<SpeedrunNotification>();

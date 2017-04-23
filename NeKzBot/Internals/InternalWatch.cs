@@ -8,16 +8,14 @@ namespace NeKzBot.Internals
 	public sealed class InternalWatch
 	{
 		private Stopwatch _watch { get; set; }
-
-		public InternalWatch()
-			=> _watch = new Stopwatch();
-
 		/// <summary>Returns the current running state of the stopwatch.</summary>
 		public bool IsRunning
 			=> _watch.IsRunning;
-
 		/// <summary>Returns the last measured time of the stop watch.</summary>
 		public int LastCheckedTimeValue { get; internal set; } = 0;
+
+		public InternalWatch()
+			=> _watch = new Stopwatch();
 
 		/// <summary>Returns the elapsed time of the stopwatch.</summary>
 		/// <param name="unit">Value with the given unit.</param>
@@ -62,29 +60,26 @@ namespace NeKzBot.Internals
 					sresult = $"{iresult}t";
 					break;
 			}
-//#if DEBUG
-//			if (!(string.IsNullOrEmpty(debugmsg)))
-//				await Logger.SendAsync(debugmsg + sresult, LogColor.Watch);
-//#endif
+#if DEBUG
+			if (!(string.IsNullOrEmpty(debugmsg)))
+				Logger.SendAsync(debugmsg + sresult, LogColor.Watch).GetAwaiter().GetResult();
+#endif
 			return Task.FromResult(LastCheckedTimeValue = iresult);
 		}
-
 		/// <summary>Starts and stops the stopwatch.</summary>
 		public async Task RestartAsync()
 		{
 			await Stop();
-			await Start();
+			await Restart();
 		}
-
-		private Task Start()
+		private Task Restart()
 		{
 			if (_watch == null)
 				_watch = Stopwatch.StartNew();
 			else
-				_watch.Start();
+				_watch.Restart();
 			return Task.FromResult(0);
 		}
-
 		private Task Stop()
 		{
 			_watch?.Stop();

@@ -19,6 +19,7 @@
   * board.iverb.me
   * speedrun.com
   * twitch.tv
+* Parsing Source Engine demo recording files
 * Works fine on Linux + [Mono](http://www.mono-project.com)
 
 ## Documentation

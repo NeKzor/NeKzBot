@@ -96,10 +96,7 @@ namespace NeKzBot.Tasks.NonModules
 					UserLink = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//a[@class='friendBlockLinkOverlay']").Attributes["href"].Value,
 					UserAvatar = doc.DocumentNode.SelectSingleNode("//div[@class='creatorsBlock']//div//div//img").Attributes["src"].Value,
 					GameName = doc.DocumentNode.SelectSingleNode("//div[@class='apphub_AppName ellipsis']").InnerHtml,
-					UserName = (doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']")
-						!= null)
-						? doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.Substring(0, doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.LastIndexOf("<br>")).Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty)
-						: doc.DocumentNode.SelectSingleNode("//div[@class='linkAuthor']//a").InnerHtml,
+					UserName = doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.Substring(0, doc.DocumentNode.SelectSingleNode("//div[@class='friendBlockContent']").InnerHtml.IndexOf("<br>")).Replace("\n", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty),
 					ItemTitle = doc.DocumentNode.SelectSingleNode("//div[@class='workshopItemTitle']").InnerHtml,
 					ItemImage = picture,
 					ItemLink = uri

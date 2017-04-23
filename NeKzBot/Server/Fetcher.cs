@@ -15,7 +15,7 @@ namespace NeKzBot.Server
 		private readonly HttpClient _client;
 
 		/// <summary>Creates a new fetching instance.</summary>
-		/// <param name="timeout">Waiting request timeout of the client in minutes.</param>
+		/// <param name="timeout">Waiting request timeout of the client in minutes. Increase this value if the tasks gets cancelled because it took too long.</param>
 		public Fetcher(double timeout = 5)
 		{
 			_client = new HttpClient { Timeout = TimeSpan.FromMinutes(timeout) };

@@ -1,12 +1,10 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
-using NeKzBot.Classes;
-using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
-using NeKzBot.Webhooks;
 
 namespace NeKzBot.Modules.Private.Owner
 {
@@ -52,11 +50,11 @@ namespace NeKzBot.Modules.Private.Owner
 								case DataChangeResult.SeparatorNotFound:
 									// Useful when you don't know how many values the list takes
 									message = "Could not find the input separator for parsing this kind of data.\n" +
-											  $"Data array needs {(await Data.Get<Complex>(e.GetArg("name"))).Values.First().Value.Count} values.";
+											  $"Data array needs {Enumerable.First((await Data.Get<Complex>(e.GetArg("name"))).Values).Value.Count} values.";
 									break;
 								case DataChangeResult.InvalidCount:
 									message = "Could not parse input.\n" +
-											  $"Data array needs {(await Data.Get<Complex>(e.GetArg("name"))).Values.First().Value.Count} values.";
+											  $"Data array needs {Enumerable.First((await Data.Get<Complex>(e.GetArg("name"))).Values).Value.Count} values.";
 									break;
 								case DataChangeResult.IncorrectType:
 									message = "Subscription values need the correct type: `Ulong: id`, `String: token`, `Ulong: guildid`, `Ulong: userid`.";

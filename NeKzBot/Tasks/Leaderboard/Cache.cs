@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -23,7 +24,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			public static async Task InitAsync()
 			{
 				await Logger.SendAsync("Initializing Portal2 Cache", LogColor.Init);
-				_fetchClient = new Fetcher();
+				_fetchClient = new Fetcher(15);
 				// Reserve cache memory
 				_cacheKey = "lb";
 				await Caching.CApplication.ReserverMemoryAsync<Tuple<string, HtmlDocument>>(_cacheKey);

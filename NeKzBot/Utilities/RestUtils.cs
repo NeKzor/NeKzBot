@@ -14,14 +14,26 @@ namespace NeKzBot.Utilities
 		public static Task<bool> ValidPathName(string path)
 			=> Task.FromResult((!(string.IsNullOrEmpty(path))) && (path?.IndexOfAny(Path.GetInvalidPathChars()) == -1));
 
-		public static Task<string> GetLocalTime()
-			=> Task.FromResult(DateTime.Now.ToString("HH:mm:ss"));
+		public static Task<string> GetLocalTime(bool actualtime = false)
+		{
+			var result = default(string);
+			if (actualtime)
+			{
+				var zone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+				var offset = zone.GetUtcOffset(DateTime.UtcNow).Hours;
+				result = $"{TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone).ToString("HH:mm:ss")}" +
+						 $" (UTC{((offset == 0) ? " " : (offset < 0) ? "-" : "+")}{offset})";
+			}
+			else
+				result = DateTime.UtcNow.ToString("HH:mm:ss");
+			return Task.FromResult(result);
+		}
 
 		public static Task<string> GetAppPath()
 			=> Task.FromResult(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 
 		public static Task<TimeSpan> GetUptime()
-			=> Task.FromResult(DateTime.Now - Process.GetCurrentProcess().StartTime);
+			=> Task.FromResult(DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime());
 
 		public static Task<bool> IsLinux()
 			=> Task.FromResult((Environment.OSVersion.Platform == PlatformID.Unix)

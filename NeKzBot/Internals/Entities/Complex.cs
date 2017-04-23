@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace NeKzBot.Internals
+namespace NeKzBot.Internals.Entities
 {
 	[JsonObject("complex")]
-	public class Complex
+	public class Complex : IMemory, IEnumerable<Simple>
 	{
 		[JsonProperty("values")]
 		public List<Simple> Values { get; set; }
@@ -13,6 +14,13 @@ namespace NeKzBot.Internals
 			=> Values = new List<Simple>();
 		public Complex(List<Simple> value)
 			=> Values = value;
+
+		IEnumerable<object> IMemory.Values => Values;
+
+		public IEnumerator<Simple> GetEnumerator()
+			=> Values.GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator()
+			=> GetEnumerator();
 
 		public Simple Get(string value)
 		{

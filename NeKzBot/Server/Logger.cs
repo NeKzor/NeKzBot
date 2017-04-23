@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Utilities;
@@ -7,7 +8,7 @@ namespace NeKzBot.Server
 {
 	public static class Logger
 	{
-		public static uint ErrorCount { get; private set; } = 0;
+		public static List<string> Errors = new List<string>();
 
 		public static async Task InitAsync()
 		{
@@ -23,27 +24,37 @@ namespace NeKzBot.Server
 			// Log this to the main server only
 			Bot.Client.LeftServer += async (_, e) => await Events.OnLeftServerAsync(e);
 			Bot.Client.JoinedServer += async (_, e) => await Events.OnJoinedServerAsync(e);
+			// Log this to console only
+#if DEBUG
+			Bot.Client.ServerAvailable += async (_, e) => await Events.OnServerAvailableAsync(e);
+#endif
+			Bot.Client.ServerUnavailable += async (_, e) => await Events.OnServerUnavailableAsync(e);
+			Bot.Client.Ready += async (_, e) => await Events.OnReadyAsync(e);
 
 			await Task.FromResult(0);
 		}
 
 		// Write to console
 		public static void CON(object _, LogMessageEventArgs e)
-			=> Console.WriteLine($"{Utils.GetLocalTime().Result} @ SOCKET : {e.Severity} : {e.Source} : {e.Message}");
+			=> Console.WriteLine($"[{Utils.GetLocalTime().GetAwaiter().GetResult()}] : " +
+								 $"{FormatTime(Utils.GetUptime().GetAwaiter().GetResult()).GetAwaiter().GetResult()}" +
+								 $"[SOCKET] : [{e.Severity}] : [{e.Source}] : {e.Message}");
 
-		public static async Task<object> SendAsync(string message, LogColor color)
+		public static async Task<object> SendAsync(string message, LogColor color = LogColor.Default)
 		{
 			Console.ForegroundColor = (ConsoleColor)color;
-			Console.WriteLine($"{await Utils.GetLocalTime()} @ ROOT : {await FormatTime(await Utils.GetUptime())}{message}");
+			Console.WriteLine($"[{await Utils.GetLocalTime()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : {await GetSource(color)} : {message}");
 			Console.ResetColor();
 			return null;
 		}
 
 		public static async Task<object> SendAsync(string message, Exception e)
 		{
-			ErrorCount++;
+			Errors.Add(message);
 			Console.ForegroundColor = (ConsoleColor)LogColor.Error;
-			Console.WriteLine($"{await Utils.GetLocalTime()} @ ROOT : {await FormatTime(await Utils.GetUptime())}{message}\n{e.Source}\n{e.Message}");
+			Console.WriteLine($"[{await Utils.GetLocalTime()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : [Error] : {message}\n" +
+							  $"Source: {e.Source}\n" +
+							  $"Message: {e.Message}");
 			Console.ResetColor();
 			return null;
 		}
@@ -67,6 +78,46 @@ namespace NeKzBot.Server
 		private static Task<string> FormatTime(TimeSpan time)
 			=> Task.FromResult((time.TotalSeconds > 100)
 												  ? string.Empty
-												  : string.Format("{0:N2}s : ", time.TotalSeconds));
+												  : $"[{string.Format("{0:N2}s", time.TotalSeconds)}] : ");
+
+		private static Task<string> GetSource(LogColor color)
+		{
+			var source = "[Error]";
+			switch (color)
+			{
+				case LogColor.Audio:
+					source = "[Audio]";
+					break;
+				case LogColor.Caching:
+					source = "[Caching]";
+					break;
+				case LogColor.Default:
+				case LogColor.Init:
+					source = "[Info]";
+					break;
+				case LogColor.Dropbox:
+					source = "[Dropbox]";
+					break;
+				case LogColor.Giveaway:
+					source = "[Giveaway]";
+					break;
+				case LogColor.Leaderboard:
+					source = "[Leaderboard]";
+					break;
+				case LogColor.Speedrun:
+					source = "[Speedrun]";
+					break;
+				case LogColor.Twitch:
+					source = "[Twitch]";
+					break;
+				case LogColor.Twitter:
+					source = "[Twitter]";
+					break;
+				case LogColor.Watch:
+					source = "[Watch]";
+					break;
+			}
+			return Task.FromResult(source);
+		}
 	}
 }

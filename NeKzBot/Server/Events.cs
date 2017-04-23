@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Tasks.NonModules;
@@ -11,7 +11,7 @@ using NeKzBot.Utilities;
 
 namespace NeKzBot.Server
 {
-	// TODO: fix or delete
+	// TODO: fix (or delete)
 	public static class Events
 	{
 		private const int _ratelimit = 333;
@@ -26,7 +26,7 @@ namespace NeKzBot.Server
 					if (!(await Steam.CheckWorkshopAsync(e)))
 						if (!(await DemoTools.CheckTickCalculatorAsync(e)))
 							if (!(await DemoTools.CheckStartdemosGeneratorAsync(e)))
-								await AutoDownloader.CheckDropboxAsync(e);
+								await AutoDownloader.CheckForDemoFileAsync(e);
 				}
 			}
 			catch (Exception ex)
@@ -34,6 +34,13 @@ namespace NeKzBot.Server
 				await Logger.SendToChannelAsync("Events.OnReceiveAsync Error", ex);
 			}
 		}
+
+		public static async Task OnServerAvailableAsync(ServerEventArgs e)
+			=> await Logger.SendAsync($"Server \"{e.Server.Name}\" is available");
+		public static async Task OnServerUnavailableAsync(ServerEventArgs e)
+			=> await Logger.SendAsync($"Server \"{e.Server.Name}\" is unavailable");
+		public static async Task OnReadyAsync(EventArgs e)
+			=> await Logger.SendAsync("Ready");
 
 		public static async Task OnJoinedServerAsync(ServerEventArgs e)
 		{

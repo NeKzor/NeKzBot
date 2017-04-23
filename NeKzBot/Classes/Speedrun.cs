@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NeKzBot.Server;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Classes
 {
@@ -19,7 +21,9 @@ namespace NeKzBot.Classes
 		public string CountryCode { get; set; }
 		public string Location
 		{
-			get => (CountryCode != string.Empty) ? $" :flag_{CountryCode}:" : string.Empty;
+			get => (CountryCode != string.Empty)
+								? $" :flag_{CountryCode}:"
+								: string.Empty;
 			set { }
 		}
 		public string Region { get; set; }
@@ -27,10 +31,7 @@ namespace NeKzBot.Classes
 		public string Role { get; set; }
 		public int Runs { get; set; }
 		public string SignUpDate
-		{
-			get => SignUpDateTime.ToString("yyyy-MM-dd HH:mm:ss");
-			set { }
-		}
+			=> SignUpDateTime.ToString("yyyy-MM-dd HH:mm:ss");
 		public DateTime SignUpDateTime { get; set; }
 		public string YouTubeLink { get; set; }
 		public string TwitchLink { get; set; }
@@ -58,26 +59,24 @@ namespace NeKzBot.Classes
 		public SpeedrunGame Game { get; private set; }
 		public string Cache { get; private set; }
 		public SpeedrunNotificationStatus Status { get; set; }
-
 		public SpeedrunPlayerProfile Author
-		{
-			get =>  (Type != SpeedrunNotificationType.Resource)
-						  ? new SpeedrunPlayerProfile { Name = ContentText.Split(' ')[0] }
-						  : null;
-		}
+			=> (Type != SpeedrunNotificationType.Resource)
+					 ? new SpeedrunPlayerProfile { Name = ContentText.Split(' ')[0] }
+					 : null;
 
+		// Tasks
 		public Task BuildGame()
 		{
 			Game = new SpeedrunGame(ParsedGame);
 			return Task.FromResult(0);
 		}
-
 		public Task BuildCache()
 		{
 			Cache = CreationDate + ContentLink + ContentText;
 			return Task.FromResult(0);
 		}
 
+		// Extensions
 		public string FormattedText
 		{
 			get
@@ -85,25 +84,24 @@ namespace NeKzBot.Classes
 				try
 				{
 					// TODO: parse notification type "guide"
-					// TODO: could fix escaping here too
 					if (Type == SpeedrunNotificationType.Thread)
-						return $"Posted a new thread:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length)}]({ContentLink})_";
+						return $"New thread post:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length)}]({Utils.AsRawText(ContentLink).GetAwaiter().GetResult()})_";
 					if (Type == SpeedrunNotificationType.Post)
-						return $"Responded to the thread:\n_[{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}]({ContentLink})_";
+						return $"New thread response:\n_[{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}]({Utils.AsRawText(ContentLink).GetAwaiter().GetResult()})_";
 					if (Type == SpeedrunNotificationType.Resource)
 						return $"The resource _{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}_ has been updated or added.";
 					if (Type == SpeedrunNotificationType.Run)
-						return $"Sets a new {(ContentText.Contains(" beat the WR in ") ? "world record" : "personal best")} in [{Game.Name}]({Game.Link})\nwith a time of {ContentText.Substring(ContentText.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
+						return $"New {(ContentText.Contains(" beat the WR in ") ? "world record" : "personal best")} in [{Utils.AsRawText(Game.Name).GetAwaiter().GetResult()}]({((string.IsNullOrEmpty(Game.Link)) ? Utils.AsRawText(ContentLink).GetAwaiter().GetResult() : Utils.AsRawText(Game.Link).GetAwaiter().GetResult())})\nwith a time of {ContentText.Substring(ContentText.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
 					if (Type == SpeedrunNotificationType.Moderator)
-						return "Is now a moderator.\nCongrats.";
+						return "A new moderator has been chosen.\nCongrats.";
 				}
-				catch
+				catch (Exception ex)
 				{
+					Logger.SendAsync("SpeedrunNotification.FormattedText Error", ex).GetAwaiter().GetResult();
 				}
 				return string.Empty;
 			}
 		}
-
 		private string ParsedGame
 		{
 			get
@@ -122,8 +120,9 @@ namespace NeKzBot.Classes
 					if (Type == SpeedrunNotificationType.Moderator)
 						return ContentText.Substring(ContentText.IndexOf("has been added to ") + "has been added to ".Length, ContentText.IndexOf(" as a moderator.") - ContentText.IndexOf("has been added to ") - "has been added to ".Length);
 				}
-				catch
+				catch (Exception ex)
 				{
+					Logger.SendAsync("SpeedrunNotification.ParsedGame Error", ex).GetAwaiter().GetResult();
 				}
 				return string.Empty;
 			}
@@ -163,9 +162,7 @@ namespace NeKzBot.Classes
 		public string Platform { get; set; }
 		public string EntryId { get; set; }
 		public string EntryLink
-		{
-			get => $"https://www.speedrun.com/run/{EntryId}";
-		}
+			=> $"https://www.speedrun.com/run/{EntryId}";
 		public string EntryVideo { get; set; }
 		public string EntryTime { get; set; }
 		public string EntryDate { get; set; }
@@ -185,7 +182,9 @@ namespace NeKzBot.Classes
 		public int? ReleaseDate { get; set; }
 		public string CreationDate
 		{
-			get => (CreationDateTime != null) ? CreationDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown" : "Unknown";
+			get => (CreationDateTime != null)
+									 ? CreationDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown"
+									 : "Unknown";
 			set { }
 		}
 		public DateTime? CreationDateTime { get; set; }
@@ -201,7 +200,6 @@ namespace NeKzBot.Classes
 		public SpeedrunGame()
 		{
 		}
-
 		public SpeedrunGame(string name, string link = "", string coverlink = "")
 		{
 			Name = name;

@@ -14,7 +14,7 @@ namespace NeKzBot.Tasks
 {
 	public static class VoiceChannel
 	{
-		private static readonly ConcurrentDictionary<ulong, InternalAudio> _audioClients = new ConcurrentDictionary<ulong, InternalAudio>();
+		private static readonly ConcurrentDictionary<ulong, Internals.InternalAudio> _audioClients = new ConcurrentDictionary<ulong, Internals.InternalAudio>();
 
 		public static async Task<string> ConnectAsync(Discord.Server guild, Channel vchannel)
 		{
@@ -32,7 +32,7 @@ namespace NeKzBot.Tasks
 				}
 				return AudioError.AlreadyConnected;
 			}
-			if (_audioClients.TryAdd(guild.Id, new InternalAudio(await Bot.Client.GetService<AudioService>().Join(vchannel)) { Connected = true }))
+			if (_audioClients.TryAdd(guild.Id, new Internals.InternalAudio(await Bot.Client.GetService<AudioService>().Join(vchannel)) { Connected = true }))
 				return AudioError.None;
 			return AudioError.Generic;
 		}

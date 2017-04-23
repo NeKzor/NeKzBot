@@ -38,7 +38,6 @@ namespace NeKzBot.Extensions
 			Fields = temp.ToArray();
 			return this;
 		}
-
 		public Embed WithAuthor(EmbedAuthor author)
 		{
 			Author = author;
@@ -58,9 +57,7 @@ namespace NeKzBot.Extensions
 		public int Width { get; set; }
 
 		public EmbedThumbnail(string url)
-		{
-			Url = url;
-		}
+			=> Url = url;
 	}
 
 	public sealed class EmbedAuthor
@@ -86,9 +83,7 @@ namespace NeKzBot.Extensions
 		public string Url { get; set; }
 
 		public EmbedImage(string url)
-		{
-			Url = url;
-		}
+			=> Url = url;
 	}
 
 	public sealed class EmbedFooter
@@ -117,7 +112,6 @@ namespace NeKzBot.Extensions
 		public EmbedField()
 		{
 		}
-
 		public EmbedField(string name, string value, bool inline = false)
 		{
 			Inline = inline;

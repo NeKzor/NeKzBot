@@ -13,6 +13,7 @@ using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Utilities;
+using NeKzBot.Internals.Entities;
 
 namespace NeKzBot.Modules.Public
 {
@@ -76,7 +77,7 @@ namespace NeKzBot.Modules.Public
 								}
 							};
 
-							var duration = await Utils.GetDuration(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.DateTime);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -158,7 +159,7 @@ namespace NeKzBot.Modules.Public
 								}
 							};
 
-							var duration = await Utils.GetDuration(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.DateTime);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -241,7 +242,7 @@ namespace NeKzBot.Modules.Public
 								}
 							};
 
-							var duration = await Utils.GetDuration(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.DateTime);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -332,6 +333,10 @@ namespace NeKzBot.Modules.Public
 							}
 
 							var entry = await Portal2.GetUserRankAsync(url, result);
+							if ((entry == null)
+							&& (e.User.Nickname != null))
+								entry = await Portal2.GetUserRankAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname.Trim()}", result);
+
 							if (entry != null)
 							{
 								var embed = new Embed
@@ -351,7 +356,7 @@ namespace NeKzBot.Modules.Public
 									}
 								};
 
-								var duration = await Utils.GetDuration(entry.DateTime);
+								var duration = await Utils.GetDurationAsync(entry.DateTime);
 								if (duration != default(string))
 								{
 									embed.AddField(field =>
@@ -459,7 +464,7 @@ namespace NeKzBot.Modules.Public
 									}
 								};
 
-								var duration = await Utils.GetDuration(entry.DateTime);
+								var duration = await Utils.GetDurationAsync(entry.DateTime);
 								if (duration != default(string))
 								{
 									embed.AddField(field =>

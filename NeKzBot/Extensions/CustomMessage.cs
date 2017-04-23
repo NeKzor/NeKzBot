@@ -20,7 +20,6 @@ namespace NeKzBot.Extensions
 			Content = string.Empty;
 			EmbedObject = embed;
 		}
-
 		public CustomMessage(string content, Embed embed)
 		{
 			Content = content;

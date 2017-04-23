@@ -11,6 +11,7 @@ using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
+using NeKzBot.Internals.Entities;
 
 namespace NeKzBot.Tasks.Leaderboard
 {

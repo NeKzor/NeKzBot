@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
-using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Utilities;
 
@@ -46,7 +46,7 @@ namespace NeKzBot.Server
 		{
 			if (usr.ServerPermissions.Administrator)
 				return true;
-			cha.SendMessage("Only an administrator is allowed to execute this command.");
+			cha.SendMessage("Only administrators are allowed to execute this command.");
 			return false;
 		}
 

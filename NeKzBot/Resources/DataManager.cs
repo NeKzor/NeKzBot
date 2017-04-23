@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NeKzBot.Classes;
 using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Server;
-using NeKzBot.Webhooks;
 
 namespace NeKzBot.Resources
 {
@@ -13,14 +12,13 @@ namespace NeKzBot.Resources
 		public static List<object> Manager { get; private set; }
 
 		public static Task<T> Get<T>(string name)
-			where T : class, new()
+			where T : class, IMemory, new()
 		{
 			var index = Manager.FindIndex(data => (data as IData).Name == name);
 			return Task.FromResult((index != -1)
 										  ? (T)((InternalData<T>)Manager[index]).Memory
 										  : default(T));
 		}
-
 		public static Task<IData> Get(string name)
 		{
 			var index = Manager.FindIndex(data => (data as IData).Name == name);
@@ -28,21 +26,18 @@ namespace NeKzBot.Resources
 										  ? (IData)Manager[index]
 										  : default(IData));
 		}
-
 		public static async Task InitAsync<T>(string name)
-			where T : class, new()
+			where T : class, IMemory, new()
 		{
 			await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.InitAsync();
 		}
-
 		public static async Task ChangeAsync<T>(string name, object newdata)
-			where T : class, new()
+			where T : class, IMemory, new()
 		{
 			await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.Change(newdata);
 		}
-
 		public static async Task<bool> ExportAsync<T>(string name)
-			where T : class, new()
+			where T : class, IMemory, new()
 		{
 			return await ((InternalData<T>)Manager[Manager.FindIndex(data => (data as IData).Name == name)])?.ExportAsync();
 		}

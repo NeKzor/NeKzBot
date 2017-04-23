@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Extensions;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -71,7 +72,7 @@ namespace NeKzBot.Modules.Public.Vip
 								return;
 							}
 
-							await WebhookData.Watch.RestartAsync();
+							await WebhookData.TestPingWatch.RestartAsync();
 							var data = new WebhookData(hook.Id, hook.Token, e.Server.Id, e.User.Id);
 
 							var result = default(bool);

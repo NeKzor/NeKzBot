@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using NeKzBot.Extensions;
-using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -16,6 +16,7 @@ namespace NeKzBot.Modules.Private.Owner
 		{
 			await Logger.SendAsync("Loading Admin Module", LogColor.Init);
 			await AdminCommands(Configuration.Default.BotCmd);
+			await SpecialPermissionCommands(Configuration.Default.BotCmd);
 		}
 
 		private static Task AdminCommands(string name)
@@ -117,31 +118,95 @@ namespace NeKzBot.Modules.Private.Owner
 							await channel.SendIsTyping();
 							await channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
 						});
+			});
+			return Task.FromResult(0);
+		}
 
-				// I don't know why but this doesn't work on my Linux server :(
+		private static Task SpecialPermissionCommands(string name)
+		{
+			CService.CreateGroup(name, GBuilder =>
+			{
+				// I don't know why but some emojis don't work
 				GBuilder.CreateCommand("react")
+						.Description("Reacts to a message with the give emoji.")
 						.Parameter("channel_id", ParameterType.Required)
 						.Parameter("message_id", ParameterType.Required)
 						.Parameter("emoji", ParameterType.Required)
-						.AddCheck(Permissions.BotOwnerOnly)
 						.Hide()
 						.Do(async e =>
 						{
 							// Check permission
-							if (await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
+							if (Utils.CheckRolePermissionsAsync(e.User, DiscordConstants.AddReactionsFlag).GetAwaiter().GetResult())
 							{
-								var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
-													  ? result
-													  : e.Channel.Id;
-								var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
-													  ? result
-													  : e.Message.Id;
-								await Bot.SendAsync(CustomRequest.AddReaction(channelid, messageid, e.GetArg("emoji")), null);
+								if (await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
+								{
+									var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
+														  ? result
+														  : e.Channel.Id;
+									var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
+														  ? result
+														  : e.Message.Id;
+									await Bot.SendAsync(CustomRequest.AddReaction(channelid, messageid, e.GetArg("emoji")), null);
+								}
+								else
+								{
+									await e.Channel.SendIsTyping();
+									await e.Channel.SendMessage("The permission to add reactions is required.");
+								}
 							}
 							else
 							{
 								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("The permission to add reactions is required.");
+								await e.Channel.SendMessage("You don't have a role which allows to add reactions to messages.");
+							}
+						});
+
+				GBuilder.CreateCommand("setnickname")
+						.Alias("setnick", "changenickname", "changenick")
+						.Description("Sets the nickname of the bot.")
+						.Parameter("name", ParameterType.Unparsed)
+						.Hide()
+						.Do(async e =>
+						{
+							if (e.User.ServerPermissions.ManageNicknames)
+								await (await Utils.GetBotUserObject(e.Channel))?.Edit(nickname: string.IsNullOrEmpty(e.GetArg("name")) ? Bot.Client.CurrentUser.Name : e.GetArg("name"));
+							else
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("You are not allowed to manage nicknames.");
+							}
+						});
+
+				GBuilder.CreateCommand("pin")
+						.Description("Pins a message.")
+						.Parameter("channel_id", ParameterType.Required)
+						.Parameter("message_id", ParameterType.Required)
+						.Hide()
+						.Do(async e =>
+						{
+							// Check permission
+							if (e.User.ServerPermissions.ManageMessages)
+							{
+								if ((await Utils.GetBotUserObject(e.Channel)).GetPermissions(e.Channel).ManageMessages)
+								{
+									var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
+														  ? result
+														  : e.Channel.Id;
+									var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
+														  ? result
+														  : e.Message.Id;
+									await Bot.SendAsync(CustomRequest.PinMessage(channelid, messageid), null);
+								}
+								else
+								{
+									await e.Channel.SendIsTyping();
+									await e.Channel.SendMessage("The permission to manage messages is required.");
+								}
+							}
+							else
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("You don't have the permission to manage messages.");
 							}
 						});
 			});

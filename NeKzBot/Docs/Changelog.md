@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## Version 1.8.0
+* Added a Source Engine demo parsing library
+* Replaced automatic attachment download task with the demo parser
+* Moved Dropbox upload code to its own command
+* Small improvement in Twitch cache algorithm
+* Some other tiny changes here and there
+
 ## Version 1.7.0
 * Replaced data pattern matching with data interface casting
 * Replaced data parsing system with json serialization

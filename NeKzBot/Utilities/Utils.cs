@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
-using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Server;
 
 namespace NeKzBot.Utilities
@@ -59,12 +59,16 @@ namespace NeKzBot.Utilities
 			return "**Error.**";
 		}
 
-		public static Task<string> GetDuration(DateTime time)
+		public async static Task<string> GetDurationAsync(DateTime time, bool withseconds = true)
+			=> await GetDurationFromTimeSpan((time != default(DateTime))
+									   ? DateTime.UtcNow - time
+									   : default(TimeSpan), withseconds);
+
+		public static Task<string> GetDurationFromTimeSpan(TimeSpan duration, bool withseconds = true)
 		{
-			if (time == default(DateTime))
+			if (duration == default(TimeSpan))
 				return Task.FromResult(default(string));
 
-			var duration = DateTime.UtcNow - time;
 			var output = (duration.Days > 0)
 										? $"{duration.Days} Day{(duration.Days == 1 ? string.Empty : "s")} "
 										: string.Empty;
@@ -74,7 +78,7 @@ namespace NeKzBot.Utilities
 			output += (duration.Minutes > 0)
 										? $"{duration.Minutes} Minute{(duration.Minutes == 1 ? string.Empty : "s")} "
 										: string.Empty;
-			output += (duration.Seconds > 0)
+			output += ((duration.Seconds > 0) && (withseconds))
 										? $"{duration.Seconds} Second{(duration.Seconds == 1 ? string.Empty : "s")}"
 										: string.Empty;
 			output += ((duration.Days > 0)

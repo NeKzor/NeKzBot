@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Classes;
 using NeKzBot.Server;
@@ -8,6 +11,12 @@ namespace NeKzBot.Modules.Public.Vip
 {
 	public class Cloud : CommandModule
 	{
+		private static readonly Fetcher _fetchClient = new Fetcher();
+		private static readonly string _cacheKey = "dropbox";
+
+		private const uint _maxFilesPerFolder = 20;
+		private const uint _maxfilesize = 5000 * 1024;   // 5MB
+
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Cloud Module", LogColor.Init);
@@ -17,7 +26,94 @@ namespace NeKzBot.Modules.Public.Vip
 		public static Task CloudCommands()
 		{
 			// Dropbox stuff
-			CService.CreateCommand("cloud")
+			CService.CreateCommand("upload")
+					.Description("Uploads your attachments ending with .dem or .sav to a Dropbox account (owned by the bot owner) as a backup.")
+					.AddCheck(Permissions.VipGuildsOnly)
+					.Do(async e =>
+					{
+						try
+						{
+							// I've never seen a message that had more than one attachment
+							if (e.Message.Attachments.Length == 1)
+							{
+								var file = e.Message.Attachments.First();
+
+								// Check file extension
+								var filename = file.Filename;
+								var extension = Path.GetExtension(filename) ?? string.Empty;
+
+								// Only allow demos and saves because Source Engine games :^)
+								if ((extension == ".dem")
+								|| (extension == ".sav"))
+								{
+									var mention = e.User.Mention;
+									// Maximum 5000KB
+									if (file.Size > _maxfilesize)
+										await e.Channel.SendMessage("Your file is too large for an upload (max. 5MB).");
+									else if (file.Size == 0)
+										await e.Channel.SendMessage("Your file seems to be broken.");
+									else
+									{
+										// Should give every user his own cache too
+										var cachekey = $"{_cacheKey}{e.User.Id}";
+
+										// Download data
+										try
+										{
+											await _fetchClient.GetFileAndCacheAsync(file.Url, cachekey);
+										}
+										catch (Exception ex)
+										{
+											await Logger.SendAsync("Fetching.GetFileAndCacheAsync Error (AutoDownloader.CheckDropboxAsync)", ex);
+											return;
+										}
+
+										// Get file
+										var cachefile = await Caching.CFile.GetPathAndSaveAsync(cachekey);
+										if (string.IsNullOrEmpty(cachefile))
+											await Logger.SendAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckDropboxAsync)", LogColor.Error);
+										else
+										{
+											// Every user has his own folder
+											var path = $"{Configuration.Default.DropboxFolderName}/{e.User.Id}";
+
+											// Check if folder is full
+											var files = await DropboxCom.GetFilesAsync(path);
+											if (files?.Count >= _maxFilesPerFolder)
+												await e.Channel.SendMessage($"Your folder is full. Try to list all files with `{Configuration.Default.PrefixCmd}dbfolder` and delete one with `{Configuration.Default.PrefixCmd}dbdelete <filename>`.");
+											else
+											{
+												// Send file to Dropbox
+												var msg = await e.Channel.SendMessage($"{mention} Uploading...");
+												var sent = $"{mention} Uploaded {await Utils.AsRawText(filename)} to Dropbox.";
+												if (await DropboxCom.UploadAsync(path, filename, cachefile))
+													await msg.Edit(sent);
+												else
+													await msg.Edit($"{mention} **Upload error.**");
+
+												var link = await DropboxCom.CreateLinkAsync($"{path}/{filename}");
+												if (!(string.IsNullOrEmpty(link)))
+													await msg.Edit($"{sent}\nDownload: <{link}>");
+											}
+										}
+									}
+								}
+								else
+									await e.Channel.SendMessage("Only .dem and .sav files are allowed.");
+							}
+							else if (e.Message.Attachments.Length > 1)
+								await e.Channel.SendMessage("How did you do that? :ok_hand:");
+							else
+								await e.Channel.SendMessage("Please attach a .dem or .sav file to your message.");
+						}
+						catch (Exception ex)
+						{
+							await Logger.SendAsync("Cloud.CloudCommands Upload Command Error", ex);
+							await e.Channel.SendMessage("**Error.**");
+						}
+					});
+
+					CService.CreateCommand("cloud")
 					.Alias("folder", "db")
 					.Description("Returns the main link for the public demo folder.")
 					.AddCheck(Permissions.VipGuildsOnly)
@@ -29,7 +125,7 @@ namespace NeKzBot.Modules.Public.Vip
 
 			CService.CreateCommand("dbfolder")
 					.Alias("myfolder", "dbfiles")
-					.Description("Returns the list of files you've stored on Dropbox.")
+					.Description("Lists the latest files you've stored on Dropbox (max. five files if there are more than that).")
 					.AddCheck(Permissions.VipGuildsOnly)
 					.Do(async e =>
 					{
@@ -41,9 +137,9 @@ namespace NeKzBot.Modules.Public.Vip
 							if (files.Count > 0)
 							{
 								var output = string.Empty;
-								foreach (var file in files)
+								foreach (var file in files.OrderBy(file => file.ModifiedDate).Take(5))
 								{
-									var duration = await Utils.GetDuration(file.ModifiedDate);
+									var duration = await Utils.GetDurationAsync(file.ModifiedDate);
 									output += $"\n{await Utils.AsRawText(file.Name)}{((duration != default(string)) ? $" (modified {duration} ago)" : string.Empty)}";
 								}
 								var link = await DropboxCom.CreateLinkAsync(path);

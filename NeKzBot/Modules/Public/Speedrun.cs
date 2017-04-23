@@ -105,7 +105,7 @@ namespace NeKzBot.Modules.Public
 								embed.AddField(async field =>
 								{
 									field.Name = "Duration";
-									field.Value = await Utils.GetDuration(result.EntryDateTime.DateTime);
+									field.Value = await Utils.GetDurationAsync(result.EntryDateTime.DateTime);
 								});
 								embed.AddField(field =>
 								{
@@ -216,7 +216,7 @@ namespace NeKzBot.Modules.Public
 								embed.AddField(async field =>
 								{
 									field.Name = "Duration";
-									field.Value = await Utils.GetDuration(result.EntryDateTime.DateTime);
+									field.Value = await Utils.GetDurationAsync(result.EntryDateTime.DateTime);
 								});
 								embed.AddField(field =>
 								{

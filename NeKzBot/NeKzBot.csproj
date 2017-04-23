@@ -33,7 +33,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>..\NeKzBotSelfBot\NeKzBotSelfBot.ruleset</CodeAnalysisRuleSet>
@@ -43,7 +43,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;RELEASE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>..\NeKzBotSelfBot\NeKzBotSelfBot.ruleset</CodeAnalysisRuleSet>
@@ -88,8 +88,13 @@
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SpeedrunComSharp">
-      <HintPath>..\..\..\Libraries\SpeedrunComSharp\SpeedrunComSharp.dll</HintPath>
+    <Reference Include="SourceDemoParser.Net, Version=1.0.0.4059, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\SourceDemoParser.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="SpeedrunComSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\SpeedrunComSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -108,19 +113,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bot.cs" />
+    <Compile Include="Internals\Entities\Portal2Maps.cs" />
     <Compile Include="Classes\SteamWorkshop.cs" />
     <Compile Include="Extensions\Constants.cs" />
-    <Compile Include="Extensions\Message.cs" />
+    <Compile Include="Extensions\CustomMessage.cs" />
     <Compile Include="Classes\DropboxCom.cs" />
+    <Compile Include="Extensions\CustomRequest.cs" />
     <Compile Include="Extensions\Embed.cs" />
     <Compile Include="Classes\Errors.cs" />
+    <Compile Include="Extensions\Endpoint.cs" />
     <Compile Include="Extensions\Request.cs" />
-    <Compile Include="Internals\Complex.cs" />
-    <Compile Include="Internals\Simple.cs" />
+    <Compile Include="Extensions\RequestExtension.cs" />
+    <Compile Include="Internals\Entities\Complex.cs" />
+    <Compile Include="Internals\Entities\IMemory.cs" />
+    <Compile Include="Internals\InternalData.cs" />
+    <Compile Include="Internals\Entities\Simple.cs" />
     <Compile Include="Modules\Public\Vip\Service.cs" />
     <Compile Include="Resources\IData.cs" />
     <Compile Include="Internals\InternalWatch.cs" />
-    <Compile Include="Internals\InternalData.cs" />
     <Compile Include="Classes\Web.cs" />
     <Compile Include="Classes\Portal2Board.cs" />
     <Compile Include="Classes\Speedrun.cs" />
@@ -141,8 +151,10 @@
     <Compile Include="Utilities\RestUtils.cs" />
     <Compile Include="Server\Handlers.cs" />
     <Compile Include="Internals\InternalAudio.cs" />
+    <Compile Include="Internals\Entities\Subscription.cs" />
     <Compile Include="Webhooks\WebhookData.cs" />
     <Compile Include="Webhooks\Webhook.cs" />
+    <Compile Include="Webhooks\WebhookObject.cs" />
     <Compile Include="Webhooks\WebhookService.cs" />
     <Compile Include="Modules\Private\Owner\Admin.cs" />
     <Compile Include="Modules\Private\MainServer\Giveaway.cs" />
@@ -209,7 +221,6 @@
       <LastGenOutput>Configuration.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
       <Visible>False</Visible>

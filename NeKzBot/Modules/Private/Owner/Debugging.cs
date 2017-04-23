@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Modules.Private.MainServer;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -169,7 +171,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("p2hook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from p2hook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from p2hook");
 										p2count++;
 									}
 									else
@@ -182,7 +184,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("srcomsourcehook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomsourcehook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomsourcehook");
 										srcomsourcecount++;
 									}
 									else
@@ -195,7 +197,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("srcomportal2hook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomportal2hook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from srcomportal2hook");
 										srcomportal2count++;
 									}
 									else
@@ -208,7 +210,7 @@ namespace NeKzBot.Modules.Private.Owner
 								{
 									if (await WebhookData.UnsubscribeAsync("twtvhook", data))
 									{
-										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from twtvhook", LogColor.Default);
+										await Logger.SendAsync($"Unhooked {data.Id} (GUILD {data.GuildId})(USER {data.UserId}) from twtvhook");
 										twtvcount++;
 									}
 									else
@@ -216,12 +218,26 @@ namespace NeKzBot.Modules.Private.Owner
 								}
 							}
 
-							await Logger.SendAsync($"Cleaned webhook data. File I/O errors: {errorcount}", LogColor.Default);
+							await Logger.SendAsync($"Cleaned webhook data. File I/O errors: {errorcount}");
 							await e.Channel.SendMessage($"Sent {totalhooks} ping test{((totalhooks == 1) ? string.Empty : "s")} in total and removed:"
 													  + $"\n• {p2count} webhook{((p2count == 1) ? string.Empty : "s")} from {Data.Portal2WebhookKeyword}"
 													  + $"\n• {srcomsourcecount} webhook{((srcomsourcecount == 1) ? string.Empty : "s")} from {Data.SpeedrunComSourceWebhookKeyword}"
 													  + $"\n• {srcomportal2count} webhook{((srcomportal2count == 1) ? string.Empty : "s")} from {Data.SpeedrunComPortal2WebhookKeyword}"
 													  + $"\n• {twtvcount} webhook{((twtvcount == 1) ? string.Empty : "s")} from {Data.TwitchTvWebhookKeyword}");
+						});
+
+				GBuilder.CreateCommand("errormessages")
+						.Alias("errormsgs", "errors")
+						.Description("Returns the five latest errors.")
+						.AddCheck(Permissions.BotOwnerOnly)
+						.Hide()
+						.Do(async e =>
+						{
+							await e.Channel.SendIsTyping();
+							var output = string.Empty;
+							foreach (var error in Logger.Errors.Take(5))
+								output += $"\n• {error}";
+							await e.Channel.SendMessage((string.IsNullOrEmpty(output)) ? "Zero errors have occurred since the last restart. :ok_hand:" : output);
 						});
 			});
 			return Task.FromResult(0);

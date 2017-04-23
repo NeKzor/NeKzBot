@@ -1,35 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace NeKzBot.Classes
 {
-	[JsonObject("portal2maps")]
-	public sealed class Portal2Maps
-	{
-		[JsonProperty("map_list")]
-		public List<Portal2Map> Maps { get; set; }
-
-		public Portal2Maps()
-			=> Maps = new List<Portal2Map>();
-
-		public Portal2Maps(List<Portal2Map> list)
-			=> Maps = list;
-
-		public Task<Portal2Map> Search(string value)
-		{
-			var index = -1;
-			if ((index = Maps.FindIndex(map => string.Equals(map.BestTimeId, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-				if ((index = Maps.FindIndex(map => string.Equals(map.BestPortalsId, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-					if ((index = Maps.FindIndex(map => string.Equals(map.Name, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-						if ((index = Maps.FindIndex(map => string.Equals(map.ChallengeModeName, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-							if ((index = Maps.FindIndex(map => string.Equals(map.ThreeLetterCode, value, StringComparison.CurrentCultureIgnoreCase))) == -1)
-								return Task.FromResult(default(Portal2Map));
-			return Task.FromResult(Maps[index]);
-		}
-	}
-
 	[JsonObject("map")]
 	public sealed class Portal2Map
 	{
@@ -80,24 +54,20 @@ namespace NeKzBot.Classes
 		public string Date
 		{
 			get => (_date != string.Empty)
-						 ? $"{_date} UTC"
-						 : "_Unknown._";
-			set { _date = value; }
+						  ? $"{_date} UTC"
+						  : "_Unknown._";
+			set => _date = value;
 		}
-		public DateTime DateTime    // Useful for duration
-		{
-			get => (DateTime.TryParse(_date, out var result))
-							? result
-							: default(DateTime);
-		}
+		// Useful for duration
+		public DateTime DateTime
+			=> (DateTime.TryParse(_date, out var result))
+						? result
+						: default(DateTime);
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
 		public string MapId { get; set; }
-		public string ImageLink
-		{
-			get => $"https://board.iverb.me/images/chambers_full/{MapId}.jpg";
-		}
+		public string ImageLink => $"https://board.iverb.me/images/chambers_full/{MapId}.jpg";
 		private string _date;
 	}
 
@@ -107,13 +77,9 @@ namespace NeKzBot.Classes
 		public string SteamId { get; set; }
 		public string SteamAvatar { get; set; }
 		public string SteamLink
-		{
-			get => $"https://steamcommunity.com/profiles/{SteamId}";
-		}
+			=> $"https://steamcommunity.com/profiles/{SteamId}";
 		public string BoardLink
-		{
-			get => $"https://board.iverb.me/profile/{SteamId}";
-		}
+			=> $"https://board.iverb.me/profile/{SteamId}";
 		public string SinglePlayerPoints { get; set; }
 		public string CooperativePoints { get; set; }
 		public string OverallPoints { get; set; }

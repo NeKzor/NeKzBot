@@ -30,77 +30,50 @@ namespace NeKzBot.Classes
 
 		public static async Task<dynamic> GetStreamAsync(string channel)
 		{
-			// Twitch API
-			var json = string.Empty;
+			var json = default(string);
 			try
 			{
-				// Download
 				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/streams/{channel}?client_id={Credentials.Default.TwitchClientId}");
+				if (string.IsNullOrEmpty(json))
+					return await Logger.SendAsync("TwitchTv.GetStreamAsync JSON Error", LogColor.Error);
 			}
 			catch (Exception e)
 			{
 				return await Logger.SendAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamAsync)", e);
 			}
-
-			// Read
-			if (string.IsNullOrEmpty(json))
-				return await Logger.SendAsync("TwitchTv.GetStreamAsync Is Empty", LogColor.Error);
-
-			// Read json string
-			dynamic streamer = JsonConvert.DeserializeObject(json);
-			return (string.IsNullOrEmpty(streamer?.ToString()))
-						  ? await Logger.SendAsync("TwitchTv.GetStreamAsync JSON Error", LogColor.Error)
-						  : streamer;
+			return JsonConvert.DeserializeObject(json);
 		}
 
 		public static async Task<dynamic> GetStreamerAsync(string channel)
 		{
-			// Twitch API
-			var json = string.Empty;
+			var json = default(string);
 			try
 			{
-				// Download
 				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/channels/{channel}?client_id={Credentials.Default.TwitchClientId}");
+				if (string.IsNullOrEmpty(json))
+					return await Logger.SendAsync("TwitchTv.GetStreamerAsync JSON Error", LogColor.Error);
 			}
 			catch (Exception e)
 			{
 				return await Logger.SendAsync("Fetching.GetStringAsync Error (TwitchTv.GetStreamerAsync)", e);
 			}
-
-			// Read
-			if (string.IsNullOrEmpty(json))
-				return await Logger.SendAsync("TwitchTv.GetStreamerAsync Is Empty", LogColor.Error);
-
-			// Read json string
-			dynamic streamer = JsonConvert.DeserializeObject(json);
-			return (string.IsNullOrEmpty(streamer?.ToString()))
-						  ? await Logger.SendAsync("TwitchTv.GetStreamerAsync JSON Error", LogColor.Error)
-						  : streamer;
+			return JsonConvert.DeserializeObject(json);
 		}
 
 		public static async Task<dynamic> GetGameAsync(string game)
 		{
-			// Twitch API
-			var json = string.Empty;
+			var json = default(string);
 			try
 			{
-				// Download
 				json = await _fetchClient.GetStringAsync($"{_twitchApi}/kraken/search/games?query={WebUtility.UrlEncode(game)}&client_id={Credentials.Default.TwitchClientId}&type=suggest");
+				if (string.IsNullOrEmpty(json))
+					return await Logger.SendAsync("TwitchTv.GetGameAsync JSON Error", LogColor.Error);
 			}
 			catch (Exception e)
 			{
 				return await Logger.SendAsync("Fetching.GetGameAsync Error (TwitchTv.GetStreamerAsync)", e);
 			}
-
-			// Read
-			if (string.IsNullOrEmpty(json))
-				return await Logger.SendAsync("TwitchTv.GetGameAsync Is Empty", LogColor.Error);
-
-			// Read json string
-			dynamic streamer = JsonConvert.DeserializeObject(json);
-			return (string.IsNullOrEmpty(streamer?.ToString()))
-						  ? await Logger.SendAsync("TwitchTv.GetGameAsync JSON Error", LogColor.Error)
-						  : streamer;
+			return JsonConvert.DeserializeObject(json);
 		}
 	}
 }

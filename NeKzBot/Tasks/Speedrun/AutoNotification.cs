@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -67,13 +68,14 @@ namespace NeKzBot.Tasks.Speedrun
 							if (nfstosend?.Count > 0)
 							{
 								nfstosend.Reverse();
+								// TODO: this can hit the rate limit pretty easily if the bot is offline for a while
 								foreach (var notification in nfstosend)
 								{
 									var hook = new Webhook
 									{
 										UserName = "SpeedrunCom",
 										AvatarUrl = _webhookavatar,
-										Embeds = new Embed[] { await CreateEmbed(notification) }
+										Embeds = new Embed[] { await CreateEmbedAsync(notification) }
 									};
 
 									// I really hope API v2 is better :s
@@ -105,8 +107,11 @@ namespace NeKzBot.Tasks.Speedrun
 				await Logger.SendToChannelAsync("SpeedrunCom.AutoNotification.StartAsync Ended", LogColor.Speedrun);
 			}
 
-			private static Task<Embed> CreateEmbed(SpeedrunNotification nf)
+			private static async Task<Embed> CreateEmbedAsync(SpeedrunNotification nf)
 			{
+				if (string.IsNullOrEmpty(nf.FormattedText))
+					await Logger.SendToChannelAsync("SpeedrunCom.CreateEmbedAsync Text Is Empty", LogColor.Speedrun);
+
 				var embed = new Embed
 				{
 					Title = "Latest Notification",
@@ -119,7 +124,7 @@ namespace NeKzBot.Tasks.Speedrun
 				};
 				if (nf.Author != null)
 					embed.WithAuthor(new EmbedAuthor(nf.Author.Name, $"https://www.speedrun.com/{nf.Author.Name}", $"https://www.speedrun.com/themes/user/{nf.Author.Name}/image.png"));
-				return Task.FromResult(embed);
+				return embed;
 			}
 		}
 	}

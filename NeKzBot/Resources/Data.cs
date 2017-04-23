@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Server;
-using NeKzBot.Tasks.NonModules;
 using NeKzBot.Utilities;
 
 namespace NeKzBot.Resources
@@ -49,7 +48,7 @@ namespace NeKzBot.Resources
 		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me."
 															  + $"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com."
 															  + $"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com."
-															  + $"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use).";
+															  + $"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use because this is a private list).";
 		public static readonly string HiddenMessage = "**[Hidden Commands & Neat Shortcuts]**\n" +
 													  $"• You can execute commands at the end of your text too: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n" +
 													  "• You can also use a mention to execute commands: `<@user_id> commands`.\n" +
@@ -60,7 +59,7 @@ namespace NeKzBot.Resources
 													  "• You can also set a custom tickrate like this: `1=sec66`.\n" +
 													  "• You can create a startdemos command very quickly with this: `10->demo_`.\n" +
 													  "• You can view the image preview of a Steam workshop item by just sending a valid uri which should have `https` or `http` in the beginning.\n" +
-													  $"• Special files like .dem and .sav will automatically be uploaded to a Dropbox account as a backup. You are allowed to store up to {AutoDownloader.MaxFilesPerFolder} files.";
+													  "• Source Engine demo files will be parsed automatically if you upload them as an attachment (parsing means that information about that demo will be returned).";
 
 		public static readonly string[] BotGreetings = { "Hey!", "Yo!", "Hi!", "Hello!", "Hei!", "Hej!", "Hallo!", "Beep boop!", "Hola!", "Salut!", "Привет!", "Ciao!" };
 		public static readonly string[] BotFeelings = { ":grinning:", ":grimacing:", ":grin:", ":smiley:", ":smile:", ":sweat_smile:", ":wink:", ":slight_smile:", ":rage:", ":yum:", ":blush:", ":robot:", ":thumbsup:", ":ok_hand:", ":v:", ":heart:" };
@@ -98,14 +97,11 @@ namespace NeKzBot.Resources
 		public const string SpeedrunComSourceWebhookKeyword = "source";
 		public const string SpeedrunComPortal2WebhookKeyword = "portal2";
 		public const string TwitchTvWebhookKeyword = "twitch";
-		public const string LatestChangelog = "\n• Replaced data pattern matching with data interface casting" +
-											  "\n• Replaced data parsing system with json serialization" +
-											  "\n• New data changing system" +
-											  "\n• New fetching system" +
-											  "\n• Added new filter parameter to a speedrun command" +
-											  "\n• Added new index parameter to a debug command" +
-											  "\n• Added new data statistics command for debugging" +
-											  "\n• Small improvements and bug fixes";
+		public const string LatestChangelog = "\n• Added a Source Engine demo parsing library" +
+											  "\n• Replaced automatic attachment download task with the demo parser" +
+											  "\n• Moved Dropbox upload code to its own command" +
+											  "\n• Small improvement in Twitch cache algorithm" +
+											  "\n• Some other tiny changes here and there";
 
 		public static async Task GenerateModuleListsAsync()
 		{
@@ -118,7 +114,7 @@ namespace NeKzBot.Resources
 			LinuxOnly = await Utils.GenerateModuleListAsync("Raspberry Pi Module", specialprefix: "rpi ", commands: new[] { "specs", "date", "uptime", "temperature", "os" });
 			ResourcesPublic = await Utils.GenerateModuleListAsync("Resource Module", commands: new[] { "scripts", "dialogue", "segmented" });
 			RestPublic = await Utils.GenerateModuleListAsync("Rest Module", commands: new[] { "invite", "join", "view", "credits" });
-			VipServersOnly = await Utils.GenerateModuleListAsync("VIP Module", commands: new[] { "sound", "twitch", "cloud", "dbfolder", "dbdelete", "bot connect", "bot disconnect", "bot stop", "bot subscribe", "bot unsubscribe" });
+			VipServersOnly = await Utils.GenerateModuleListAsync("VIP Module", commands: new[] { "sound", "twitch", "upload", "cloud", "dbfolder", "dbdelete", "bot connect", "bot disconnect", "bot stop", "bot subscribe", "bot unsubscribe" });
 			MainServerOnly = await Utils.GenerateModuleListAsync("Bot Module - Developer Server Only", commands: new[] { "giveaway", "giveaway maxtries", "giveaway setstate", "giveaway status", "pie", "line" });
 			LeaderboardPrivate = await Utils.GenerateModuleListAsync("Leaderboard Module - Bot Owner Only", specialprefix: $"{Configuration.Default.LeaderboardCmd} ", commands: new[] { "boardparameter", "cachetime", "setcachetime" });
 			BotOwnerOnly = await Utils.GenerateModuleListAsync("Bot Module - Bot Owner Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "newgame", "setgame", "echo", "send", "add", "delete", "reload", "showdata", "datavars", "cleanconfig", "revive", "taskstatus", "watches", "webhooktest", "react" });

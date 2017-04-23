@@ -232,7 +232,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					// First get all maps
 					var maps = doc.DocumentNode.SelectNodes("//div[@class='cell title']//a");
-					var mapname = map.Name;
+					var mapname = map.ChallengeModeName;
 
 					// Find index map of all nodes
 					var index = 0;

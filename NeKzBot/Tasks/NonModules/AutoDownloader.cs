@@ -1,92 +1,67 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using NeKzBot.Classes;
+using NeKzBot.Extensions;
+using NeKzBot.Resources;
 using NeKzBot.Server;
-using NeKzBot.Utilities;
+using SourceDemoParser.Net;
 
 namespace NeKzBot.Tasks.NonModules
 {
 	public static class AutoDownloader
 	{
 		private static readonly Fetcher _fetchClient = new Fetcher();
-		private static string _cacheKey;
+		private static readonly string _cacheKey = "demo";
 
-		public const uint MaxFilesPerFolder = 20;
-		private const uint _maxfilesize = 5000 * 1024;   // 5KB
+		private const uint _maxfilesize = 5000 * 1024;   // 5MB
 
-		// Upload to Dropbox.com
-		public static async Task<bool> CheckDropboxAsync(MessageEventArgs args)
+		// Parse demo files
+		public static async Task<bool> CheckForDemoFileAsync(MessageEventArgs args)
 		{
 			try
 			{
-				if (args.Message.Attachments.Length > 0)
+				// I've never seen a message that had more than one attachment
+				if (args.Message.Attachments.Length == 1)
 				{
-					foreach (var file in args.Message.Attachments)
-					{
-						// Check file extension
-						var filename = file.Filename;
-						var extension = filename.Substring(filename.Length - 4, 4);
+					var file = args.Message.Attachments.First();
 
-						// Only allow demos and saves because Source Engine games :^)
-						if ((extension == ".dem")
-						|| (extension == ".sav"))
+					// Check file extension
+					var filename = file.Filename;
+					var extension = Path.GetExtension(filename) ?? string.Empty;
+
+					// Only allow Source Engine demos
+					if (extension == ".dem")
+					{
+						// Maximum 5000KB
+						if ((file.Size < _maxfilesize)
+						&& (file.Size != 0))
 						{
-							var mention = args.User.Mention;
-							// Maximum 5000KB
-							if (file.Size > _maxfilesize)
-							{
-								await args.Channel.SendMessage($"{mention} File {await Utils.AsRawText(filename)} is too large for an upload (max. {_maxfilesize}KB).");
-								continue;
-							}
-							else if (file.Size == 0)
-							{
-								await args.Channel.SendMessage($"{mention} File {await Utils.AsRawText(filename)} seems to be broken.");
-								continue;
-							}
+							// Should give every user his own cache too
+							var cachekey = $"{_cacheKey}{args.User.Id}";
 
 							// Download data
-							_cacheKey = _cacheKey ?? "dropbox";
 							try
 							{
-								await _fetchClient.GetFileAndCacheAsync(file.Url, _cacheKey);
+								await _fetchClient.GetFileAndCacheAsync(file.Url, cachekey);
 							}
 							catch (Exception e)
 							{
-								await Logger.SendToChannelAsync("Fetching.GetFileAndCacheAsync Error (AutoDownloader.CheckDropboxAsync)", e);
-								break;
+								await Logger.SendAsync("Fetching.GetFileAndCacheAsync Error (AutoDownloader.CheckForDemoFileAsync)", e);
+								return true;
 							}
 
 							// Get file
-							var cacheFile = await Caching.CFile.GetPathAndSaveAsync(_cacheKey);
-							if (string.IsNullOrEmpty(cacheFile))
-							{
-								await Logger.SendToChannelAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckDropboxAsync)", LogColor.Error);
-								break;
-							}
-
-							// Every user has his own folder
-							var path = $"{Configuration.Default.DropboxFolderName}/{args.User.Id}";
-
-							// Check if folder is full
-							var files = await DropboxCom.GetFilesAsync(path);
-							if (files?.Count >= MaxFilesPerFolder)
-							{
-								await args.Channel.SendMessage($"Your folder is full. Try to list all files with `{Configuration.Default.PrefixCmd}dbfolder` and delete one with `{Configuration.Default.PrefixCmd}dbdelete <filename>`.");
-								continue;
-							}
-
-							// Send file to Dropbox
-							var msg = await args.Channel.SendMessage($"{mention} Uploading...");
-							var sent = $"{mention} Uploaded {await Utils.AsRawText(filename)} to Dropbox.";
-							if (await DropboxCom.UploadAsync(path, filename, cacheFile))
-								await msg.Edit(sent);
+							var cachefile = await Caching.CFile.GetPathAndSaveAsync(cachekey);
+							if (string.IsNullOrEmpty(cachefile))
+								await Logger.SendAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckForDemoFileAsync)", LogColor.Error);
 							else
-								await msg.Edit($"{mention} **Upload error.**");
-
-							var link = await DropboxCom.CreateLinkAsync($"{path}/{filename}");
-							if (!(string.IsNullOrEmpty(link)))
-								await msg.Edit($"{sent}\nDownload: <{link}>");
+							{
+								// Parser throws exception if something failed
+								var demo = await SourceDemo.Parse(cachefile);
+								await Bot.SendAsync(CustomRequest.SendMessage(args.Channel.Id), new CustomMessage(await GenerateEmbed(demo)));
+							}
 						}
 					}
 				}
@@ -95,10 +70,63 @@ namespace NeKzBot.Tasks.NonModules
 			}
 			catch (Exception e)
 			{
-				await Logger.SendToChannelAsync("AutoDownloader.CheckDropboxAsync Error", e);
-				await args.Channel.SendMessage("**Error.**");
+				await Logger.SendAsync("AutoDownloader.CheckForDemoFileAsync Error", e);
 			}
 			return true;
+		}
+
+		private static Task<Embed> GenerateEmbed(SourceDemo demo)
+		{
+			var game = demo.GameInfo.Name;
+			var mode = demo.GameInfo.Mode;
+			var player = demo.Client;
+			var mapname = demo.MapName;
+			var alias = demo.GameInfo.GetMapAlias(mapname);
+			var adjusted = demo.AdjustedTicks;
+			var ticks = demo.PlaybackTicks;
+			var time = demo.PlaybackTime;
+			var tickrate = demo.Tickrate;
+			if (ticks != adjusted)
+			{
+				ticks = adjusted;
+				time = demo.AdjustTime(demo.TicksPerSecond);
+			}
+			// Just filling the last embed field with useless and inaccurate information because I don't know what else I could put in there
+			// Calculate jump count (not a real jump but if you could somehow combine this by looking for the "onground" flag then it should work)
+			var jumps = demo.ConsoleCommands.Where(frame => frame.ConsoleCommand.StartsWith("+jump"));
+			var registeredjumps = jumps.Count();
+			var command = jumps.FirstOrDefault();
+			var actualjumps = 0;
+			if (registeredjumps > 1)
+			{
+				foreach (var frame in jumps.Skip(1))
+				{
+					if (command.CurrentTick != frame.CurrentTick)
+						actualjumps++;
+					command = frame;
+				}
+			}
+			else
+				actualjumps = registeredjumps;
+
+			return Task.FromResult(new Embed
+			{
+				Title = "Demo Info",
+				Url = "https://traderain.hu/VolvoWrench",
+				Color = Data.BasicColor.RawValue,
+				Fields = new EmbedField[]
+				{
+					// I trust you guys, do not try to break this :s (escaping)
+					new EmbedField("Game",  game + $"{((string.IsNullOrEmpty(mode)) ? string.Empty : $"\n{mode}")}", true),
+					new EmbedField("Player", player, true),
+					new EmbedField("Time", $"{ticks} ticks\n{time.ToString("N3")}s", true),
+					new EmbedField("Map",  mapname + $"{((string.IsNullOrEmpty(alias)) ? string.Empty : $"\n{alias}")}", true),
+					new EmbedField("Tickrate", $"{tickrate}", true),
+					new EmbedField("Stats", $"Jump Inputs: {registeredjumps}\nJump Ticks: {actualjumps}", true)
+				},
+				// Not true anymore but I guess we can call this advertisement lol
+				Footer = new EmbedFooter("Parsed with VolvoWrench", "https://raw.githubusercontent.com/Traderain/VolvoWrench/master/VolvoWrench/Resources/08%20Wrench.ico")
+			});
 		}
 	}
 }

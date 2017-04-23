@@ -34,7 +34,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.7.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.8.0")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -199,7 +199,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("540068865")]
+        [global::System.Configuration.DefaultSettingValueAttribute("674294849")]
         public int BotPermissions {
             get {
                 return ((int)(this["BotPermissions"]));

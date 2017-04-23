@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NeKzBot.Extensions;
 using NeKzBot.Internals;
@@ -9,21 +8,10 @@ using NeKzBot.Utilities;
 
 namespace NeKzBot.Webhooks
 {
-	[JsonObject("subscription")]
-	public class Subscription
-	{
-		[JsonProperty("subs")]
-		public List<WebhookData> Subscribers { get; set; }
-		public Subscription()
-			=> Subscribers = new List<WebhookData>();
-		public Subscription(List<WebhookData> subs)
-			=> Subscribers = subs;
-	}
-
 	[JsonObject("webhook")]
-	public class WebhookData
+	public sealed class WebhookData
 	{
-		public static InternalWatch Watch { get; set; } = new InternalWatch();
+		public static InternalWatch TestPingWatch { get; set; } = new InternalWatch();
 
 		[JsonProperty("id")]
 		public ulong Id { get; set; }
@@ -39,7 +27,6 @@ namespace NeKzBot.Webhooks
 		public WebhookData()
 		{
 		}
-
 		public WebhookData(ulong id, string token, ulong guildid, ulong userid)
 		{
 			Id = id;
@@ -77,7 +64,7 @@ namespace NeKzBot.Webhooks
 					new Embed
 					{
 						Title = "Webhook Ping Test!",
-						Description = $"{await Utils.RngStringAsync(Data.BotGreetings)} {await Utils.RngStringAsync(Data.BotFeelings)}\nThis test took {await Watch.GetElapsedTime()} milliseconds.\nThe webhook id has been sent as a direct message.",
+						Description = $"{await Utils.RngStringAsync(Data.BotGreetings)} {await Utils.RngStringAsync(Data.BotFeelings)}\nThis test took {await TestPingWatch.GetElapsedTime()} milliseconds.\nThe webhook id has been sent as a direct message.",
 						Color = Data.BasicColor.RawValue,
 						Url = Configuration.Default.AppUrl,
 						Footer = new EmbedFooter("NeKzHook Service 2017")

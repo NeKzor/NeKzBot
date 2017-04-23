@@ -1,19 +1,18 @@
 ﻿using System.Threading.Tasks;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Utilities;
 
 namespace NeKzBot.Internals
 {
 	public sealed class InternalData<T> : IData
-		where T : class, new()
+		where T : class, IMemory, new()
 	{
 		public string Name { get; }
 		public bool ReadingAllowed { get; }
 		public bool WrittingAllowed { get; }
 		public bool ReadWriteAllowed
-		{
-			get => ReadingAllowed && WrittingAllowed;
-		}
+			=> ReadingAllowed && WrittingAllowed;
 		public string FileName { get; }
 		public object Memory { get; private set; }
 

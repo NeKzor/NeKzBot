@@ -29,7 +29,7 @@ namespace NeKzBot.Modules.Public
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"Uptime • **{(await Utils.GetUptime()).ToString(@"hh\:mm\:ss")}**");
+							await e.Channel.SendMessage($"Uptime • {await Utils.GetDurationFromTimeSpan(await Utils.GetUptime(), false)}");
 						});
 
 				GBuilder.CreateCommand("location")
@@ -37,7 +37,8 @@ namespace NeKzBot.Modules.Public
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage("Bot Location • Graz, Austria :flag_at:");
+							await e.Channel.SendMessage("Bot Location • Graz, Austria :flag_at:\n" +
+														$"Local Time • {await Utils.GetLocalTime(true)}");
 						});
 
 				GBuilder.CreateCommand("info")
@@ -60,10 +61,13 @@ namespace NeKzBot.Modules.Public
 														$"\n**Servers** {Bot.Client.Servers.Count()}" +
 														$"\n**Commands** {CService.AllCommands.Count()}" +
 														$"\n**Services** {Bot.Client.Services.Count()}" +
-														$"\n**Error Count** {Logger.ErrorCount}" +
+														$"\n**Error Count** {Logger.Errors.Count}" +
 														$"\n**Heap Size** {Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB" +
-														$"\n**Application Uptime** {(await Utils.GetUptime()).ToString(@"hh\:mm\:ss")}" +
-														$"\n**Thread Count** {Process.GetCurrentProcess().Threads.Count}/{workers}/{ports}");
+														$"\n**Thread Count** {Process.GetCurrentProcess().Threads.Count}/{workers}/{ports}" +
+														$"\n**Application Uptime** {await Utils.GetDurationFromTimeSpan(await Utils.GetUptime(), false)}" +
+														"\n**Bot Location** Graz, Austria" +
+														$"\n**Local Time** {await Utils.GetLocalTime()}" +
+														$"\n**Actual Local Time** {await Utils.GetLocalTime(true)}");
 						});
 
 				GBuilder.CreateCommand("version")
@@ -131,43 +135,43 @@ namespace NeKzBot.Modules.Public
 						var lowestids = new List<User>();
 						var highestids = new List<User>();
 						var sumids = 0;
-						foreach (var item in users)
+						foreach (var user in users)
 						{
-							if (item.Id == 0)
+							if (user.Id == 0)
 								continue;
 
 							// Search for lowest id
-							if (lowestid.Id > item.Id)
+							if (lowestid.Id > user.Id)
 							{
-								lowestid = item;
-								lowestids = new List<User> { item };
+								lowestid = user;
+								lowestids = new List<User> { user };
 							}
-							else if (lowestid.Id == item.Id)
-								lowestids.Add(item);
+							else if (lowestid.Id == user.Id)
+								lowestids.Add(user);
 
 							// Search for highest id
-							if (highestid.Id < item.Id)
+							if (highestid.Id < user.Id)
 							{
-								highestid = item;
-								highestids = new List<User> { item };
+								highestid = user;
+								highestids = new List<User> { user };
 							}
-							else if (highestid.Id == item.Id)
-								highestids.Add(item);
+							else if (highestid.Id == user.Id)
+								highestids.Add(user);
 
-							sumids += item.Discriminator;
+							sumids += user.Discriminator;
 						}
 
-						var output1 = string.Empty;
+						var lowest = string.Empty;
 						foreach (var item in lowestids)
-							output1 += $"• {await Utils.AsRawText(item.Name)}#{item.Discriminator.ToString("D4")}\n";
+							lowest += $"• {await Utils.AsRawText(item.Name)}#{item.Discriminator.ToString("D4")}\n";
 
-						var output2 = string.Empty;
+						var highest = string.Empty;
 						foreach (var item in highestids)
-							output2 += $"• {await Utils.AsRawText(item.Name)}#{item.Discriminator.ToString("D4")}\n";
+							highest += $"• {await Utils.AsRawText(item.Name)}#{item.Discriminator.ToString("D4")}\n";
 
-						await e.Channel.SendMessage($"{(lowestids.Count > 1 ? $"Lowest IDs\n{output1}" : $"Lowest ID • {await Utils.AsRawText(lowestid.Name)}#{lowestid.Discriminator.ToString("D4")}\n")}" +
-													$"{(highestids.Count > 1 ? $"Highest IDs\n{output2}" : $"Highest ID • {await Utils.AsRawText(highestid.Name)}#{highestid.Discriminator.ToString("D4")}\n")}" +
-													$"Average ID • #{((ulong)Math.Round((decimal)sumids / users.Length, 0)).ToString("D4")}");
+						await e.Channel.SendMessage($"{(lowestids.Count > 1 ? $"Lowest Discriminators\n{lowest}" : $"Lowest Discriminator • {await Utils.AsRawText(lowestid.Name)}#{lowestid.Discriminator.ToString("D4")}\n")}" +
+													$"{(highestids.Count > 1 ? $"Highest Discriminators\n{highest}" : $"Highest Discriminator • {await Utils.AsRawText(highestid.Name)}#{highestid.Discriminator.ToString("D4")}\n")}" +
+													$"Average Discriminator • #{((ulong)Math.Round((decimal)sumids / users.Length, 0)).ToString("D4")}");
 					});
 			return Task.FromResult(0);
 		}

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
@@ -31,7 +33,7 @@ namespace NeKzBot.Tasks
 
 		public static async Task StartAsync(int serverdelay = 8000)
 		{
-			await Task.Delay(serverdelay);
+			//await Task.Delay(serverdelay);
 			await Logger.SendAsync("Twitch Started", LogColor.Twitch);
 			IsRunning = true;
 			try
@@ -48,16 +50,21 @@ namespace NeKzBot.Tasks
 						await Caching.CFile.SaveCacheAsync(_cacheKey, string.Empty);
 						continue;
 					}
-
-					foreach (var streamer in (await Data.Get<Simple>("streamers")).Value)
+#if DEBUG
+					await Logger.SendAsync(await Utils.CollectionToList(cache, delimiter: "|"));
+#endif
+					var streamers = (await Data.Get<Simple>("streamers")).Value;
+					foreach (var streamer in streamers.ToArray())
 					{
 						// Giving this a scanning rate because why not
-						await Task.Delay((int)_delayFactor * (await Data.Get<Simple>("streamers")).Value.Count);
+						await Task.Delay((int)_delayFactor * streamers.Count);
 
 						dynamic api = await TwitchTv.GetStreamAsync(streamer);
+						if (api == null)
+							continue;
 
 						// Check if streamer is offline
-						if (api?.stream != null)
+						if (api.stream != null)
 						{
 							// Ignore when already streaming
 							if (cache.Contains(streamer))
@@ -113,9 +120,17 @@ namespace NeKzBot.Tasks
 								cache.Remove(streamer);
 						api = null;
 					}
+					// Clean up cache
+					var newcache = new List<string>() { string.Empty };
+					foreach (var item in cache.Skip(1))
+						if (streamers.Contains(item))
+							newcache.Add(item);
 					// Save cache
-					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(cache, delimiter: "|"));
-					cache = null;
+#if DEBUG
+					await Logger.SendAsync(await Utils.CollectionToList(newcache, delimiter: "|"));
+#endif
+					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(newcache, delimiter: "|"));
+					cache = newcache = null;
 
 					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> ");
 					await Task.Delay((delay > 0 ) ? delay : 0);
