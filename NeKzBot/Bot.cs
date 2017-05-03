@@ -109,6 +109,7 @@ namespace NeKzBot
 				// Private
 				await Admin.LoadAsync();
 				await Cloud.LoadAsync();
+				await Contest.LoadAsync();
 				await DataBase.LoadAsync();
 				await Debugging.LoadAsync();
 				await Giveaway.LoadAsync();

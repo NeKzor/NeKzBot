@@ -36,14 +36,14 @@ namespace NeKzBot.Server
 
 		// Write to console
 		public static void CON(object _, LogMessageEventArgs e)
-			=> Console.WriteLine($"[{Utils.GetLocalTime().GetAwaiter().GetResult()}] : " +
+			=> Console.WriteLine($"[{Utils.GetLocalTimeAsync().GetAwaiter().GetResult()}] : " +
 								 $"{FormatTime(Utils.GetUptime().GetAwaiter().GetResult()).GetAwaiter().GetResult()}" +
 								 $"[SOCKET] : [{e.Severity}] : [{e.Source}] : {e.Message}");
 
 		public static async Task<object> SendAsync(string message, LogColor color = LogColor.Default)
 		{
 			Console.ForegroundColor = (ConsoleColor)color;
-			Console.WriteLine($"[{await Utils.GetLocalTime()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : {await GetSource(color)} : {message}");
+			Console.WriteLine($"[{await Utils.GetLocalTimeAsync()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : {await GetSource(color)} : {message}");
 			Console.ResetColor();
 			return null;
 		}
@@ -52,7 +52,7 @@ namespace NeKzBot.Server
 		{
 			Errors.Add(message);
 			Console.ForegroundColor = (ConsoleColor)LogColor.Error;
-			Console.WriteLine($"[{await Utils.GetLocalTime()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : [Error] : {message}\n" +
+			Console.WriteLine($"[{await Utils.GetLocalTimeAsync()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : [Error] : {message}\n" +
 							  $"Source: {e.Source}\n" +
 							  $"Message: {e.Message}");
 			Console.ResetColor();
@@ -63,14 +63,14 @@ namespace NeKzBot.Server
 		public static async Task<object> SendToChannelAsync(string message, LogColor color)
 		{
 			await SendAsync(message, color);
-			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()}**\n{message}");
+			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTimeAsync()}**\n{message}");
 			return null;
 		}
 
 		public static async Task<object> SendToChannelAsync(string message, Exception e)
 		{
 			await SendAsync(message, e);
-			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTime()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
+			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTimeAsync()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
 			return null;
 		}
 

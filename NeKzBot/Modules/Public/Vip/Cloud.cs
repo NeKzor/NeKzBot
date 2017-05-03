@@ -114,14 +114,14 @@ namespace NeKzBot.Modules.Public.Vip
 					});
 
 					CService.CreateCommand("cloud")
-					.Alias("folder", "db")
-					.Description("Returns the main link for the public demo folder.")
-					.AddCheck(Permissions.VipGuildsOnly)
-					.Do(async e =>
-					{
-						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage((Credentials.Default.DropboxFolderQuery != string.Empty) ? $"<https://www.dropbox.com/sh/{Credentials.Default.DropboxFolderQuery}?dl=0>" : "Not available.");
-					});
+							.Alias("folder", "db")
+							.Description("Returns the main link for the public demo folder.")
+							.AddCheck(Permissions.VipGuildsOnly)
+							.Do(async e =>
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage((Credentials.Default.DropboxFolderQuery != string.Empty) ? $"<https://www.dropbox.com/sh/{Credentials.Default.DropboxFolderQuery}?dl=0>" : "Not available.");
+							});
 
 			CService.CreateCommand("dbfolder")
 					.Alias("myfolder", "dbfiles")

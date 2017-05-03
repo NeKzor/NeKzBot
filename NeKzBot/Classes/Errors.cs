@@ -2,13 +2,13 @@
 
 namespace NeKzBot.Classes
 {
-	public static class TwitchError
+	public struct TwitchError
 	{
 		public static readonly string Generic = "**Error.**";
 		public static readonly string Offline = "Streamer is offline.";
 	}
 
-	public static class DataError
+	public struct DataError
 	{
 		public static readonly string Generic = "**Error.**";
 		public static readonly string FileNotFound = "**Error** • File not found.";
@@ -21,7 +21,7 @@ namespace NeKzBot.Classes
 		public static readonly string NameNotFound = "**Error** - Unique data name/id not found.";
 	}
 
-	public static class AudioError
+	public struct AudioError
 	{
 		public static readonly string None = string.Empty;
 		public static readonly string Generic = "**Error.**";

@@ -164,8 +164,18 @@ namespace NeKzBot.Modules.Private.Owner
 									}
 									else
 									{
-										foreach (var item in complex.Values)
-											output += $"{item.Value[0]}, ";
+										// Try to find the index instead (if the uint index is actually a string)
+										var found = complex.Values.FindIndex(s => s.Value.First() == e.GetArg("index"));
+										if (found != -1)
+										{
+											foreach (var item in complex.Values[found].Value)
+												output += $"{item}, ";
+										}
+										else
+										{
+											foreach (var item in complex.Values)
+												output += $"{item.Value[0]}, ";
+										}
 									}
 								}
 								else if (memory is Subscription sub)

@@ -69,7 +69,8 @@ namespace NeKzBot.Resources
 				new InternalData<Subscription>("srcomsourcehook", true, true, "srsourcesubs"),
 				new InternalData<Subscription>("twtvhook", true, true, "twtvsubs"),
 				new InternalData<Subscription>("srcomportal2hook", true, true, "srportal2subs"),
-				new InternalData<Portal2Maps>("p2maps", true, false, "p2maps")
+				new InternalData<Portal2Maps>("p2maps", true, false, "p2maps"),
+				new InternalData<Submissions>("contest", true, true, "contest")
 			};
 		}
 	}

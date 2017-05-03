@@ -97,11 +97,11 @@ namespace NeKzBot.Resources
 		public const string SpeedrunComSourceWebhookKeyword = "source";
 		public const string SpeedrunComPortal2WebhookKeyword = "portal2";
 		public const string TwitchTvWebhookKeyword = "twitch";
-		public const string LatestChangelog = "\n• Added a Source Engine demo parsing library" +
-											  "\n• Replaced automatic attachment download task with the demo parser" +
-											  "\n• Moved Dropbox upload code to its own command" +
-											  "\n• Small improvement in Twitch cache algorithm" +
-											  "\n• Some other tiny changes here and there";
+		public const string LatestChangelog = "• Added a new community game\n" +
+											  "• Improved a data command\n" +
+											  "• Fixed TimeZoneNotFoundException\n" +
+											  "• Json serialization for Twitch API objects\n" +
+											  "• Improved Twitch game search by exact name";
 
 		public static async Task GenerateModuleListsAsync()
 		{
@@ -117,7 +117,7 @@ namespace NeKzBot.Resources
 			VipServersOnly = await Utils.GenerateModuleListAsync("VIP Module", commands: new[] { "sound", "twitch", "upload", "cloud", "dbfolder", "dbdelete", "bot connect", "bot disconnect", "bot stop", "bot subscribe", "bot unsubscribe" });
 			MainServerOnly = await Utils.GenerateModuleListAsync("Bot Module - Developer Server Only", commands: new[] { "giveaway", "giveaway maxtries", "giveaway setstate", "giveaway status", "pie", "line" });
 			LeaderboardPrivate = await Utils.GenerateModuleListAsync("Leaderboard Module - Bot Owner Only", specialprefix: $"{Configuration.Default.LeaderboardCmd} ", commands: new[] { "boardparameter", "cachetime", "setcachetime" });
-			BotOwnerOnly = await Utils.GenerateModuleListAsync("Bot Module - Bot Owner Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "newgame", "setgame", "echo", "send", "add", "delete", "reload", "showdata", "datavars", "cleanconfig", "revive", "taskstatus", "watches", "webhooktest", "react" });
+			BotOwnerOnly = await Utils.GenerateModuleListAsync("Bot Module - Bot Owner Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "newgame", "setgame", "echo", "send", "add", "delete", "reload", "showdata", "datavars", "cleanconfig", "revive", "taskstatus", "watches", "webhooktest", "react", "contestrules", "contestgame", "contestmap", "setcontest", "opencontest", "closecontest" });
 		}
 	}
 }

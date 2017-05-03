@@ -59,12 +59,13 @@ namespace NeKzBot.Tasks
 						// Giving this a scanning rate because why not
 						await Task.Delay((int)_delayFactor * streamers.Count);
 
-						dynamic api = await TwitchTv.GetStreamAsync(streamer);
-						if (api == null)
+						var obj = await TwitchTv.GetStreamAsync(streamer);
+						if (obj == null)
 							continue;
 
 						// Check if streamer is offline
-						if (api.stream != null)
+						var stream = obj.Stream;
+						if (stream != null)
 						{
 							// Ignore when already streaming
 							if (cache.Contains(streamer))
@@ -74,26 +75,10 @@ namespace NeKzBot.Tasks
 							await Logger.SendAsync($"Twitch.StartAsync Caching -> {await Utils.StringInBytes(streamer)} bytes", LogColor.Caching);
 							cache.Add(streamer);
 
-							var gamename = api?.stream?.channel?.game?.ToString();
-							var stream = new TwitchStream()
-							{
-								ChannelName = api?.stream?.channel?.display_name?.ToString() ?? "ERROR",
-								Game = new TwitchGame
-								{
-									Name = (gamename != null) ? $"Playing {gamename}" : "Streaming",
-									BoxArt = (await TwitchTv.GetGameAsync(gamename))?.games[0]?.box?.medium?.ToString() ?? string.Empty
-								},
-								StreamTitle = api?.stream?.channel?.status?.ToString() ?? "ERROR",
-								StreamLink = api?.stream?.channel?.url?.ToString() ?? "ERROR",
-								PreviewLink = api?.stream?.preview?.large?.ToString(),
-								ChannelViewers = (api?.stream?.viewers != null) ? uint.Parse(api.stream.viewers.ToString()) : 0,
-								AvatarLink = api?.stream?.channel?.logo?.ToString() ?? "https://static-cdn.jtvnw.net/jtv_user_pictures/xarth/404_user_70x70.png"
-							};
-
 							// Save preview image, upload to dropbox and create a link
-							var filename = $"{stream.ChannelName}.jpg";
+							var filename = $"{stream.Channel?.DisplayName ?? "error"}.jpg";
 							var path = await Utils.GetAppPath() + $"/Resources/Cache/{filename}";
-							await _fetchClient.GetFileAsync(stream.PreviewLink, path);
+							await _fetchClient.GetFileAsync(stream.Preview.Large, path);
 
 							// Not sure if this is actually a good idea, it delays everything :c
 							await DropboxCom.DeleteFileAsync("TwitchCache", filename);
@@ -101,9 +86,9 @@ namespace NeKzBot.Tasks
 
 							// Overwrite new preview link
 							var link = await DropboxCom.CreateLinkAsync($"TwitchCache/{filename}");
-							stream.PreviewLink = (link != null)
-													   ? $"{link}&raw=1"
-													   : stream.PreviewLink;
+							stream.Preview.Large = (link != null)
+														 ? $"{link}&raw=1"
+														 : stream.Preview.Large;
 
 							foreach (var item in (await Data.Get<Subscription>("twtvhook")).Subscribers)
 							{
@@ -115,10 +100,10 @@ namespace NeKzBot.Tasks
 								});
 							}
 						}
-						else // Remove from cache when not streaming
-							if (cache.Contains(streamer))
-								cache.Remove(streamer);
-						api = null;
+						// Remove from cache when not streaming
+						else if (cache.Contains(streamer))
+							cache.Remove(streamer);
+						obj = null;
 					}
 					// Clean up cache
 					var newcache = new List<string>() { string.Empty };
@@ -150,15 +135,15 @@ namespace NeKzBot.Tasks
 			var streamer = await TwitchTv.GetStreamAsync(channel);
 			return (streamer == null)
 							 ? TwitchError.Generic
-							 : (streamer?.stream == null)
-												 ? TwitchError.Offline
-												 : streamer?.stream?.preview?.large?.ToString();
+							 : (streamer.Stream == null)
+												? TwitchError.Offline
+												: streamer.Stream.Preview?.Large;
 		}
 
 		private static async Task<Embed> CreateEmbedAsync(TwitchStream stream)
 		{
 			var people = default(string);
-			switch (stream.ChannelViewers)
+			switch (stream.Viewers)
 			{
 				case 0:
 					people = string.Empty;
@@ -167,19 +152,23 @@ namespace NeKzBot.Tasks
 					people = " for 1 viewer";
 					break;
 				default:
-					people = $" for {stream.ChannelViewers} viewers";
+					people = $" for {stream.Viewers} viewers";
 					break;
 			}
 
+			// Get box art of game for the embed thumbnail
+			var obj = await TwitchTv.GetGamesAsync(stream.Game);
+			var game = obj.Games.FirstOrDefault(g => string.Equals(g.Name, stream.Game, StringComparison.CurrentCultureIgnoreCase));
+
 			return new Embed
 			{
-				Author = new EmbedAuthor(stream.ChannelName, stream.StreamLink, stream.AvatarLink),
+				Author = new EmbedAuthor(stream.Channel.DisplayName, stream.Channel.Url, stream.Channel.Logo),
 				Title = "Twitch Livestream",
-				Description = $"{await Utils.AsRawText(stream.Game.Name)}{people}!\n\n_{await Utils.AsRawText($"[{stream.StreamTitle}]({stream.StreamLink})")}_",
-				Url = stream.StreamLink,
+				Description = $"{await Utils.AsRawText(string.IsNullOrEmpty(stream.Game) ? "Streaming" : $"Playing {stream.Game}")}{people}!\n\n_{await Utils.AsRawText($"[{stream.Channel.Status}]({stream.Channel.Url})")}_",
+				Url = stream.Channel.Url,
 				Color = Data.TwitchColor.RawValue,
-				Thumbnail = new EmbedThumbnail(stream.Game.BoxArt),
-				Image = new EmbedImage(stream.PreviewLink),
+				Thumbnail = new EmbedThumbnail(game?.Box?.Medium),
+				Image = new EmbedImage(stream.Preview.Large),
 				Timestamp = DateTime.UtcNow.ToString("s"),
 				Footer = new EmbedFooter("twitch.tv", Data.TwitchTvIconUrl)
 			};

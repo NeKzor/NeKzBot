@@ -38,7 +38,7 @@ namespace NeKzBot.Modules.Public
 						{
 							await e.Channel.SendIsTyping();
 							await e.Channel.SendMessage("Bot Location • Graz, Austria :flag_at:\n" +
-														$"Local Time • {await Utils.GetLocalTime(true)}");
+														$"Local Time • {await Utils.GetLocalTimeAsync(true)}");
 						});
 
 				GBuilder.CreateCommand("info")
@@ -66,8 +66,8 @@ namespace NeKzBot.Modules.Public
 														$"\n**Thread Count** {Process.GetCurrentProcess().Threads.Count}/{workers}/{ports}" +
 														$"\n**Application Uptime** {await Utils.GetDurationFromTimeSpan(await Utils.GetUptime(), false)}" +
 														"\n**Bot Location** Graz, Austria" +
-														$"\n**Local Time** {await Utils.GetLocalTime()}" +
-														$"\n**Actual Local Time** {await Utils.GetLocalTime(true)}");
+														$"\n**Local Time** {await Utils.GetLocalTimeAsync()}" +
+														$"\n**Actual Local Time** {await Utils.GetLocalTimeAsync(true)}");
 						});
 
 				GBuilder.CreateCommand("version")

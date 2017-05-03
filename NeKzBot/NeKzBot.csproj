@@ -88,7 +88,7 @@
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SourceDemoParser.Net, Version=1.0.0.4059, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="SourceDemoParser.Net, Version=1.0.0.17543, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\libs\SourceDemoParser.Net.dll</HintPath>
     </Reference>
@@ -126,6 +126,7 @@
     <Compile Include="Extensions\RequestExtension.cs" />
     <Compile Include="Internals\Entities\Complex.cs" />
     <Compile Include="Internals\Entities\IMemory.cs" />
+    <Compile Include="Internals\Entities\Submissions.cs" />
     <Compile Include="Internals\InternalData.cs" />
     <Compile Include="Internals\Entities\Simple.cs" />
     <Compile Include="Modules\Public\Vip\Service.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="Modules\Public\Others\Rest.cs" />
     <Compile Include="Modules\Public\Others\Resource.cs" />
     <Compile Include="Server\Fetcher.cs" />
+    <Compile Include="Modules\Public\Contest.cs" />
     <Compile Include="Utilities\RngUtils.cs" />
     <Compile Include="Utilities\FileUtils.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />

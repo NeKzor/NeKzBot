@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using NeKzBot.Modules.Public;
 
 namespace NeKzBot.Server
 {
@@ -13,7 +14,11 @@ namespace NeKzBot.Server
 
 			// Make sure that it's not from a DM channel
 			if (msg.Channel.IsPrivate)
+			{
+				// Execute DM specific commands here
+				Contest.CheckCommand(msg).GetAwaiter();
 				return -1;
+			}
 
 			var text = msg.RawText;
 			var prefix = Configuration.Default.PrefixCmd.ToString();

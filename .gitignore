@@ -4,6 +4,7 @@
 
 /NeKzBot/bin
 /NeKzBot/obj
+/NeKzBotSelfBot/bin
 /NeKzBotSelfBot/obj
 /NeKzBotSelfBot/Modules/Voice.cs
 /NeKzBotSelfBot/Modules/Unused.cs

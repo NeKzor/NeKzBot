@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## Version 1.9.0
+* Added a new community game
+* Improved a data command
+* Fixed TimeZoneNotFoundException
+* Json serialization for Twitch API objects
+* Improved Twitch game search by exact name
+
 ## Version 1.8.0
 * Added a Source Engine demo parsing library
 * Replaced automatic attachment download task with the demo parser

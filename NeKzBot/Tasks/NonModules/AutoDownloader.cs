@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using SourceDemoParser.Net;
 using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
-using SourceDemoParser.Net;
 
 namespace NeKzBot.Tasks.NonModules
 {
@@ -89,10 +89,10 @@ namespace NeKzBot.Tasks.NonModules
 			if (ticks != adjusted)
 			{
 				ticks = adjusted;
-				time = demo.AdjustTime(demo.TicksPerSecond);
+				time = demo.AdjustedTime;
 			}
 			// Just filling the last embed field with useless and inaccurate information because I don't know what else I could put in there
-			// Calculate jump count (not a real jump but if you could somehow combine this by looking for the "onground" flag then it should work)
+			// Calculate jump count (not a real jump but if you could somehow combine this by looking for the FL_ONGROUND flag then it should work)
 			var jumps = demo.ConsoleCommands.Where(frame => frame.ConsoleCommand.StartsWith("+jump"));
 			var registeredjumps = jumps.Count();
 			var command = jumps.FirstOrDefault();
@@ -112,7 +112,7 @@ namespace NeKzBot.Tasks.NonModules
 			return Task.FromResult(new Embed
 			{
 				Title = "Demo Info",
-				Url = "https://traderain.hu/VolvoWrench",
+				Url = "https://github.com/NeKzor/SourceDemoParser.Net",
 				Color = Data.BasicColor.RawValue,
 				Fields = new EmbedField[]
 				{
@@ -124,8 +124,7 @@ namespace NeKzBot.Tasks.NonModules
 					new EmbedField("Tickrate", $"{tickrate}", true),
 					new EmbedField("Stats", $"Jump Inputs: {registeredjumps}\nJump Ticks: {actualjumps}", true)
 				},
-				// Not true anymore but I guess we can call this advertisement lol
-				Footer = new EmbedFooter("Parsed with VolvoWrench", "https://raw.githubusercontent.com/Traderain/VolvoWrench/master/VolvoWrench/Resources/08%20Wrench.ico")
+				Footer = new EmbedFooter("Parsed with SourceDemoParser.Net")
 			});
 		}
 	}
