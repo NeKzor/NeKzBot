@@ -97,11 +97,11 @@ namespace NeKzBot.Resources
 		public const string SpeedrunComSourceWebhookKeyword = "source";
 		public const string SpeedrunComPortal2WebhookKeyword = "portal2";
 		public const string TwitchTvWebhookKeyword = "twitch";
-		public const string LatestChangelog = "• Added a new community game\n" +
-											  "• Improved a data command\n" +
-											  "• Fixed TimeZoneNotFoundException\n" +
-											  "• Json serialization for Twitch API objects\n" +
-											  "• Improved Twitch game search by exact name";
+		public const string LatestChangelog = "\n• Added a new community game" +
+											  "\n• Improved a data command" +
+											  "\n• Fixed TimeZoneNotFoundException" +
+											  "\n• Json serialization for Twitch API objects" +
+											  "\n• Improved Twitch game search by exact name";
 
 		public static async Task GenerateModuleListsAsync()
 		{
