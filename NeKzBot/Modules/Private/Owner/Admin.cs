@@ -230,8 +230,12 @@ namespace NeKzBot.Modules.Private.Owner
 											// Am I doing this right?
 											.Where(m => (DateTime.UtcNow - m.Timestamp.Date.ToUniversalTime()).TotalMilliseconds < (1000 * 60 * 60 * 24 * 7 * 2));
 										await e.Message.Delete();
-										if (messages.Any())
+										var msgcount = messages.Count();
+										if (msgcount > 0)
+										{
 											await e.Channel.DeleteMessages(messages.Take(33).ToArray());
+											await Logger.SendAsync($"{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) deleted {msgcount} message{((msgcount == 1) ? string.Empty : "s")} in channel #{e.Channel.Name} (ID {e.Channel.Id}).");
+										}
 									}
 									else
 									{
