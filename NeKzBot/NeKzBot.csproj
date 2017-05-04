@@ -135,7 +135,7 @@
     <Compile Include="Classes\Web.cs" />
     <Compile Include="Classes\Portal2Board.cs" />
     <Compile Include="Classes\Speedrun.cs" />
-    <Compile Include="Classes\TwitchTv.cs" />
+    <Compile Include="Classes\TwitchApi.cs" />
     <Compile Include="Classes\Twitter.cs" />
     <Compile Include="Modules\Public\Vip\Cloud.cs" />
     <Compile Include="Modules\Private\Owner\Debugging.cs" />

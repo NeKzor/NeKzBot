@@ -1,141 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using NeKzBot.Server;
 using Newtonsoft.Json.Serialization;
-using System.Collections.Generic;
+using NeKzBot.Server;
 
 namespace NeKzBot.Classes
 {
-	public sealed class TwitchStreamObject
-	{
-		[JsonProperty("stream")]
-		public TwitchStream Stream { get; set; }
-	}
-
-	public sealed class TwitchGameSearchObject
-	{
-		[JsonProperty("games")]
-		public IEnumerable<TwitchGame> Games { get; set; }
-	}
-
-	public sealed class TwitchGame
-	{
-		[JsonProperty("name")]
-		public string Name { get; set; }
-		[JsonProperty("popularity")]
-		public int Popularity { get; set; }
-		[JsonProperty("_id")]
-		public int Id { get; set; }
-		[JsonProperty("giantbomb_id")]
-		public int GiantbombId { get; set; }
-		[JsonProperty("box")]
-		public TwitchGameBox Box { get; set; }
-	}
-
-	[JsonObject("box")]
-	public sealed class TwitchGameBox
-	{
-		[JsonProperty("large")]
-		public string Large { get; set; }
-		[JsonProperty("medium")]
-		public string Medium { get; set; }
-		[JsonProperty("small")]
-		public string Small { get; set; }
-		[JsonProperty("template")]
-		public string Template { get; set; }
-	}
-
-	[JsonObject("logo")]
-	public sealed class TwitchGameLogo
-	{
-		[JsonProperty("large")]
-		public string Large { get; set; }
-		[JsonProperty("medium")]
-		public string Medium { get; set; }
-		[JsonProperty("small")]
-		public string Small { get; set; }
-		[JsonProperty("template")]
-		public string Template { get; set; }
-	}
-
-	[JsonObject("stream")]
-	public sealed class TwitchStream
-	{
-		[JsonProperty("_id")]
-		public int Id { get; set; }
-		[JsonProperty("game")]
-		public string Game { get; set; }
-		[JsonProperty("viewers")]
-		public int Viewers { get; set; }
-		[JsonProperty("video_height")]
-		public int VideoHeight { get; set; }
-		[JsonProperty("average_fps")]
-		public int AverageFps { get; set; }
-		[JsonProperty("delay")]
-		public int Delay { get; set; }
-		[JsonProperty("created_at")]
-		public DateTime CreatedAt { get; set; }
-		[JsonProperty("is_playlist")]
-		public bool IsPlaylist { get; set; }
-		[JsonProperty("preview")]
-		public TwitchStreamPreview Preview { get; set; }
-		[JsonProperty("channel")]
-		public TwitchChannel Channel { get; set; }
-	}
-
-	[JsonObject("preview")]
-	public sealed class TwitchStreamPreview
-	{
-		[JsonProperty("small")]
-		public string Small { get; set; }
-		[JsonProperty("medium")]
-		public string Medium { get; set; }
-		[JsonProperty("large")]
-		public string Large { get; set; }
-		[JsonProperty("template")]
-		public string Template { get; set; }
-	}
-
-	[JsonObject("channel")]
-	public sealed class TwitchChannel
-	{
-		[JsonProperty("mature")]
-		public bool IsMature { get; set; }
-		[JsonProperty("status")]
-		public string Status { get; set; }
-		[JsonProperty("broadcaster_language")]
-		public string BroadcasterLanguage { get; set; }
-		[JsonProperty("display_name")]
-		public string DisplayName { get; set; }
-		[JsonProperty("game")]
-		public string Game { get; set; }
-		[JsonProperty("language")]
-		public string Language { get; set; }
-		[JsonProperty("_id")]
-		public int Id { get; set; }
-		[JsonProperty("name")]
-		public string Name { get; set; }
-		[JsonProperty("created_at")]
-		public DateTime CreatedAt { get; set; }
-		[JsonProperty("updated_at")]
-		public DateTime UpdatedAt { get; set; }
-		[JsonProperty("logo")]
-		public string Logo { get; set; }
-		[JsonProperty("profile_banner")]
-		public string ProfileBanner { get; set; }
-		[JsonProperty("partner")]
-		public bool IsPartner { get; set; }
-		[JsonProperty("url")]
-		public string Url { get; set; }
-		[JsonProperty("views")]
-		public int Views { get; set; }
-		[JsonProperty("followers")]
-		public int Followers { get; set; }
-	}
-
-	public static class TwitchTv
+	public static class TwitchApi
 	{
 		private static readonly string _twitchApi = "https://api.twitch.tv";
 		private static readonly Fetcher _fetchClient = new Fetcher();
@@ -187,5 +60,132 @@ namespace NeKzBot.Classes
 			}
 			return JsonConvert.DeserializeObject<TwitchGameSearchObject>(json);
 		}
+	}
+
+	public sealed class TwitchStreamObject
+	{
+		[JsonProperty("stream")]
+		public TwitchStream Stream { get; set; }
+	}
+
+	public sealed class TwitchGameSearchObject
+	{
+		[JsonProperty("games")]
+		public IEnumerable<TwitchGame> Games { get; set; }
+	}
+
+	public sealed class TwitchGame
+	{
+		[JsonProperty("name")]
+		public string Name { get; set; }
+		[JsonProperty("popularity")]
+		public uint Popularity { get; set; }
+		[JsonProperty("_id")]
+		public ulong Id { get; set; }
+		[JsonProperty("giantbomb_id")]
+		public ulong GiantbombId { get; set; }
+		[JsonProperty("box")]
+		public TwitchGameBox Box { get; set; }
+	}
+
+	[JsonObject("box")]
+	public sealed class TwitchGameBox
+	{
+		[JsonProperty("large")]
+		public string Large { get; set; }
+		[JsonProperty("medium")]
+		public string Medium { get; set; }
+		[JsonProperty("small")]
+		public string Small { get; set; }
+		[JsonProperty("template")]
+		public string Template { get; set; }
+	}
+
+	[JsonObject("logo")]
+	public sealed class TwitchGameLogo
+	{
+		[JsonProperty("large")]
+		public string Large { get; set; }
+		[JsonProperty("medium")]
+		public string Medium { get; set; }
+		[JsonProperty("small")]
+		public string Small { get; set; }
+		[JsonProperty("template")]
+		public string Template { get; set; }
+	}
+
+	[JsonObject("stream")]
+	public sealed class TwitchStream
+	{
+		[JsonProperty("_id")]
+		public ulong Id { get; set; }
+		[JsonProperty("game")]
+		public string Game { get; set; }
+		[JsonProperty("viewers")]
+		public uint Viewers { get; set; }
+		[JsonProperty("video_height")]
+		public uint VideoHeight { get; set; }
+		[JsonProperty("average_fps")]
+		public float AverageFps { get; set; }
+		[JsonProperty("delay")]
+		public uint Delay { get; set; }
+		[JsonProperty("created_at")]
+		public DateTime CreatedAt { get; set; }
+		[JsonProperty("is_playlist")]
+		public bool IsPlaylist { get; set; }
+		[JsonProperty("preview")]
+		public TwitchStreamPreview Preview { get; set; }
+		[JsonProperty("channel")]
+		public TwitchChannel Channel { get; set; }
+	}
+
+	[JsonObject("preview")]
+	public sealed class TwitchStreamPreview
+	{
+		[JsonProperty("small")]
+		public string Small { get; set; }
+		[JsonProperty("medium")]
+		public string Medium { get; set; }
+		[JsonProperty("large")]
+		public string Large { get; set; }
+		[JsonProperty("template")]
+		public string Template { get; set; }
+	}
+
+	[JsonObject("channel")]
+	public sealed class TwitchChannel
+	{
+		[JsonProperty("mature")]
+		public bool IsMature { get; set; }
+		[JsonProperty("status")]
+		public string Status { get; set; }
+		[JsonProperty("broadcaster_language")]
+		public string BroadcasterLanguage { get; set; }
+		[JsonProperty("display_name")]
+		public string DisplayName { get; set; }
+		[JsonProperty("game")]
+		public string Game { get; set; }
+		[JsonProperty("language")]
+		public string Language { get; set; }
+		[JsonProperty("_id")]
+		public ulong Id { get; set; }
+		[JsonProperty("name")]
+		public string Name { get; set; }
+		[JsonProperty("created_at")]
+		public DateTime CreatedAt { get; set; }
+		[JsonProperty("updated_at")]
+		public DateTime UpdatedAt { get; set; }
+		[JsonProperty("logo")]
+		public string Logo { get; set; }
+		[JsonProperty("profile_banner")]
+		public string ProfileBanner { get; set; }
+		[JsonProperty("partner")]
+		public bool IsPartner { get; set; }
+		[JsonProperty("url")]
+		public string Url { get; set; }
+		[JsonProperty("views")]
+		public uint Views { get; set; }
+		[JsonProperty("followers")]
+		public uint Followers { get; set; }
 	}
 }

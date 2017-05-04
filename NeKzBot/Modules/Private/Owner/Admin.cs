@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -207,6 +208,47 @@ namespace NeKzBot.Modules.Private.Owner
 							{
 								await e.Channel.SendIsTyping();
 								await e.Channel.SendMessage("You don't have the permission to manage messages.");
+							}
+						});
+
+				// TODO: change permission settings variable (document permissions too)
+				GBuilder.CreateCommand("cleanup")
+						.Alias("cleanuptime")
+						.Description("Deletes the latest messages in the channel (max. 33 messages per cleanup and bulk delete mode only).")
+						.Parameter("message_count", ParameterType.Required)
+						.Hide()
+						.Do(async e =>
+						{
+							if (e.User.ServerPermissions.ManageMessages)
+							{
+								if ((await Utils.GetBotUserObject(e.Channel)).GetPermissions(e.Channel).ManageMessages)
+								{
+									if (uint.TryParse(e.GetArg("message_count"), out var count))
+									{
+										// Bulk delete only
+										var messages = (await e.Channel.DownloadMessages((int)count, e.Message.Id, Relative.Before, false))
+											// Am I doing this right?
+											.Where(m => (DateTime.UtcNow - m.Timestamp.Date.ToUniversalTime()).TotalMilliseconds < (1000 * 60 * 60 * 24 * 7 * 2));
+										await e.Message.Delete();
+										if (messages.Any())
+											await e.Channel.DeleteMessages(messages.Take(33).ToArray());
+									}
+									else
+									{
+										await e.Channel.SendIsTyping();
+										await e.Channel.SendMessage("Parameter should be an unsigned integer.");
+									}
+								}
+								else
+								{
+									await e.Channel.SendIsTyping();
+									await e.Channel.SendMessage("The permission to manage messages is required.");
+								}
+							}
+							else
+							{
+								await e.Channel.SendIsTyping();
+								await e.Channel.SendMessage("You are not allowed to manage messages.");
 							}
 						});
 			});

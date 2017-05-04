@@ -59,7 +59,7 @@ namespace NeKzBot.Tasks
 						// Giving this a scanning rate because why not
 						await Task.Delay((int)_delayFactor * streamers.Count);
 
-						var obj = await TwitchTv.GetStreamAsync(streamer);
+						var obj = await TwitchApi.GetStreamAsync(streamer);
 						if (obj == null)
 							continue;
 
@@ -132,7 +132,7 @@ namespace NeKzBot.Tasks
 
 		public static async Task<string> GetPreviewAsync(string channel)
 		{
-			var streamer = await TwitchTv.GetStreamAsync(channel);
+			var streamer = await TwitchApi.GetStreamAsync(channel);
 			return (streamer == null)
 							 ? TwitchError.Generic
 							 : (streamer.Stream == null)
@@ -157,7 +157,7 @@ namespace NeKzBot.Tasks
 			}
 
 			// Get box art of game for the embed thumbnail
-			var obj = await TwitchTv.GetGamesAsync(stream.Game);
+			var obj = await TwitchApi.GetGamesAsync(stream.Game);
 			var game = obj.Games.FirstOrDefault(g => string.Equals(g.Name, stream.Game, StringComparison.CurrentCultureIgnoreCase));
 
 			return new Embed
