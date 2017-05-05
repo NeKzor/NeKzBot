@@ -66,11 +66,11 @@ namespace NeKzBot.Modules.Public
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 World Record",
 								Url = url,
-								Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
+								Image = new EmbedImage(entry.ImageLink),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map, true),
+									new EmbedField("Map", entry.Map.ChallengeModeName, true),
 									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
 									new EmbedField("Time", entry.Time, true),
 									new EmbedField("Date", entry.Date, true)
@@ -148,11 +148,11 @@ namespace NeKzBot.Modules.Public
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 Entry",
 								Url = url,
-								Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
+								Image = new EmbedImage(entry.ImageLink),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map, true),
+									new EmbedField("Map", entry.Map.ChallengeModeName, true),
 									new EmbedField("Rank", entry.Ranking, true),
 									new EmbedField("Time", entry.Time, true),
 									new EmbedField("Date", entry.Date, true)
@@ -231,11 +231,11 @@ namespace NeKzBot.Modules.Public
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 World Record",
 								Url = url,
-								Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
+								Image = new EmbedImage(entry.ImageLink),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map, true),
+									new EmbedField("Map", entry.Map.ChallengeModeName, true),
 									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
 									new EmbedField("Time", entry.Time, true),
 									new EmbedField("Date", entry.Date, true)
@@ -345,11 +345,11 @@ namespace NeKzBot.Modules.Public
 									Color = Data.BoardColor.RawValue,
 									Title = "Personal Record",
 									Url = url,
-									Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
+									Image = new EmbedImage(entry.ImageLink),
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", entry.Map, true),
+										new EmbedField("Map", entry.Map.ChallengeModeName, true),
 										new EmbedField("Rank", entry.Ranking, true),
 										new EmbedField("Time", entry.Time, true),
 										new EmbedField("Date", entry.Date, true)
@@ -453,11 +453,11 @@ namespace NeKzBot.Modules.Public
 									Color = Data.BoardColor.RawValue,
 									Title = "Personal Record",
 									Url = url,
-									Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{entry.MapId}.jpg"),
+									Image = new EmbedImage(entry.ImageLink),
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", entry.Map, true),
+										new EmbedField("Map", entry.Map.ChallengeModeName, true),
 										new EmbedField("Rank", entry.Ranking, true),
 										new EmbedField("Time", entry.Time, true),
 										new EmbedField("Date", entry.Date, true)
@@ -665,12 +665,12 @@ namespace NeKzBot.Modules.Public
 								Color = Data.BoardColor.RawValue,
 								Title = $"Portal 2 Top {leaderboard.Entries.Count}",
 								Url = url,
-								Image = new EmbedImage($"https://board.iverb.me/images/chambers_full/{result.BestTimeId}.jpg"),
+								Image = new EmbedImage(leaderboard.Entries.First().ImageLink),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 							}
 							.AddField(async field =>
 							{
-								field.Name = leaderboard.MapName;
+								field.Name = leaderboard.Map.ChallengeModeName;
 								var output = string.Empty;
 								foreach (var item in leaderboard.Entries)
 								{
@@ -699,21 +699,21 @@ namespace NeKzBot.Modules.Public
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreatePieAsync(e, MapFilter.Any));
+					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.Any));
 
 			CService.CreateCommand(c + "sp")
 					.Description("Creates a pie plot for a player comparison. Calculation might take a while.")
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreatePieAsync(e, MapFilter.SinglePlayer));
+					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.SinglePlayer));
 
 			CService.CreateCommand(c + "mp")
 					.Description("Creates a pie plot for a player comparison. Calculation might take a while.")
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreatePieAsync(e, MapFilter.MultiPlayer));
+					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.MultiPlayer));
 			return Task.FromResult(0);
 		}
 
@@ -724,25 +724,25 @@ namespace NeKzBot.Modules.Public
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreateGraphAsync(e, MapFilter.Any));
+					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.Any));
 
 			CService.CreateCommand(c + "sp")
 					.Description("Creates a line plot for a player comparison. Calculation might take a while.")
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreateGraphAsync(e, MapFilter.SinglePlayer));
+					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.SinglePlayer));
 
 			CService.CreateCommand(c + "mp")
 					.Description("Creates a line plot for a player comparison. Calculation might take a while.")
 					.Parameter("players", ParameterType.Multiple)
 					.AddCheck(Permissions.DevelopersOnly)
 					.Hide()
-					.Do(async e => await CreateGraphAsync(e, MapFilter.MultiPlayer));
+					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.MultiPlayer));
 			return Task.FromResult(0);
 		}
 
-		private static async Task CreatePieAsync(CommandEventArgs e, MapFilter filter = default(MapFilter))
+		private static async Task CreatePieAsync(CommandEventArgs e, Portal2MapFilter filter = default(Portal2MapFilter))
 		{
 			await e.Channel.SendIsTyping();
 			var msg = await e.Channel.SendMessage("This might take a while.");
@@ -764,9 +764,9 @@ namespace NeKzBot.Modules.Public
 
 					switch (result[i].Filter)
 					{
-						case MapFilter.Any:
-						case MapFilter.SinglePlayer:
-						case MapFilter.MultiPlayer:
+						case Portal2MapFilter.Any:
+						case Portal2MapFilter.SinglePlayer:
+						case Portal2MapFilter.MultiPlayer:
 							break;
 						default:
 							continue;
@@ -860,7 +860,7 @@ namespace NeKzBot.Modules.Public
 			}
 		}
 
-		private static async Task CreateGraphAsync(CommandEventArgs e, MapFilter filter = default(MapFilter))
+		private static async Task CreateGraphAsync(CommandEventArgs e, Portal2MapFilter filter = default(Portal2MapFilter))
 		{
 			await e.Channel.SendIsTyping();
 			var msg = await e.Channel.SendMessage("This might take a while.");
@@ -882,9 +882,9 @@ namespace NeKzBot.Modules.Public
 
 					switch (result[i].Filter)
 					{
-						case MapFilter.Any:
-						case MapFilter.SinglePlayer:
-						case MapFilter.MultiPlayer:
+						case Portal2MapFilter.Any:
+						case Portal2MapFilter.SinglePlayer:
+						case Portal2MapFilter.MultiPlayer:
 							break;
 						default:
 							continue;

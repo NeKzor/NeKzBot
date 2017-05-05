@@ -7,11 +7,11 @@ using TweetSharp;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Internals;
+using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Utilities;
 using NeKzBot.Webhooks;
-using NeKzBot.Internals.Entities;
 
 namespace NeKzBot.Tasks.Leaderboard
 {
@@ -88,6 +88,11 @@ namespace NeKzBot.Tasks.Leaderboard
 								sendupdates.Reverse();
 								foreach (var update in sendupdates)
 								{
+									// Inject a nice feature which the leaderboard doesn't have
+									var wrdelta = await GetWorldRecordDifference($"https://board.iverb.me/changelog?wr=1&chamber={update.Entry.Map.BestTimeId}", update.Entry) ?? -1;
+									update.Entry.Time += (wrdelta != -1)
+																  ? $" (-{wrdelta.ToString("N2")})"
+																  : string.Empty;
 									// RIP channel messages, webhooks are the future
 									foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
 									{
@@ -100,7 +105,7 @@ namespace NeKzBot.Tasks.Leaderboard
 									}
 
 									// Send it to Twitter too but make sure it's world record
-									var tweet = update.Tweet.Message;
+									var tweet = await FormatMainTweetAsync($"New World Record in {update.Entry.Map}\n{update.Entry.Time} by {update.Entry.Player}\n{update.Entry.Date} (UTC)", update.Entry.Demo, update.Entry.YouTube);
 									if ((tweet != string.Empty)
 									&& (Configuration.Default.BoardParameter == "?wr=1"))
 									{
@@ -176,7 +181,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 					Fields = new EmbedField[]
 					{
-						new EmbedField("Map", wr.Map, true),
+						new EmbedField("Map", wr.Map.ChallengeModeName, true),
 						new EmbedField("Time", wr.Time, true),
 						new EmbedField("Player", await Utils.AsRawText(wr.Player.Name), true),
 						new EmbedField("Date", wr.Date, true)

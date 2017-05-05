@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using NeKzBot.Classes;
+using NeKzBot.Internals.Entities;
+using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.Leaderboard
@@ -58,8 +60,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						YouTube = youtube,
 						Demo = demo,
 						Date = date,
-						Map = map,
-						MapId = mapid,
+						Map = await (await Data.Get<Portal2Maps>("p2maps")).Search(map),
 						Player = new Portal2User
 						{
 							Name = player,
@@ -128,8 +129,7 @@ namespace NeKzBot.Tasks.Leaderboard
 								Comment = comment,
 								Date = date,
 								Demo = demo,
-								Map = map,
-								MapId = mapid,
+								Map = await (await Data.Get<Portal2Maps>("p2maps")).Search(map),
 								Player = new Portal2User
 								{
 									Name = player,
@@ -140,12 +140,9 @@ namespace NeKzBot.Tasks.Leaderboard
 								Time = time,
 								YouTube = youtube
 							},
-							// This will also detect player name changes (pls don't) and ties
-							CacheFormat = $"{map}{time}{player}",
 							// Tweet
 							Tweet = new Portal2TweetUpdate
 							{
-								Message =  await FormatMainTweetAsync($"New World Record in {map}\n{time} by {player}\n{date} (UTC)", demo, youtube),
 								Location = player,
 								CommentMessage = await FormatReplyTweetAsync(player, comment)
 							}
@@ -282,8 +279,7 @@ namespace NeKzBot.Tasks.Leaderboard
 							SteamAvatar = steamavatar
 						},
 						Date = date,
-						Map = mapname,
-						MapId = mapid,
+						Map = await (await Data.Get<Portal2Maps>("p2maps")).Search(mapname),
 						Ranking = ranking,
 						Time = time,
 						Demo = demo,
@@ -329,7 +325,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					return new Portal2Leaderboard()
 					{
-						MapName = map,
+						Map = await (await Data.Get<Portal2Maps>("p2maps")).Search(map),
 						Entries = entries
 					};
 				}
@@ -359,6 +355,59 @@ namespace NeKzBot.Tasks.Leaderboard
 				}
 			}
 			return false;
+		}
+
+		public static async Task<float?> GetWorldRecordDifference(string url, Portal2Entry wr)
+		{
+			var doc = await Cache.GetAsync(url, true);
+			if (doc != null)
+			{
+				try
+				{
+					var entries = new List<Portal2EntryUpdate>();
+					var found = false;
+					for (int i = 0; i < 5; i++)
+					{
+						var node = HtmlNode.CreateNode(doc.DocumentNode.SelectNodes("//div[@class='datatable page-entries active']//div[@class='entry']")[i].InnerHtml);
+						var time = node.SelectSingleNode("//div[@class='newscore']//a[@class='time']")?.FirstChild?.InnerHtml ?? string.Empty;
+						var date = node.SelectSingleNode("//div[@class='date']")?.Attributes["date"]?.Value?.ToString() ?? string.Empty;
+
+						if (new List<string> { time, date }.Contains(string.Empty))
+							return await Logger.SendToChannelAsync("Portal2.GetWorldRecordDifference Node Is Empty", LogColor.Error) as float?;
+						node = null;
+
+						if (found)
+						{
+							// Don't allow this for cooperative wrs because:
+							// 1.) Partner entries do not always match their date
+							// 2.) One of the world record holder can tie it again with another partner
+							if (wr.Map.Filter == Portal2MapFilter.SinglePlayer)
+							{
+								if ((float.TryParse(time, out var oldwr))
+								&& (float.TryParse(wr.Time, out var newwr)))
+								{
+									if (oldwr == newwr)
+										return 0;
+									if (newwr < oldwr)
+										return oldwr - newwr;
+								}
+							}
+							break;
+						}
+
+						// Search current wr, then take the next one
+						if (date == wr.Date)
+							found = true;
+					}
+					doc = null;
+				}
+				catch (Exception e)
+				{
+					await Logger.SendToChannelAsync("Portal2.GetWorldRecordDifference Error", e);
+					doc?.Save(await Caching.CFile.GetPathAndSaveAsync("lb"));
+				}
+			}
+			return default(float?);
 		}
 
 		private static Task<string> RankFromat(string s)

@@ -45,7 +45,7 @@ namespace NeKzBot.Server
 			Console.ForegroundColor = (ConsoleColor)color;
 			Console.WriteLine($"[{await Utils.GetLocalTimeAsync()}] : {await FormatTime(await Utils.GetUptime())}[SERVER] : {await GetSource(color)} : {message}");
 			Console.ResetColor();
-			return null;
+			return default(object);
 		}
 
 		public static async Task<object> SendAsync(string message, Exception e)
@@ -56,7 +56,7 @@ namespace NeKzBot.Server
 							  $"Source: {e.Source}\n" +
 							  $"Message: {e.Message}");
 			Console.ResetColor();
-			return null;
+			return default(object);
 		}
 
 		// Write to channel
@@ -64,14 +64,14 @@ namespace NeKzBot.Server
 		{
 			await SendAsync(message, color);
 			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTimeAsync()}**\n{message}");
-			return null;
+			return default(object);
 		}
 
 		public static async Task<object> SendToChannelAsync(string message, Exception e)
 		{
 			await SendAsync(message, e);
 			(await Utils.FindTextChannel(Configuration.Default.LogChannelName))?.SendMessage($"**{await Utils.GetLocalTimeAsync()} -> {message}**\n**Source** {e.Source}\n**Message** {e.Message}");
-			return null;
+			return default(object);
 		}
 
 		// Show nothing after a random time

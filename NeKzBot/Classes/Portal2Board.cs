@@ -20,34 +20,33 @@ namespace NeKzBot.Classes
 		[JsonProperty("elevator_timing")]
 		public string ElevatorTiming { get; set; }
 		[JsonProperty("map_filter")]
-		public MapFilter Filter { get; set; }
+		public Portal2MapFilter Filter { get; set; }
 	}
 
 	public sealed class Portal2Leaderboard
 	{
 		public List<Portal2Entry> Entries { get; set; }
-		public string MapName { get; set; }
-		public string MapId { get; set; }
-		public string MapPreview { get; set; }
+		public Portal2Map Map { get; set; }
 	}
 
 	public sealed class Portal2EntryUpdate
 	{
 		public Portal2Entry Entry { get; set; }
-		public string CacheFormat { get; set; }
 		public Portal2TweetUpdate Tweet { get; set; }
+		// This won't detect player name changes now
+		public string CacheFormat
+			=> $"{Entry.Map.ChallengeModeName}{Entry.Time}{Entry.Player.SteamId}";
 	}
 
 	public sealed class Portal2TweetUpdate
 	{
-		public string Message { get; set; }
 		public string Location { get; set; }
 		public string CommentMessage { get; set; }
 	}
 
 	public sealed class Portal2Entry
 	{
-		public string Map { get; set; }
+		public Portal2Map Map { get; set; }
 		public string Time { get; set; }
 		public Portal2User Player { get; set; }
 		public string Ranking { get; set; }
@@ -66,8 +65,8 @@ namespace NeKzBot.Classes
 		public string Demo { get; set; }
 		public string YouTube { get; set; }
 		public string Comment { get; set; }
-		public string MapId { get; set; }
-		public string ImageLink => $"https://board.iverb.me/images/chambers_full/{MapId}.jpg";
+		public string ImageLink
+			=> $"https://board.iverb.me/images/chambers_full/{Map.BestTimeId}.jpg";
 		private string _date;
 	}
 
@@ -98,11 +97,11 @@ namespace NeKzBot.Classes
 		public string WorstPlaceMap { get; set; }
 	}
 
-	public enum MapFilter
+	public enum Portal2MapFilter
 	{
 		Any,
 		SinglePlayer,
 		MultiPlayer,
-		Workshop
+		Workshop		// Workshop has two other modes again but it means custom map for now
 	}
 }
