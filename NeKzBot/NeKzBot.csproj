@@ -146,6 +146,7 @@
     <Compile Include="Modules\Public\Others\Resource.cs" />
     <Compile Include="Server\Fetcher.cs" />
     <Compile Include="Modules\Public\Contest.cs" />
+    <Compile Include="Tasks\TwitchTv.cs" />
     <Compile Include="Utilities\RngUtils.cs" />
     <Compile Include="Utilities\FileUtils.cs" />
     <Compile Include="Utilities\DiscordUtils.cs" />
@@ -192,18 +193,18 @@
     <Compile Include="Tasks\Leaderboard\AutoUpdater.cs" />
     <Compile Include="Tasks\Leaderboard\Portal2.cs" />
     <Compile Include="Tasks\Leaderboard\Cache.cs" />
-    <Compile Include="Tasks\NonModules\AutoDownloader.cs" />
+    <Compile Include="Tasks\NonModules\DemoParser.cs" />
     <Compile Include="Tasks\NonModules\DemoTools.cs" />
     <Compile Include="Tasks\NonModules\Steam.cs" />
     <Compile Include="Tasks\Speedrun\AutoNotification.cs" />
     <Compile Include="Tasks\Speedrun\SpeedrunCom.cs" />
-    <Compile Include="Tasks\Twitch.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Docs\Commands.md" />
+    <None Include="Docs\Permissions.md" />
     <None Include="Docs\RaspberryPi.md" />
     <None Include="Docs\Changelog.md" />
-    <None Include="Docs\Modules.md" />
     <None Include="Docs\Audio.md" />
     <None Include="Docs\Settings.md" />
     <None Include="packages.config" />

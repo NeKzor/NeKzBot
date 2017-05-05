@@ -92,7 +92,7 @@ namespace NeKzBot.Utilities
 
 		public static async Task<bool> CheckRolePermissionsAsync(User usr, byte flag)
 		{
-			foreach (var role in usr.Roles)
+			foreach (var role in usr?.Roles)
 				if (await FlagIsSet(role.Permissions.RawValue, flag))
 					return true;
 			return false;

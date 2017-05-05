@@ -18,9 +18,6 @@ namespace NeKzBot.Server
 			// Log this to all servers
 			Bot.Client.UserJoined += async (_, e) => await Events.OnUserJoinedAsync(e);
 			Bot.Client.UserLeft += async (_, e) => await Events.OnUserLeftAsync(e);
-			Bot.Client.UserBanned += async (_, e) => await Events.OnUserBannedAsync(e);
-			Bot.Client.UserUnbanned += async (_, e) => await Events.OnUserUnbannedAsync(e);
-			Bot.Client.UserUpdated += async (_, e) => await Events.OnUserUpdatedAsync(e);
 			// Log this to the main server only
 			Bot.Client.LeftServer += async (_, e) => await Events.OnLeftServerAsync(e);
 			Bot.Client.JoinedServer += async (_, e) => await Events.OnJoinedServerAsync(e);

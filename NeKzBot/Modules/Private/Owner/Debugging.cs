@@ -58,9 +58,9 @@ namespace NeKzBot.Modules.Private.Owner
 										await e.Channel.SendMessage("Task hasn't finished yet.");
 									break;
 								case "twitch":
-									if (!(Twitch.IsRunning))
+									if (!(TwitchTv.IsRunning))
 									{
-										await Task.Factory.StartNew(async () => await Twitch.StartAsync());
+										await Task.Factory.StartNew(async () => await TwitchTv.StartAsync());
 										await e.Channel.SendMessage("Restarted task.");
 									}
 									else
@@ -105,7 +105,7 @@ namespace NeKzBot.Modules.Private.Owner
 									await e.Channel.SendMessage($"{(Portal2.AutoUpdater.IsRunning ? "Is running" : "Dead")}");
 									break;
 								case "twitch":
-									await e.Channel.SendMessage($"{(Twitch.IsRunning ? "Is running" : "Dead")}");
+									await e.Channel.SendMessage($"{(TwitchTv.IsRunning ? "Is running" : "Dead")}");
 									break;
 								case "nf":
 									await e.Channel.SendMessage($"{(SpeedrunCom.AutoNotification.IsRunning ? "Is running" : "Dead")}");
@@ -115,7 +115,7 @@ namespace NeKzBot.Modules.Private.Owner
 									break;
 								case "":
 									await e.Channel.SendMessage($"Leaderboard{(Portal2.AutoUpdater.IsRunning ? " - Running" : " - Dead")}\n"
-															  + $"TwitchTv{(Twitch.IsRunning ? " - Running" : " - Dead")}\n"
+															  + $"TwitchTv{(TwitchTv.IsRunning ? " - Running" : " - Dead")}\n"
 															  + $"SpeedrunCom{(SpeedrunCom.AutoNotification.IsRunning ? " - Running" : " - Dead")}\n"
 															  + $"Giveaway{(Giveaway.IsRunning ? " - Running" : " - Dead")}");
 									break;
@@ -135,7 +135,7 @@ namespace NeKzBot.Modules.Private.Owner
 							await e.Channel.SendMessage($"Portal2.AutoUpdater • *{(Portal2.AutoUpdater.Watch.IsRunning ? "Running" : $"On Hold ({Portal2.AutoUpdater.Watch.LastCheckedTimeValue})")}*"
 													  + $"\nPortal2.Cache • *{(Portal2.Cache.Watch.IsRunning ? "Running" : $"On Hold ({Portal2.Cache.Watch.LastCheckedTimeValue})")}*"
 													  + $"\nSpeedrunCom.AutoNotification • *{(SpeedrunCom.AutoNotification.Watch.IsRunning ? "Running" : $"On Hold ({SpeedrunCom.AutoNotification.Watch.LastCheckedTimeValue})")}*"
-													  + $"\nTwitch • *{(Twitch.Watch.IsRunning ? "Running" : $"On Hold ({Twitch.Watch.LastCheckedTimeValue})")}*"
+													  + $"\nTwitch • *{(TwitchTv.Watch.IsRunning ? "Running" : $"On Hold ({TwitchTv.Watch.LastCheckedTimeValue})")}*"
 													  + $"\nGiveaway • *{(Giveaway.Watch.IsRunning ? "Running" : $"On Hold({ Giveaway.Watch.LastCheckedTimeValue})")}*");
 						});
 

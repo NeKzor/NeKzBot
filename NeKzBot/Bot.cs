@@ -89,7 +89,7 @@ namespace NeKzBot
 				await Portal2.Cache.InitAsync();
 				await Portal2.AutoUpdater.InitAsync();
 				await Steam.InitAsync();
-				await Twitch.InitAsync();
+				await TwitchTv.InitAsync();
 				await Giveaway.InitAsync();
 				await DropboxCom.InitAsync();
 				await SpeedrunCom.InitAsync();
@@ -160,7 +160,7 @@ namespace NeKzBot
 			await Logger.SendAsync("Loading Tasks");
 			Task.WaitAll(
 				Giveaway.ResetAsync(),
-				Twitch.StartAsync(),
+				TwitchTv.StartAsync(),
 				Portal2.Cache.ResetAsync(),
 				Portal2.AutoUpdater.StartAsync(),
 				SpeedrunCom.AutoNotification.StartAsync()

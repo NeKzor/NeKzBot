@@ -29,11 +29,19 @@ namespace NeKzBot.Modules.Public.Others
 					.Description("Creates a new temporary invite link of this server.")
 					.Do(async e =>
 					{
-						if ((bool)e.Server.Users.FirstOrDefault(user => user.Id == Bot.Client.CurrentUser.Id)?.ServerPermissions.CreateInstantInvite)
+						await e.Channel.SendIsTyping();
+						if ((e.User.ServerPermissions.CreateInstantInvite)
+						&& e.User.GetPermissions(e.Channel).CreateInstantInvite)
 						{
-							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"https://discord.gg/{(await e.Server.CreateInvite()).Code}");
+							var bot = await Utils.GetBotUserObject(e.Channel);
+							if ((bot?.ServerPermissions.CreateInstantInvite == true)
+							&& (bot?.GetPermissions(e.Channel).CreateInstantInvite == true))
+								await e.Channel.SendMessage($"https://discord.gg/{(await e.Server.CreateInvite()).Code}");
+							else
+								await e.Channel.SendMessage("The permission to create instant invites is required.");
 						}
+						else
+							await e.Channel.SendMessage("You are not allowed to create instant invites.");
 					});
 
 			// Get bot invite link
@@ -55,7 +63,7 @@ namespace NeKzBot.Modules.Public.Others
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var preview = await Twitch.GetPreviewAsync(e.Args[0]);
+						var preview = await TwitchTv.GetPreviewAsync(e.Args[0]);
 						if (preview == null)
 							await e.Channel.SendMessage(TwitchError.Generic);
 						else if (preview == TwitchError.Offline)

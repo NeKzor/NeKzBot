@@ -170,7 +170,16 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							if (e.User.ServerPermissions.ManageNicknames)
-								await (await Utils.GetBotUserObject(e.Channel))?.Edit(nickname: string.IsNullOrEmpty(e.GetArg("name")) ? Bot.Client.CurrentUser.Name : e.GetArg("name"));
+							{
+								var bot = await Utils.GetBotUserObject(e.Channel);
+								if (bot?.ServerPermissions.ChangeNickname == true)
+									await bot.Edit(nickname: string.IsNullOrEmpty(e.GetArg("name")) ? Bot.Client.CurrentUser.Name : e.GetArg("name"));
+								else
+								{
+									await e.Channel.SendIsTyping();
+									await e.Channel.SendMessage("The permission to change nickname is required.");
+								}
+							}
 							else
 							{
 								await e.Channel.SendIsTyping();
@@ -186,9 +195,12 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							// Check permission
-							if (e.User.ServerPermissions.ManageMessages)
+							if ((e.User.ServerPermissions.ManageMessages)
+							&& (e.User.GetPermissions(e.Channel).ManageMessages))
 							{
-								if ((await Utils.GetBotUserObject(e.Channel)).GetPermissions(e.Channel).ManageMessages)
+								var bot = await Utils.GetBotUserObject(e.Channel);
+								if ((bot?.ServerPermissions.ManageMessages == true)
+								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
 								{
 									var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
 														  ? result
@@ -211,7 +223,6 @@ namespace NeKzBot.Modules.Private.Owner
 							}
 						});
 
-				// TODO: change permission settings variable (document permissions too)
 				GBuilder.CreateCommand("cleanup")
 						.Alias("cleanuptime")
 						.Description("Deletes the latest messages in the channel (max. 33 messages per cleanup and bulk delete mode only).")
@@ -219,9 +230,12 @@ namespace NeKzBot.Modules.Private.Owner
 						.Hide()
 						.Do(async e =>
 						{
-							if (e.User.ServerPermissions.ManageMessages)
+							if ((e.User.ServerPermissions.ManageMessages)
+							&& (e.User.GetPermissions(e.Channel).ManageMessages))
 							{
-								if ((await Utils.GetBotUserObject(e.Channel)).GetPermissions(e.Channel).ManageMessages)
+								var bot = await Utils.GetBotUserObject(e.Channel);
+								if ((bot?.ServerPermissions.ManageMessages == true)
+								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
 								{
 									if (uint.TryParse(e.GetArg("message_count"), out var count))
 									{

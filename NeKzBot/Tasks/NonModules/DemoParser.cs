@@ -10,7 +10,7 @@ using NeKzBot.Server;
 
 namespace NeKzBot.Tasks.NonModules
 {
-	public static class AutoDownloader
+	public static class DemoParser
 	{
 		private static readonly Fetcher _fetchClient = new Fetcher();
 		private static readonly string _cacheKey = "demo";
@@ -48,14 +48,14 @@ namespace NeKzBot.Tasks.NonModules
 							}
 							catch (Exception e)
 							{
-								await Logger.SendAsync("Fetching.GetFileAndCacheAsync Error (AutoDownloader.CheckForDemoFileAsync)", e);
+								await Logger.SendAsync("Fetching.GetFileAndCacheAsync Error (DemoParser.CheckForDemoFileAsync)", e);
 								return true;
 							}
 
 							// Get file
 							var cachefile = await Caching.CFile.GetPathAndSaveAsync(cachekey);
 							if (string.IsNullOrEmpty(cachefile))
-								await Logger.SendAsync("Caching.CFile.GetPathAndSaveAsync Error (AutoDownloader.CheckForDemoFileAsync)", LogColor.Error);
+								await Logger.SendAsync("Caching.CFile.GetPathAndSaveAsync Error (DemoParser.CheckForDemoFileAsync)", LogColor.Error);
 							else
 							{
 								// Parser throws exception if something failed
@@ -70,7 +70,7 @@ namespace NeKzBot.Tasks.NonModules
 			}
 			catch (Exception e)
 			{
-				await Logger.SendAsync("AutoDownloader.CheckForDemoFileAsync Error", e);
+				await Logger.SendAsync("DemoParser.CheckForDemoFileAsync Error", e);
 			}
 			return true;
 		}

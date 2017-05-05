@@ -23,7 +23,8 @@
 * Works fine on Linux + [Mono](http://www.mono-project.com)
 
 ## Documentation
-* [Modules](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Modules.md)
+* [Permissions](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Permissions.md)
+* [Commands](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Commands.md)
 * [Settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Settings.md)
 * [Audio](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Audio.md)
 * [RaspberryPi](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/RaspberryPi.md)

@@ -13,7 +13,7 @@ using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks
 {
-	public static class Twitch
+	public static class TwitchTv
 	{
 		public static bool IsRunning { get; set; } = false;
 		public static InternalWatch Watch { get; } = new InternalWatch();
@@ -34,7 +34,7 @@ namespace NeKzBot.Tasks
 		public static async Task StartAsync(int serverdelay = 8000)
 		{
 			//await Task.Delay(serverdelay);
-			await Logger.SendAsync("Twitch Started", LogColor.Twitch);
+			await Logger.SendAsync("TwitchTv Started", LogColor.Twitch);
 			IsRunning = true;
 			try
 			{
@@ -72,7 +72,7 @@ namespace NeKzBot.Tasks
 								continue;
 
 							await Logger.SendAsync($"{streamer} IS LIVE", LogColor.Twitch);
-							await Logger.SendAsync($"Twitch.StartAsync Caching -> {await Utils.StringInBytes(streamer)} bytes", LogColor.Caching);
+							await Logger.SendAsync($"TwitchTv.StartAsync Caching -> {await Utils.StringInBytes(streamer)} bytes", LogColor.Caching);
 							cache.Add(streamer);
 
 							// Save preview image, upload to dropbox and create a link
@@ -117,17 +117,17 @@ namespace NeKzBot.Tasks
 					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(newcache, delimiter: "|"));
 					cache = newcache = null;
 
-					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Twitch.StartAsync Delay Took -> ");
+					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "TwitchTv.StartAsync Delay Took -> ");
 					await Task.Delay((delay > 0 ) ? delay : 0);
 					await Watch.RestartAsync();
 				}
 			}
 			catch (Exception e)
 			{
-				await Logger.SendToChannelAsync("Twitch.StartAsync Error", e);
+				await Logger.SendToChannelAsync("TwitchTv.StartAsync Error", e);
 			}
 			IsRunning = false;
-			await Logger.SendToChannelAsync("Twitch.StartAsync Ended", LogColor.Twitch);
+			await Logger.SendToChannelAsync("TwitchTv.StartAsync Ended", LogColor.Twitch);
 		}
 
 		public static async Task<string> GetPreviewAsync(string channel)
