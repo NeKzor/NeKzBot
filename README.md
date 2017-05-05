@@ -1,4 +1,4 @@
-# [NeKzBot 1.8](https://github.com/NeKzor/NeKzBot/tree/master/NeKzBot#nekzbot)
+# [NeKzBot 1.9](https://github.com/NeKzor/NeKzBot/tree/master/NeKzBot#nekzbot)
 Made with [Discord.Net 0.9.6](https://github.com/RogueException/Discord.Net) on .NET Framework 4.5.2.
 
 # [NeKzBotSelfBot 1.0](https://github.com/NeKzor/NeKzBot/tree/master/NeKzBotSelfBot#nekzbotselfbot)

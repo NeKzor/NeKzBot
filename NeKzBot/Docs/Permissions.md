@@ -31,11 +31,11 @@ Speak|Play sound in voice channel.
 ---
 ##### Notes:
 
-¹ Requires the user to have the manage nicknames permission
+¹ Requires the user to have the manage nicknames permission.
 
-² Requires the user to have the same permission
+² Requires the user to have the same permission.
 
-³ Requires the user to have the admin permission
+³ Requires the user to have the admin permission.
 
 ---
 ##### For bot developers:
