@@ -51,7 +51,7 @@ namespace NeKzBot.Modules.Public.Others
 					{
 						// Useful tool https://finitereality.github.io/permissions
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"https://discordapp.com/api/oauth2/authorize?client_id={Bot.Client.CurrentUser.Id}&scope=bot&permissions={Configuration.Default.BotPermissions}");
+						await e.Channel.SendMessage($"<https://discordapp.com/api/oauth2/authorize?client_id={Bot.Client.CurrentUser.Id}&scope=bot&permissions={Configuration.Default.BotPermissions}>");
 					});
 
 			// Twitch

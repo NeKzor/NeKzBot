@@ -14,7 +14,7 @@ Special|Description
 ---|---
 Embed Links|-
 Change Nickname¹|Change bot's nickname by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#165).
-Manage Messages²|Pin message by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#181) and mass delete messages by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#214).
+Manage Messages²|Pin message by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#181) and mass delete messages by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#214)⁴.
 Add Reactions²|Add reaction to message by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Private/Owner/Admin.cs#131).
 Create Instant Invite²|Create a channel invite by [command](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Modules/Public/Others/Rest.cs#L28).
 
@@ -36,6 +36,8 @@ Speak|Play sound in voice channel.
 ² Requires the user to have the same permission.
 
 ³ Requires the user to have the admin permission.
+
+⁴ Would also require the read message history permission.
 
 ---
 ##### For bot developers:

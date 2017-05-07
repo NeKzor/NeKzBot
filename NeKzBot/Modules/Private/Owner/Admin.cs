@@ -233,6 +233,7 @@ namespace NeKzBot.Modules.Private.Owner
 							if ((e.User.ServerPermissions.ManageMessages)
 							&& (e.User.GetPermissions(e.Channel).ManageMessages))
 							{
+								// NOTE: bot would also need the permission to read message history
 								var bot = await Utils.GetBotUserObject(e.Channel);
 								if ((bot?.ServerPermissions.ManageMessages == true)
 								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
@@ -240,7 +241,7 @@ namespace NeKzBot.Modules.Private.Owner
 									if (uint.TryParse(e.GetArg("message_count"), out var count))
 									{
 										// Bulk delete only
-										var messages = (await e.Channel.DownloadMessages((int)count, e.Message.Id, Relative.Before, false))
+										var messages = (await e.Channel.DownloadMessages((int)count, e.Message.Id, Relative.Before))
 											// Am I doing this right?
 											.Where(m => (DateTime.UtcNow - m.Timestamp.Date.ToUniversalTime()).TotalMilliseconds < (1000 * 60 * 60 * 24 * 7 * 2));
 										await e.Message.Delete();

@@ -140,6 +140,8 @@ namespace NeKzBot.Tasks.Leaderboard
 								Time = time,
 								YouTube = youtube
 							},
+							// This won't detect player name changes now
+							CacheFormat = $"{map}{time}{steamid}",
 							// Tweet
 							Tweet = new Portal2TweetUpdate
 							{
@@ -396,7 +398,8 @@ namespace NeKzBot.Tasks.Leaderboard
 						}
 
 						// Search current wr, then take the next one
-						if (date == wr.Date)
+						var entry = new Portal2Entry { Date = date };
+						if (entry.Date == wr.Date)
 							found = true;
 					}
 					doc = null;

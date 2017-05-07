@@ -33,9 +33,7 @@ namespace NeKzBot.Classes
 	{
 		public Portal2Entry Entry { get; set; }
 		public Portal2TweetUpdate Tweet { get; set; }
-		// This won't detect player name changes now
-		public string CacheFormat
-			=> $"{Entry.Map.ChallengeModeName}{Entry.Time}{Entry.Player.SteamId}";
+		public string CacheFormat { get; set; }
 	}
 
 	public sealed class Portal2TweetUpdate
@@ -53,7 +51,7 @@ namespace NeKzBot.Classes
 		public string Date
 		{
 			get => (_date != string.Empty)
-						  ? $"{_date} UTC"
+						  ? $"{_date} (UTC)"
 						  : "_Unknown._";
 			set => _date = value;
 		}

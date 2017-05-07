@@ -199,7 +199,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("674294849")]
+        [global::System.Configuration.DefaultSettingValueAttribute("607185985")]
         public int BotPermissions {
             get {
                 return ((int)(this["BotPermissions"]));

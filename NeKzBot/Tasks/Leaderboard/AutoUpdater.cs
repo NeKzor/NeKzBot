@@ -105,7 +105,7 @@ namespace NeKzBot.Tasks.Leaderboard
 									}
 
 									// Send it to Twitter too but make sure it's world record
-									var tweet = await FormatMainTweetAsync($"New World Record in {update.Entry.Map}\n{update.Entry.Time} by {update.Entry.Player}\n{update.Entry.Date} (UTC)", update.Entry.Demo, update.Entry.YouTube);
+									var tweet = await FormatMainTweetAsync($"New World Record in {update.Entry.Map.ChallengeModeName}\n{update.Entry.Time} by {update.Entry.Player.Name}\n{update.Entry.Date}", update.Entry.Demo, update.Entry.YouTube);
 									if ((tweet != string.Empty)
 									&& (Configuration.Default.BoardParameter == "?wr=1"))
 									{
