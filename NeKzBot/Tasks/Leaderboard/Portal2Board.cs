@@ -7,49 +7,33 @@ namespace NeKzBot.Tasks.Leaderboard
 {
 	public static partial class Portal2Board
 	{
-		//private static Task<string> RankFromat(string s)
-		//{
-		//	var output = $"Rank • **{s}th**";
-		//	if (Convert.ToInt16(s) > 10)
-		//		output = $"Rank • **#{s}**";
-		//	else if (s == "1")
-		//		output = string.Empty;  // Trophy maybe?
-		//	else if (s == "2")
-		//		output = "Rank • **2nd**";
-		//	else if (s == "3")
-		//		output = "Rank • **3rd**";
-		//	return Task.FromResult(output);
-		//}
+		public static string FormatPointsToString(this uint? points)
+			=> (points != 0)
+					   ? points?.ToString("#,###,###.##")
+					   : points.ToString();
 
-		//private static Task<string> AddDecimalPlace(string s)
-		//	=> Task.FromResult((s.Contains(".")
-		//					|| (s == "NO"))
-		//						  ? s
-		//						  : $"{s}.0");
+		public static string FormatAveragePlaceToString(this float? place)
+			=> place == default(float?)
+					 ? "NO"
+					 : place?.ToString("N1");
 
-		//private static Task<string> FormatRank(string s)
-		//{
-		//	if (s == "NO")
-		//		return Task.FromResult(s);
+		public static string FormatRankToString(this uint? rank)
+		{
+			if (rank == default(uint?))
+				return "NO";
 
-		//	var output = $"{s}th";
-		//	if ((s == "11")
-		//	|| (s == "12")
-		//	|| (s == "13"))
-		//		return Task.FromResult(output);
-		//	else if (s[s.Length - 1] == '1')
-		//		output = $"{s}st";
-		//	else if (s[s.Length - 1] == '2')
-		//		output = $"{s}nd";
-		//	else if (s[s.Length - 1] == '3')
-		//		output = $"{s}rd";
-		//	return Task.FromResult(output);
-		//}
-
-		//private static Task<string> FormatPoints(string s)
-		//	=> Task.FromResult((s != "0")
-		//						  ? int.Parse(s).ToString("#,###,###.##")
-		//						  : s);
+			if ((rank == 11)
+			|| (rank == 12)
+			|| (rank == 13))
+				return $"{rank}th";
+			if (rank % 10 == 1)
+				return $"{rank}st";
+			if (rank % 10 == 2)
+				return $"{rank}nd";
+			if (rank % 10 == 3)
+				return $"{rank}rd";
+			return $"{rank}th";
+		}
 
 		private static async Task<string> FormatMainTweetAsync(string msg, params string[] stuff)
 		{

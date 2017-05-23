@@ -42,11 +42,11 @@ namespace NeKzBot.Tasks.Leaderboard
 																					 Credentials.Default.TwitterAppTokenSecret);
 				_refreshWatch = new Stopwatch();
 				_cacheKey = "autolb";
-				_refreshTime = 20 * 60 * 1000;  // 20 minutes
+				_refreshTime = 5 * 60 * 1000;  // 5 minutes
 
 				// My library :)
 				_latestWorldRecords = new ChangelogParameters { [Parameters.WorldRecord] = 1 };
-				_client = new Portal2BoardsClient(_latestWorldRecords);
+				_client = new Portal2BoardsClient(_latestWorldRecords, await new Fetcher().GetClient());
 			}
 
 			public static async Task StartAsync(int serverdelay = 8000)

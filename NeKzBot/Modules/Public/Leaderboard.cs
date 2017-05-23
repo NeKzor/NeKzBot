@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
-using NeKzBot.Extensions;
-using NeKzBot.Resources;
-using NeKzBot.Server;
-using NeKzBot.Utilities;
 using Portal2Boards.Net;
 using Portal2Boards.Net.API.Models;
 using Portal2Boards.Net.Entities;
 using Portal2Boards.Net.Extensions;
+using NeKzBot.Extensions;
+using NeKzBot.Resources;
+using NeKzBot.Server;
+using NeKzBot.Tasks.Leaderboard;
+using NeKzBot.Utilities;
 
 namespace NeKzBot.Modules.Public
 {
 	public class Leaderboard : CommandModule
 	{
-		private static readonly Portal2BoardsClient _client = new Portal2BoardsClient();
+		private static readonly Portal2BoardsClient _client = new Portal2BoardsClient(new Fetcher().GetClient().GetAwaiter().GetResult());
 
 		public static async Task LoadAsync()
 		{
@@ -54,9 +55,9 @@ namespace NeKzBot.Modules.Public
 						}
 
 						var changelog = await _client.GetChangelogAsync(query);
-						var entry = (EntryData)changelog?.Data;
-						if (entry != null)
+						if (changelog != null)
 						{
+							var entry = (EntryData)changelog.Data.FirstOrDefault();
 							var embed = new Embed
 							{
 								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
@@ -125,11 +126,11 @@ namespace NeKzBot.Modules.Public
 						var filter = e.GetArg("filter");
 						var query = default(string);
 						if (string.IsNullOrEmpty(filter))
-							query = "http://board.iverb.me/changelog";
+							query = string.Empty;
 						else if (string.Equals(filter, "yt", StringComparison.CurrentCultureIgnoreCase))
-							query = "http://board.iverb.me/changelog?yt=1";
+							query = "?yt=1";
 						else if (string.Equals(filter, "demo", StringComparison.CurrentCultureIgnoreCase))
-							query = "http://board.iverb.me/changelog?demo=1";
+							query = "?demo=1";
 						else
 						{
 							await e.Channel.SendMessage($"Unknown parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`.");
@@ -137,9 +138,9 @@ namespace NeKzBot.Modules.Public
 						}
 
 						var changelog = await _client.GetChangelogAsync(query);
-						var entry = (EntryData)changelog?.Data;
-						if (entry != null)
+						if (changelog != null)
 						{
+							var entry = (EntryData)changelog.Data.FirstOrDefault();
 							var embed = new Embed
 							{
 								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
@@ -153,7 +154,7 @@ namespace NeKzBot.Modules.Public
 									new EmbedField("Map", entry.Map.Name, true),
 									new EmbedField("Rank", entry.Rank.Current.ToString(), true),
 									new EmbedField("Time", entry.Score.Current.AsTimeToString(), true),
-									new EmbedField("Date", entry.Date.DateTimeToString(), true)
+									new EmbedField("Date", entry.Date.DateTimeToString() + " UTC", true)
 								}
 							};
 
@@ -219,9 +220,9 @@ namespace NeKzBot.Modules.Public
 							changelog = await _client.GetChangelogAsync($"?wr=1&chamber={map.BestTimeId}");
 						}
 
-						var entry = (EntryData)changelog?.Data;
-						if (entry != null)
+						if (changelog != null)
 						{
+							var entry = (EntryData)changelog.Data.FirstOrDefault();
 							var embed = new Embed
 							{
 								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
@@ -294,9 +295,9 @@ namespace NeKzBot.Modules.Public
 							&& (e.User.Nickname != null))
 								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
 
-							var user = (UserData)profile?.Data;
-							if (user != null)
+							if (profile != null)
 							{
+								var user = (UserData)profile.Data;
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
@@ -306,22 +307,22 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
-															   $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
-															   $"Overall • {user.Points.Global.ScoreRank}", true),
-										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score}\n" +
-																 $"Cooperative • {user.Points.Cooperative.Score}\n" +
-																 $"Overall • {user.Points.Global.Score}", true),
-										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank} on {user.Times.BestScore.MapName}", true),
-										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-																	   $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-																	   $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}", true),
+										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank.FormatRankToString()}\n" +
+															   $"Cooperative • {user.Points.Cooperative.ScoreRank.FormatRankToString()}\n" +
+															   $"Overall • {user.Points.Global.ScoreRank.FormatRankToString()}", true),
+										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score.FormatPointsToString()}\n" +
+																 $"Cooperative • {user.Points.Cooperative.Score.FormatPointsToString()}\n" +
+																 $"Overall • {user.Points.Global.Score.FormatPointsToString()}", true),
+										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank.FormatRankToString()} on {user.Times.BestScore.ParsedMap?.Alias ?? "serveral chambers"}", true),
+										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+																	   $"Cooperative • {user.Times.Cooperative.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+																	   $"Overall • {user.Times.GlobalAveragePlace.FormatAveragePlaceToString()}", true),
 										new EmbedField("World Records", (user.Times.WorldRecordCount >= 1)
 																								  ? $"Single Player • {user.Times.SinglePlayer.Chapters.WorldRecordCount}\n" +
 																									$"Cooperative • {user.Times.Cooperative.Chapters.WorldRecordCount}\n" +
 																									$"Overall • {user.Times.WorldRecordCount}"
 																								  : "None.", true),
-										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank} on {user.Times.WorstScore.MapName}", true)
+										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank.FormatRankToString()} on {user.Times.WorstScore.ParsedMap?.Alias ?? "several chambers"}", true)
 									}
 								}));
 							}
@@ -342,9 +343,9 @@ namespace NeKzBot.Modules.Public
 							&& (e.User.Nickname != null))
 								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
 
-							var user = (UserData)profile?.Data;
-							if (user != null)
+							if (profile != null)
 							{
+								var user = (UserData)profile.Data;
 								var data = user.Times.GetMapData(map);
 								var embed = new Embed
 								{
@@ -356,7 +357,7 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", data.MapName, true),
+										new EmbedField("Map", map.Alias, true),
 										new EmbedField("Rank", data.ScoreRank.ToString(), true),
 										new EmbedField("Time", data.Score.AsTimeToString(), true),
 										new EmbedField("Date", data.Date.DateTimeToString() + " UTC", true)
@@ -416,9 +417,9 @@ namespace NeKzBot.Modules.Public
 						if (string.IsNullOrEmpty(e.GetArg("map_name")))
 						{
 							var profile = await _client.GetProfileAsync(e.GetArg("board_name"));
-							var user = (UserData)profile.Data;
-							if (user != null)
+							if (profile != null)
 							{
+								var user = (UserData)profile.Data;
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
 									Author = new EmbedAuthor(user.DisplayName, user.SteamLink, user.SteamAvatarLink),
@@ -428,22 +429,22 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
-															   $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
-															   $"Overall • {user.Points.Global.ScoreRank}", true),
-										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score}\n" +
-																 $"Cooperative • {user.Points.Cooperative.Score}\n" +
-																 $"Overall • {user.Points.Global.Score}", true),
-										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank} on {user.Times.BestScore.MapName}", true),
-										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-																	   $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-																	   $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}", true),
+										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank.FormatRankToString()}\n" +
+															   $"Cooperative • {user.Points.Cooperative.ScoreRank.FormatRankToString()}\n" +
+															   $"Overall • {user.Points.Global.ScoreRank.FormatRankToString()}", true),
+										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score.FormatPointsToString()}\n" +
+																 $"Cooperative • {user.Points.Cooperative.Score.FormatPointsToString()}\n" +
+																 $"Overall • {user.Points.Global.Score.FormatPointsToString()}", true),
+										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank.FormatRankToString()} on {user.Times.BestScore.ParsedMap?.Alias ?? "several chambers"}", true),
+										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+																	   $"Cooperative • {user.Times.Cooperative.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+																	   $"Overall • {user.Times.GlobalAveragePlace.FormatAveragePlaceToString()}", true),
 										new EmbedField("World Records", (user.Times.WorldRecordCount >= 1)
 																								  ? $"Single Player • {user.Times.SinglePlayer.Chapters.WorldRecordCount}\n" +
 																									$"Cooperative • {user.Times.Cooperative.Chapters.WorldRecordCount}\n" +
 																									$"Overall • {user.Times.WorldRecordCount}"
 																								  : "None.", true),
-										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank} on {user.Times.WorstScore.MapName}", true)
+										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank.FormatRankToString()} on {user.Times.WorstScore.ParsedMap?.Alias ?? "several chambers"}", true)
 									}
 								}));
 							}
@@ -459,14 +460,10 @@ namespace NeKzBot.Modules.Public
 								return;
 							}
 
-							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
-							if ((profile == null)
-							&& (e.User.Nickname != null))
-								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
-
-							var user = (UserData)profile?.Data;
-							if (user != null)
+							var profile = await _client.GetProfileAsync(e.GetArg("board_name"));
+							if (profile != null)
 							{
+								var user = (UserData)profile.Data;
 								var data = user.Times.GetMapData(map);
 								var embed = new Embed
 								{
@@ -478,7 +475,7 @@ namespace NeKzBot.Modules.Public
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", data.MapName, true),
+										new EmbedField("Map", map.Alias, true),
 										new EmbedField("Rank", data.ScoreRank.ToString(), true),
 										new EmbedField("Time", data.Score.AsTimeToString(), true),
 										new EmbedField("Date", data.Date.DateTimeToString() + " UTC", true)
@@ -546,14 +543,17 @@ namespace NeKzBot.Modules.Public
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for a comparison.");
 							else
 							{
-								var users = new List<UserData> { (UserData)(await _client.GetProfileAsync(e.GetArg("map_name"))).Data };
+								var profiles = new List<ProfileData> { (await _client.GetProfileAsync(e.GetArg("map_name")))?.Data };
 								foreach (var player in players)
-									users.Add((UserData)(await _client.GetProfileAsync(player)).Data);
-								users.RemoveAll(user => user == null);
-								if (users.Count < 2)
+									profiles.Add((await _client.GetProfileAsync(player))?.Data);
+								profiles.RemoveAll(profile => profile == null);
+								if (profiles.Count < 2)
 									await e.Channel.SendMessage("Couldn't parse enough player profiles for a comparison.");
 								else
 								{
+									var users = new List<UserData>();
+									foreach (var profile in profiles)
+										users.Add((UserData)profile);
 									var embed = new Embed
 									{
 										Color = Data.BoardColor.RawValue,
@@ -567,25 +567,25 @@ namespace NeKzBot.Modules.Public
 										embed.AddField(field =>
 										{
 											field.Name = "Rank";
-											field.Value = $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
-														  $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
-														  $"Overall • {user.Points.Global.ScoreRank}";
+											field.Value = $"Single Player • {user.Points.SinglePlayer.ScoreRank.FormatRankToString()}\n" +
+														  $"Cooperative • {user.Points.Cooperative.ScoreRank.FormatRankToString()}\n" +
+														  $"Overall • {user.Points.Global.ScoreRank.FormatRankToString()}";
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Average Rank";
-											field.Value = $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-														  $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
-														  $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}";
+											field.Value = $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+														  $"Cooperative • {user.Times.Cooperative.Chapters.AveragePlace.FormatAveragePlaceToString()}\n" +
+														  $"Overall • {user.Times.GlobalAveragePlace.FormatAveragePlaceToString()}";
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Points";
-											field.Value = $"Single Player • {user.Points.SinglePlayer.Score}\n" +
-														  $"Cooperative • {user.Points.Cooperative.Score}\n" +
-														  $"Overall • {user.Points.Global.Score}";
+											field.Value = $"Single Player • {user.Points.SinglePlayer.Score.FormatPointsToString()}\n" +
+														  $"Cooperative • {user.Points.Cooperative.Score.FormatPointsToString()}\n" +
+														  $"Overall • {user.Points.Global.Score.FormatPointsToString()}";
 											field.Inline = true;
 										});
 									}
@@ -601,14 +601,17 @@ namespace NeKzBot.Modules.Public
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for comparison.");
 							else
 							{
-								var users = new List<UserData>();
+								var profiles = new List<ProfileData> { (await _client.GetProfileAsync(e.GetArg("map_name")))?.Data };
 								foreach (var player in players)
-									users.Add((UserData)(await _client.GetProfileAsync(player)).Data);
-								users.RemoveAll(user => user == null);
-								if (users.Count < 2)
+									profiles.Add((await _client.GetProfileAsync(player))?.Data);
+								profiles.RemoveAll(profile => profile == null);
+								if (profiles.Count < 2)
 									await e.Channel.SendMessage("Couldn't parse enough player profiles for a comparison.");
 								else
 								{
+									var users = new List<UserData>();
+									foreach (var profile in profiles)
+										users.Add((UserData)profile);
 									var embed = new Embed
 									{
 										Color = Data.BoardColor.RawValue,
@@ -638,7 +641,7 @@ namespace NeKzBot.Modules.Public
 										embed.AddField(field =>
 										{
 											field.Name = "Date";
-											field.Value = data.Date.DateTimeToString();
+											field.Value = data.Date.DateTimeToString() + " UTC";
 											field.Inline = true;
 										});
 									}
@@ -705,7 +708,7 @@ namespace NeKzBot.Modules.Public
 								var output = string.Empty;
 								foreach (var chamber in data)
 								{
-									var temp = $"\n{chamber.ScoreRank} {chamber.Score.AsTimeToString()} by {await Utils.AsRawText(chamber.Player.Name)} ({chamber.Date.DateTimeToString() + " UTC"})";
+									var temp = $"\n**{chamber.ScoreRank.FormatRankToString()}** {chamber.Score.AsTimeToString()} by {await Utils.AsRawText(chamber.Player.Name)} ({chamber.Date.DateTimeToString() + " UTC"})";
 									if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 										output += temp;
 								}

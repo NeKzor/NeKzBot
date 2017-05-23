@@ -12,14 +12,14 @@
 * Fetching data from
   * [board.iverb.me](https://board.iverb.me)
   * [speedrun.com](https://www.speedrun.com)
-  * [steamcommunity.com](http://steamcommunity.com/workshop)
+  * [steamcommunity.com](https://steamcommunity.com/workshop)
   * [twitch.tv](https://www.twitch.tv)
 * Auto notifications for
   * board.iverb.me
   * speedrun.com
   * twitch.tv
 * Parsing Source Engine demo recording files
-* Works fine on Linux + [Mono](http://www.mono-project.com)
+* Works fine on Linux + [Mono](https://www.mono-project.com)
 
 ## Documentation
 * [Permissions](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Permissions.md)
