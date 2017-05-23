@@ -52,7 +52,6 @@ namespace NeKzBot.Resources
 		public static readonly string HiddenMessage = "**[Hidden Commands & Neat Shortcuts]**\n" +
 													  $"• You can execute commands at the end of your text too: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n" +
 													  "• You can also use a mention to execute commands: `<@user_id> commands`.\n" +
-													  "• Every Portal 2 challenge mode map has its own abbreviation e.g. `PGN` means Portal Gun, you don't have to write it in caps.\n" +
 													  "**[VIP Guilds Only]**\n" +
 													  "• `10=tick` converts 10 ticks into seconds with the default Portal 2 tickrate 60.\n" +
 													  "• `1=sec` converts 1 second into ticks with the default Portal 2 tickrate 60.\n" +
