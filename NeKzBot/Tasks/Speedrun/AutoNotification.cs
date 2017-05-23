@@ -68,7 +68,7 @@ namespace NeKzBot.Tasks.Speedrun
 							if (nfstosend?.Count > 0)
 							{
 								nfstosend.Reverse();
-								// TODO: this can hit the rate limit pretty easily if the bot is offline for a while
+								// NOTE: this can hit the rate limit pretty easily if the bot is offline for a while
 								foreach (var notification in nfstosend)
 								{
 									var hook = new Webhook

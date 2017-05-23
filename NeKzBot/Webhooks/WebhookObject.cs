@@ -2,7 +2,6 @@
 
 namespace NeKzBot.Webhooks
 {
-	// TODO: retry sending images because I didn't know about the base64 header :>
 	public sealed class WebhookObject
 	{
 		[JsonProperty("id")]

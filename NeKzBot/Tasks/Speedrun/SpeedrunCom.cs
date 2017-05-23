@@ -599,8 +599,8 @@ namespace NeKzBot.Tasks.Speedrun
 					};
 
 					// Filtering
-					//if (notification.Type != SpeedrunNotificationType.Post)
-					//{
+					if (notification.Type != SpeedrunNotificationType.Post)
+					{
 						// Eh, blame the guy who designed the website/api :c
 						await notification.BuildGame();
 						var game = _client.Games.SearchGame(notification.Game.Name);
@@ -611,7 +611,7 @@ namespace NeKzBot.Tasks.Speedrun
 						}
 						await notification.BuildCache();
 						updates.Add(notification);
-					//}
+					}
 				}
 				return updates;
 			}

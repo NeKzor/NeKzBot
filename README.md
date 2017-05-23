@@ -6,4 +6,3 @@ Made with [Discord.Net 1.0.0-rc-00614](https://github.com/RogueException/Discord
 
 # VIP Servers
 [![Portal 2 Speedrun Server](https://discordapp.com/api/guilds/146404426746167296/embed.png?style=banner2)](https://discord.gg/0ohYsRHYh540eI50)
-[![Developer Server](https://discordapp.com/api/guilds/208570520805965826/embed.png?style=banner2)](https://discord.gg/rEazbJn)

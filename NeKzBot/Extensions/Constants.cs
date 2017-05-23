@@ -1,6 +1,6 @@
 ﻿namespace NeKzBot.Extensions
 {
-	public static class DiscordConstants
+	public struct DiscordConstants
 	{
 		public const uint MaximumCharsPerMessage = 2000;
 		public const uint MaximumFieldsInEmbed = 25;

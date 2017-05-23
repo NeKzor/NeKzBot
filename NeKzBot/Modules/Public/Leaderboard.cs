@@ -1,37 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
-using OxyPlot;
-using OxyPlot.Series;
-using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
-using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Utilities;
-using NeKzBot.Internals.Entities;
+using Portal2Boards.Net;
+using Portal2Boards.Net.API.Models;
+using Portal2Boards.Net.Entities;
+using Portal2Boards.Net.Extensions;
 
 namespace NeKzBot.Modules.Public
 {
 	public class Leaderboard : CommandModule
 	{
+		private static readonly Portal2BoardsClient _client = new Portal2BoardsClient();
+
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Leaderboard Module", LogColor.Init);
 			await GetLatestWorldRecord("latestwr");
 			await GetCurrentWorldRecord("wr");
+			await GetLatestLeaderboardEntry("latestentry");
 			await GetOwnRank("rank");
 			await GetUserRank("player");
-			await GetLatestLeaderboardEntry("latestentry");
 			await GetPlayerComparison("compare");
-			await GetPiePlayerComparison("pie");
-			await GetLinePlayerComparison("line");
 			await GetLeaderboard("top");
-			await LeaderboardCommands(Configuration.Default.LeaderboardCmd);
 		}
 
 		private static Task GetLatestWorldRecord(string c)
@@ -44,40 +40,41 @@ namespace NeKzBot.Modules.Public
 					{
 						await e.Channel.SendIsTyping();
 						var filter = e.GetArg("filter");
-						var url = default(string);
+						var query = default(string);
 						if (string.IsNullOrEmpty(filter))
-							url = "http://board.iverb.me/changelog?wr=1";
+							query = "?wr=1";
 						else if (string.Equals(filter, "yt", StringComparison.CurrentCultureIgnoreCase))
-							url = "http://board.iverb.me/changelog?wr=1&yt=1";
+							query = "?wr=1&yt=1";
 						else if (string.Equals(filter, "demo", StringComparison.CurrentCultureIgnoreCase))
-							url = "http://board.iverb.me/changelog?wr=1&demo=1";
+							query = "?wr=1&demo=1";
 						else
 						{
 							await e.Channel.SendMessage($"Unknown parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`.");
 							return;
 						}
 
-						var entry = await Portal2.GetLatestEntryAsync(url);
+						var changelog = await _client.GetChangelogAsync(query);
+						var entry = (EntryData)changelog?.Data;
 						if (entry != null)
 						{
 							var embed = new Embed
 							{
-								Author = new EmbedAuthor(entry.Player.Name, entry.Player.SteamLink, entry.Player.SteamAvatar),
+								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 World Record",
-								Url = url,
-								Image = new EmbedImage(entry.ImageLink),
+								Url = changelog.RequestUrl,
+								Image = new EmbedImage(entry.ImageLinkFull),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map.ChallengeModeName, true),
+									new EmbedField("Map", entry.Map.Name, true),
 									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
-									new EmbedField("Time", entry.Time, true),
-									new EmbedField("Date", entry.Date, true)
+									new EmbedField("Time", entry.Score.Current.AsTimeToString(), true),
+									new EmbedField("Date", entry.Date.DateTimeToString() + " UTC", true)
 								}
 							};
 
-							var duration = await Utils.GetDurationAsync(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.Date);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -86,21 +83,21 @@ namespace NeKzBot.Modules.Public
 									field.Value = duration;
 								});
 							}
-							if ((entry.Demo != string.Empty)
-							|| (entry.YouTube != string.Empty))
+							if ((entry.DemoExists)
+							|| (entry.VideoExists))
 							{
 								embed.AddField(field =>
 								{
 									field.Name = "Links";
 									var output = string.Empty;
-									if (entry.Demo != string.Empty)
-										output += $"[Demo Download]({entry.Demo})";
-									if (entry.YouTube != string.Empty)
-										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+									if (entry.DemoExists)
+										output += $"[Demo Download]({entry.DemoLink})";
+									if (entry.VideoExists)
+										output += $"{((entry.DemoExists) ? "\n" : string.Empty)}[YouTube Video]({entry.VideoLink})";
 									field.Value = output;
 								});
 							}
-							if (entry.Comment != string.Empty)
+							if (entry.CommentExists)
 							{
 								embed.AddField(async field =>
 								{
@@ -126,40 +123,41 @@ namespace NeKzBot.Modules.Public
 					{
 						await e.Channel.SendIsTyping();
 						var filter = e.GetArg("filter");
-						var url = default(string);
+						var query = default(string);
 						if (string.IsNullOrEmpty(filter))
-							url = "http://board.iverb.me/changelog";
+							query = "http://board.iverb.me/changelog";
 						else if (string.Equals(filter, "yt", StringComparison.CurrentCultureIgnoreCase))
-							url = "http://board.iverb.me/changelog?yt=1";
+							query = "http://board.iverb.me/changelog?yt=1";
 						else if (string.Equals(filter, "demo", StringComparison.CurrentCultureIgnoreCase))
-							url = "http://board.iverb.me/changelog?demo=1";
+							query = "http://board.iverb.me/changelog?demo=1";
 						else
 						{
 							await e.Channel.SendMessage($"Unknown parameter. Try `{Configuration.Default.PrefixCmd + c} yt` or `{Configuration.Default.PrefixCmd + c} demo`.");
 							return;
 						}
 
-						var entry = await Portal2.GetLatestEntryAsync(url);
+						var changelog = await _client.GetChangelogAsync(query);
+						var entry = (EntryData)changelog?.Data;
 						if (entry != null)
 						{
 							var embed = new Embed
 							{
-								Author = new EmbedAuthor(entry.Player.Name, entry.Player.SteamLink, entry.Player.SteamAvatar),
+								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 Entry",
-								Url = url,
-								Image = new EmbedImage(entry.ImageLink),
+								Url = changelog.RequestUrl,
+								Image = new EmbedImage(entry.ImageLinkFull),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map.ChallengeModeName, true),
-									new EmbedField("Rank", entry.Ranking, true),
-									new EmbedField("Time", entry.Time, true),
-									new EmbedField("Date", entry.Date, true)
+									new EmbedField("Map", entry.Map.Name, true),
+									new EmbedField("Rank", entry.Rank.Current.ToString(), true),
+									new EmbedField("Time", entry.Score.Current.AsTimeToString(), true),
+									new EmbedField("Date", entry.Date.DateTimeToString(), true)
 								}
 							};
 
-							var duration = await Utils.GetDurationAsync(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.Date);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -168,21 +166,21 @@ namespace NeKzBot.Modules.Public
 									field.Value = duration;
 								});
 							}
-							if ((entry.Demo != string.Empty)
-							|| (entry.YouTube != string.Empty))
+							if ((entry.DemoExists)
+							|| (entry.VideoExists))
 							{
 								embed.AddField(field =>
 								{
 									field.Name = "Links";
 									var output = string.Empty;
-									if (entry.Demo != string.Empty)
-										output += $"[Demo Download]({entry.Demo})";
-									if (entry.YouTube != string.Empty)
-										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+									if (entry.DemoExists)
+										output += $"[Demo Download]({entry.DemoLink})";
+									if (entry.VideoExists)
+										output += $"{((entry.DemoExists) ? "\n" : string.Empty)}[YouTube Video]({entry.VideoLink})";
 									field.Value = output;
 								});
 							}
-							if (entry.Comment != string.Empty)
+							if (entry.CommentExists)
 							{
 								embed.AddField(async field =>
 								{
@@ -203,46 +201,45 @@ namespace NeKzBot.Modules.Public
 			CService.CreateCommand(c)
 					.Alias("currentwr", "p2wr")
 					.Description($"Returns latest world record of a map. Try `{Configuration.Default.PrefixCmd + c}` to show a random wr entry.")
-					.Parameter("mapname", ParameterType.Unparsed)
+					.Parameter("map_name", ParameterType.Unparsed)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						const string url = "http://board.iverb.me/changelog?wr=1&chamber=";
-						var entry = default(Portal2Entry);
-						var collection = await Data.Get<Portal2Maps>("p2maps");
-						if (string.IsNullOrEmpty(e.GetArg("mapname")))
-							entry = await Portal2.GetLatestEntryAsync($"{url}{collection.Maps[await Utils.RngAsync(collection.Maps.Count)].BestTimeId}");
+						var changelog = default(Changelog);
+						if (string.IsNullOrEmpty(e.GetArg("map_name")))
+							changelog = await _client.GetChangelogAsync($"?wr=1&chamber={(await Utils.RngAsync(Portal2.CampaignMaps.Where(m => m.IsOfficial))).BestTimeId}");
 						else
 						{
-							var result = await collection.Search(e.GetArg("mapname"));
-							if (result == null)
+							var map = await Portal2.GetMapByName(e.GetArg("map_name"));
+							if (map == null)
 							{
 								await e.Channel.SendMessage("Couldn't find that map.");
 								return;
 							}
-							entry = await Portal2.GetLatestEntryAsync($"{url}{result.BestTimeId}");
+							changelog = await _client.GetChangelogAsync($"?wr=1&chamber={map.BestTimeId}");
 						}
 
+						var entry = (EntryData)changelog?.Data;
 						if (entry != null)
 						{
 							var embed = new Embed
 							{
-								Author = new EmbedAuthor(entry.Player.Name, entry.Player.SteamLink, entry.Player.SteamAvatar),
+								Author = new EmbedAuthor(entry.Player.Name, entry.Player.Link, entry.Player.SteamAvatarLink),
 								Color = Data.BoardColor.RawValue,
 								Title = "Portal 2 World Record",
-								Url = url,
-								Image = new EmbedImage(entry.ImageLink),
+								Url = changelog.RequestUrl,
+								Image = new EmbedImage(entry.ImageLinkFull),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 								Fields = new EmbedField[]
 								{
-									new EmbedField("Map", entry.Map.ChallengeModeName, true),
+									new EmbedField("Map", entry.Map.Name, true),
 									new EmbedField("Player", await Utils.AsRawText(entry.Player.Name), true),
-									new EmbedField("Time", entry.Time, true),
-									new EmbedField("Date", entry.Date, true)
+									new EmbedField("Time", entry.Score.Current.AsTimeToString(), true),
+									new EmbedField("Date", entry.Date.DateTimeToString() + " UTC", true)
 								}
 							};
 
-							var duration = await Utils.GetDurationAsync(entry.DateTime);
+							var duration = await Utils.GetDurationAsync(entry.Date);
 							if (duration != default(string))
 							{
 								embed.AddField(field =>
@@ -251,21 +248,21 @@ namespace NeKzBot.Modules.Public
 									field.Value = duration;
 								});
 							}
-							if ((entry.Demo != string.Empty)
-							|| (entry.YouTube != string.Empty))
+							if ((entry.DemoExists)
+							|| (entry.VideoExists))
 							{
 								embed.AddField(field =>
 								{
 									field.Name = "Links";
 									var output = string.Empty;
-									if (entry.Demo != string.Empty)
-										output += $"[Demo Download]({entry.Demo})";
-									if (entry.YouTube != string.Empty)
-										output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+									if (entry.DemoExists)
+										output += $"[Demo Download]({entry.DemoLink})";
+									if (entry.VideoExists)
+										output += $"{((entry.DemoExists) ? "\n" : string.Empty)}[YouTube Video]({entry.VideoLink})";
 									field.Value = output;
 								});
 							}
-							if (entry.Comment != string.Empty)
+							if (entry.CommentExists)
 							{
 								embed.AddField(async field =>
 								{
@@ -286,37 +283,45 @@ namespace NeKzBot.Modules.Public
 			CService.CreateCommand(c)
 					.Alias("pb")
 					.Description("Shows your leaderboard stats. Map name parameter is optional.")
-					.Parameter("mapname", ParameterType.Unparsed)
+					.Parameter("map_name", ParameterType.Unparsed)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var url = $"http://board.iverb.me/profile/{e.User.Name.Trim()}";
-						if (string.IsNullOrEmpty(e.GetArg("mapname")))
+						if (string.IsNullOrEmpty(e.GetArg("map_name")))
 						{
-							var profile = await Portal2.GetUserStatsAsync(url);
+							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
 							if ((profile == null)
 							&& (e.User.Nickname != null))
-								profile = await Portal2.GetUserStatsAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname.Trim()}");
+								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
 
-							if (profile != null)
+							var user = (UserData)profile?.Data;
+							if (user != null)
 							{
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
-									Author = new EmbedAuthor(profile.Name, profile.SteamLink, profile.SteamAvatar),
+									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
 									Color = Data.BoardColor.RawValue,
 									Title = "Portal 2 Profile",
-									Url = url,
+									Url = profile.RequestUrl,
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Rank", $"Single Player • {profile.SinglePlayerRank}\nCooperative • {profile.CooperativeRank}\nOverall • {profile.OverallRank}", true),
-										new EmbedField("Points", $"Single Player • {profile.SinglePlayerPoints}\nCooperative • {profile.CooperativePoints}\nOverall • {profile.OverallPoints}", true),
-										new EmbedField("Best Rank", $"{profile.BestPlaceRank} on {profile.BestPlaceMap}", true),
-										new EmbedField("Average Rank", $"Single Player • {profile.AverageSinglePlayerRank}\nCooperative • {profile.AverageCooperativeRank}\nOverall • {profile.AverageOverallRank}", true),
-										new EmbedField("World Records", (profile.SinglePlayerRank != "0")
-																								  ? $"Single Player • {profile.SinglePlayerWorldRecords}\nCooperative • {profile.CooperativeWorldRecords}\nOverall • {profile.OverallWorldRecords}"
+										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
+															   $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
+															   $"Overall • {user.Points.Global.ScoreRank}", true),
+										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score}\n" +
+																 $"Cooperative • {user.Points.Cooperative.Score}\n" +
+																 $"Overall • {user.Points.Global.Score}", true),
+										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank} on {user.Times.BestScore.MapName}", true),
+										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+																	   $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+																	   $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}", true),
+										new EmbedField("World Records", (user.Times.WorldRecordCount >= 1)
+																								  ? $"Single Player • {user.Times.SinglePlayer.Chapters.WorldRecordCount}\n" +
+																									$"Cooperative • {user.Times.Cooperative.Chapters.WorldRecordCount}\n" +
+																									$"Overall • {user.Times.WorldRecordCount}"
 																								  : "None.", true),
-										new EmbedField("Worst Rank", $"{profile.WorstPlaceRank} on {profile.WorstPlaceMap}", true)
+										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank} on {user.Times.WorstScore.MapName}", true)
 									}
 								}));
 							}
@@ -325,38 +330,40 @@ namespace NeKzBot.Modules.Public
 						}
 						else
 						{
-							var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(e.GetArg("mapname"));
-							if (result == null)
+							var map = await Portal2.GetMapByName(e.GetArg("map_name"));
+							if (map == null)
 							{
 								await e.Channel.SendMessage("Couldn't find that map.");
 								return;
 							}
 
-							var entry = await Portal2.GetUserRankAsync(url, result);
-							if ((entry == null)
+							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
+							if ((profile == null)
 							&& (e.User.Nickname != null))
-								entry = await Portal2.GetUserRankAsync(url = $"http://board.iverb.me/profile/{e.User.Nickname.Trim()}", result);
+								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
 
-							if (entry != null)
+							var user = (UserData)profile?.Data;
+							if (user != null)
 							{
+								var data = user.Times.GetMapData(map);
 								var embed = new Embed
 								{
-									Author = new EmbedAuthor(entry.Player.Name, entry.Player.SteamLink, entry.Player.SteamAvatar),
+									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
 									Color = Data.BoardColor.RawValue,
 									Title = "Personal Record",
-									Url = url,
-									Image = new EmbedImage(entry.ImageLink),
+									Url = profile.RequestUrl,
+									Image = new EmbedImage(map.ImageLinkFull),
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", entry.Map.ChallengeModeName, true),
-										new EmbedField("Rank", entry.Ranking, true),
-										new EmbedField("Time", entry.Time, true),
-										new EmbedField("Date", entry.Date, true)
+										new EmbedField("Map", data.MapName, true),
+										new EmbedField("Rank", data.ScoreRank.ToString(), true),
+										new EmbedField("Time", data.Score.AsTimeToString(), true),
+										new EmbedField("Date", data.Date.DateTimeToString() + " UTC", true)
 									}
 								};
 
-								var duration = await Utils.GetDurationAsync(entry.DateTime);
+								var duration = await Utils.GetDurationAsync(data.Date);
 								if (duration != default(string))
 								{
 									embed.AddField(field =>
@@ -365,26 +372,26 @@ namespace NeKzBot.Modules.Public
 										field.Value = duration;
 									});
 								}
-								if ((entry.Demo != string.Empty)
-								|| (entry.Demo != string.Empty))
+								if ((data.DemoExists)
+								|| (data.VideoExists))
 								{
 									embed.AddField(field =>
 									{
 										field.Name = "Links";
 										var output = string.Empty;
-										if (entry.Demo != string.Empty)
-											output += $"[Demo Download]({entry.Demo})";
-										if (entry.YouTube != string.Empty)
-											output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+										if (data.DemoExists)
+											output += $"[Demo Download]({data.DemoLink})";
+										if (data.VideoExists)
+											output += $"{((data.DemoExists) ? "\n" : string.Empty)}[YouTube Video]({data.VideoLink})";
 										field.Value = output;
 									});
 								}
-								if (entry.Comment != string.Empty)
+								if (data.CommentExists)
 								{
 									embed.AddField(async field =>
 									{
 										field.Name = "Comment";
-										field.Value = await Utils.AsRawText(entry.Comment);
+										field.Value = await Utils.AsRawText(data.Comment);
 									});
 								}
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -401,34 +408,42 @@ namespace NeKzBot.Modules.Public
 			CService.CreateCommand(c)
 					.Alias("profile")
 					.Description("Shows leaderboard stats about a player (Steam ID64 would also work). Map name parameter is optional.")
-					.Parameter("playername", ParameterType.Required)
-					.Parameter("mapname", ParameterType.Unparsed)
+					.Parameter("board_name", ParameterType.Required)
+					.Parameter("map_name", ParameterType.Unparsed)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var url = $"http://board.iverb.me/profile/{e.GetArg("playername")}";
-						if (string.IsNullOrEmpty(e.GetArg("mapname")))
+						if (string.IsNullOrEmpty(e.GetArg("map_name")))
 						{
-							var profile = await Portal2.GetUserStatsAsync(url);
-							if (profile != null)
+							var profile = await _client.GetProfileAsync(e.GetArg("board_name"));
+							var user = (UserData)profile.Data;
+							if (user != null)
 							{
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 								{
-									Author = new EmbedAuthor(profile.Name, profile.SteamLink, profile.SteamAvatar),
+									Author = new EmbedAuthor(user.DisplayName, user.SteamLink, user.SteamAvatarLink),
 									Color = Data.BoardColor.RawValue,
 									Title = "Portal 2 Profile",
-									Url = url,
+									Url = profile.RequestUrl,
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Rank", $"Single Player • {profile.SinglePlayerRank}\nCooperative • {profile.CooperativeRank}\nOverall • {profile.OverallRank}", true),
-										new EmbedField("Points", $"Single Player • {profile.SinglePlayerPoints}\nCooperative • {profile.CooperativePoints}\nOverall • {profile.OverallPoints}", true),
-										new EmbedField("Best Rank", $"{profile.BestPlaceRank} on {profile.BestPlaceMap}", true),
-										new EmbedField("Average Rank", $"Single Player • {profile.AverageSinglePlayerRank}\nCooperative • {profile.AverageCooperativeRank}\nOverall • {profile.AverageOverallRank}", true),
-										new EmbedField("World Records", (profile.SinglePlayerRank != "0")
-																				? $"Single Player • {profile.SinglePlayerWorldRecords}\nCooperative • {profile.CooperativeWorldRecords}\nOverall • {profile.OverallWorldRecords}"
-																				: "None.", true),
-										new EmbedField("Worst Rank", $"{profile.WorstPlaceRank} on {profile.WorstPlaceMap}", true)
+										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
+															   $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
+															   $"Overall • {user.Points.Global.ScoreRank}", true),
+										new EmbedField("Points", $"Single Player • {user.Points.SinglePlayer.Score}\n" +
+																 $"Cooperative • {user.Points.Cooperative.Score}\n" +
+																 $"Overall • {user.Points.Global.Score}", true),
+										new EmbedField("Best Rank", $"{user.Times.BestScore.ScoreRank} on {user.Times.BestScore.MapName}", true),
+										new EmbedField("Average Rank", $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+																	   $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+																	   $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}", true),
+										new EmbedField("World Records", (user.Times.WorldRecordCount >= 1)
+																								  ? $"Single Player • {user.Times.SinglePlayer.Chapters.WorldRecordCount}\n" +
+																									$"Cooperative • {user.Times.Cooperative.Chapters.WorldRecordCount}\n" +
+																									$"Overall • {user.Times.WorldRecordCount}"
+																								  : "None.", true),
+										new EmbedField("Worst Rank", $"{user.Times.WorstScore.ScoreRank} on {user.Times.WorstScore.MapName}", true)
 									}
 								}));
 							}
@@ -437,34 +452,40 @@ namespace NeKzBot.Modules.Public
 						}
 						else
 						{
-							var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(e.GetArg("mapname"));
-							if (result == null)
+							var map = await Portal2.GetMapByName(e.GetArg("map_name"));
+							if (map == null)
 							{
 								await e.Channel.SendMessage("Couldn't find that map.");
 								return;
 							}
 
-							var entry = await Portal2.GetUserRankAsync(url, result);
-							if (entry != null)
+							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
+							if ((profile == null)
+							&& (e.User.Nickname != null))
+								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
+
+							var user = (UserData)profile?.Data;
+							if (user != null)
 							{
+								var data = user.Times.GetMapData(map);
 								var embed = new Embed
 								{
-									Author = new EmbedAuthor(entry.Player.Name, entry.Player.SteamLink, entry.Player.SteamAvatar),
+									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
 									Color = Data.BoardColor.RawValue,
 									Title = "Personal Record",
-									Url = url,
-									Image = new EmbedImage(entry.ImageLink),
+									Url = profile.RequestUrl,
+									Image = new EmbedImage(map.ImageLinkFull),
 									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 									Fields = new EmbedField[]
 									{
-										new EmbedField("Map", entry.Map.ChallengeModeName, true),
-										new EmbedField("Rank", entry.Ranking, true),
-										new EmbedField("Time", entry.Time, true),
-										new EmbedField("Date", entry.Date, true)
+										new EmbedField("Map", data.MapName, true),
+										new EmbedField("Rank", data.ScoreRank.ToString(), true),
+										new EmbedField("Time", data.Score.AsTimeToString(), true),
+										new EmbedField("Date", data.Date.DateTimeToString() + " UTC", true)
 									}
 								};
 
-								var duration = await Utils.GetDurationAsync(entry.DateTime);
+								var duration = await Utils.GetDurationAsync(data.Date);
 								if (duration != default(string))
 								{
 									embed.AddField(field =>
@@ -473,26 +494,26 @@ namespace NeKzBot.Modules.Public
 										field.Value = duration;
 									});
 								}
-								if ((entry.Demo != string.Empty)
-								|| (entry.Demo != string.Empty))
+								if ((data.DemoExists)
+								|| (data.VideoExists))
 								{
 									embed.AddField(field =>
 									{
 										field.Name = "Links";
 										var output = string.Empty;
-										if (entry.Demo != string.Empty)
-											output += $"[Demo Download]({entry.Demo})";
-										if (entry.YouTube != string.Empty)
-											output += $"{((entry.Demo != string.Empty) ? "\n" : string.Empty)}[YouTube Video]({entry.YouTube})";
+										if (data.DemoExists)
+											output += $"[Demo Download]({data.DemoLink})";
+										if (data.VideoExists)
+											output += $"{((data.DemoExists) ? "\n" : string.Empty)}[YouTube Video]({data.VideoLink})";
 										field.Value = output;
 									});
 								}
-								if (entry.Comment != string.Empty)
+								if (data.CommentExists)
 								{
 									embed.AddField(async field =>
 									{
 										field.Name = "Comment";
-										field.Value = await Utils.AsRawText(entry.Comment);
+										field.Value = await Utils.AsRawText(data.Comment);
 									});
 								}
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(embed));
@@ -508,16 +529,16 @@ namespace NeKzBot.Modules.Public
 		{
 			CService.CreateCommand(c)
 					.Alias("comparison", "vs")
-					.Description($"Compares profiles of players. Try `{Configuration.Default.PrefixCmd + c} <mapname> <players>` to compare to a specific map (you have to write the map name in one word).")
-					.Parameter("mapname", ParameterType.Optional)
+					.Description($"Compares profiles of players. Try `{Configuration.Default.PrefixCmd + c} <map_name> <players>` to compare to a specific map (you have to write the map name in one word).")
+					.Parameter("map_name", ParameterType.Optional)
 					.Parameter("players", ParameterType.Unparsed)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
 						const uint minimum = 2;
 						const uint maximum = 3;
-						var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(e.GetArg("mapname"));
-						if (result == null)
+						var map = await Portal2.GetMapByName(e.GetArg("map_name"));
+						if (map == null)
 						{
 							var players = e.GetArg("players").Split(' ');
 							if ((players.Length < minimum - 1)
@@ -525,11 +546,11 @@ namespace NeKzBot.Modules.Public
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for a comparison.");
 							else
 							{
-								var list = new List<Portal2User> { await Portal2.GetUserStatsAsync($"http://board.iverb.me/profile/{e.GetArg("mapname")}") };
+								var users = new List<UserData> { (UserData)(await _client.GetProfileAsync(e.GetArg("map_name"))).Data };
 								foreach (var player in players)
-									list.Add(await Portal2.GetUserStatsAsync($"http://board.iverb.me/profile/{player}"));
-								list.RemoveAll(users => users == null);
-								if (list.Count < 2)
+									users.Add((UserData)(await _client.GetProfileAsync(player)).Data);
+								users.RemoveAll(user => user == null);
+								if (users.Count < 2)
 									await e.Channel.SendMessage("Couldn't parse enough player profiles for a comparison.");
 								else
 								{
@@ -537,28 +558,34 @@ namespace NeKzBot.Modules.Public
 									{
 										Color = Data.BoardColor.RawValue,
 										Title = "Player Profile Comparison",
-										Description = await Utils.AsRawText(await Utils.CollectionToList(list.Select(profile => profile.Name), delimiter: " vs ")),
+										Description = await Utils.AsRawText(await Utils.CollectionToList(users.Select(user => user.DisplayName), delimiter: " vs ")),
 										Url = "https://board.iverb.me",
 										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 									};
-									foreach (var profile in list)
+									foreach (var user in users)
 									{
 										embed.AddField(field =>
 										{
 											field.Name = "Rank";
-											field.Value = $"Single Player • {profile.SinglePlayerRank}\nCooperative • {profile.CooperativeRank}\nOverall • {profile.OverallRank}";
+											field.Value = $"Single Player • {user.Points.SinglePlayer.ScoreRank}\n" +
+														  $"Cooperative • {user.Points.Cooperative.ScoreRank}\n" +
+														  $"Overall • {user.Points.Global.ScoreRank}";
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Average Rank";
-											field.Value = $"Single Player • {profile.AverageSinglePlayerRank}\nCooperative • {profile.AverageCooperativeRank}\nOverall • {profile.AverageOverallRank}";
+											field.Value = $"Single Player • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+														  $"Cooperative • {user.Times.SinglePlayer.Chapters.AveragePlace}\n" +
+														  $"Overall • {user.Times.SinglePlayer.Chapters.AveragePlace}";
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Points";
-											field.Value = $"Single Player • {profile.SinglePlayerPoints}\nCooperative • {profile.CooperativePoints}\nOverall • {profile.OverallPoints}";
+											field.Value = $"Single Player • {user.Points.SinglePlayer.Score}\n" +
+														  $"Cooperative • {user.Points.Cooperative.Score}\n" +
+														  $"Overall • {user.Points.Global.Score}";
 											field.Inline = true;
 										});
 									}
@@ -574,11 +601,11 @@ namespace NeKzBot.Modules.Public
 								await e.Channel.SendMessage("A minimum of two (maximum three) player names are required for comparison.");
 							else
 							{
-								var list = new List<Portal2Entry>();
+								var users = new List<UserData>();
 								foreach (var player in players)
-									list.Add(await Portal2.GetUserRankAsync($"http://board.iverb.me/profile/{player}", result));
-								list.RemoveAll(users => users == null);
-								if (list.Count < 2)
+									users.Add((UserData)(await _client.GetProfileAsync(player)).Data);
+								users.RemoveAll(user => user == null);
+								if (users.Count < 2)
 									await e.Channel.SendMessage("Couldn't parse enough player profiles for a comparison.");
 								else
 								{
@@ -586,28 +613,32 @@ namespace NeKzBot.Modules.Public
 									{
 										Color = Data.BoardColor.RawValue,
 										Title = "Player Rank Comparison",
-										Description = $"{await Utils.AsRawText(await Utils.CollectionToList(list.Select(profile => profile.Player.Name), delimiter: " vs "))}\non {list.First().Map}",
+										Description = $"{await Utils.AsRawText(await Utils.CollectionToList(users.Select(user => user.DisplayName), delimiter: " vs "))}\non {map.Alias}",
 										Url = "https://board.iverb.me",
 										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 									};
-									foreach (var entry in list)
+									foreach (var user in users)
 									{
+										var data = user.Times.GetMapData(map);
+										if (data == null)
+											break;
+
 										embed.AddField(field =>
 										{
 											field.Name = "Rank";
-											field.Value = entry.Ranking;
+											field.Value = data.ScoreRank.ToString();
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Time";
-											field.Value = entry.Time;
+											field.Value = data.Score.AsTimeToString();
 											field.Inline = true;
 										});
 										embed.AddField(field =>
 										{
 											field.Name = "Date";
-											field.Value = entry.Date;
+											field.Value = data.Date.DateTimeToString();
 											field.Inline = true;
 										});
 									}
@@ -622,12 +653,12 @@ namespace NeKzBot.Modules.Public
 		private static Task GetLeaderboard(string c)
 		{
 			CService.CreateCommand(c)
-					.Description($"Shows the current top five leaderboard. Try `{Configuration.Default.PrefixCmd + c} <count> <mapname>` to show a specific amount of entries (max. 10).")
-					.Parameter("mapname", ParameterType.Unparsed)
+					.Description($"Shows the current top five leaderboard. Try `{Configuration.Default.PrefixCmd + c} <count> <map_name>` to show a specific amount of entries (max. 10).")
+					.Parameter("map_name", ParameterType.Unparsed)
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						var mapname = e.GetArg("mapname");
+						var mapname = e.GetArg("map_name");
 						if (string.IsNullOrEmpty(mapname))
 						{
 							await e.Channel.SendMessage(await Utils.GetDescription(e.Command));
@@ -638,7 +669,7 @@ namespace NeKzBot.Modules.Public
 						var count = 5U;
 						if (uint.TryParse(mapname.Split(' ')[0], out var parsed))
 						{
-							count = parsed;
+							count = (parsed >= 10) ? 10 : parsed;
 							var index = mapname.IndexOf(' ');
 							if (index != -1)
 								mapname = mapname.Substring(index + 1);
@@ -649,32 +680,32 @@ namespace NeKzBot.Modules.Public
 							}
 						}
 
-						var result = await (await Data.Get<Portal2Maps>("p2maps")).Search(mapname);
-						if (result == null)
+						var map = await Portal2.GetMapByName(mapname);
+						if (map == null)
 						{
 							await e.Channel.SendMessage("Couldn't find that map.");
 							return;
 						}
 
-						var url = $"http://board.iverb.me/chamber/{result.BestTimeId}";
-						var leaderboard = await Portal2.GetMapEntriesAsync(url, 0, count, 10);
-						if (leaderboard != null)
+						var board = await _client.GetLeaderboardAsync(map);
+						if (board != null)
 						{
+							var data = board.Take((int)count);
 							await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(new Embed
 							{
 								Color = Data.BoardColor.RawValue,
-								Title = $"Portal 2 Top {leaderboard.Entries.Count}",
-								Url = url,
-								Image = new EmbedImage(leaderboard.Entries.First().ImageLink),
+								Title = $"Portal 2 Top {data.Count()}",
+								Url = map.Link,
+								Image = new EmbedImage(map.ImageLinkFull),
 								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
 							}
 							.AddField(async field =>
 							{
-								field.Name = leaderboard.Map.ChallengeModeName;
+								field.Name = map.Alias;
 								var output = string.Empty;
-								foreach (var item in leaderboard.Entries)
+								foreach (var chamber in data)
 								{
-									var temp = $"\n{item.Ranking} {item.Time} by {await Utils.AsRawText(item.Player.Name)} ({item.Date.Replace(".", string.Empty)})";
+									var temp = $"\n{chamber.ScoreRank} {chamber.Score.AsTimeToString()} by {await Utils.AsRawText(chamber.Player.Name)} ({chamber.Date.DateTimeToString() + " UTC"})";
 									if ((output.Length + temp.Length) <= DiscordConstants.MaximumCharsPerEmbedField)
 										output += temp;
 								}
@@ -686,326 +717,6 @@ namespace NeKzBot.Modules.Public
 						else
 							await e.Channel.SendMessage("Couldn't parse a leaderboard.");
 					});
-			return Task.FromResult(0);
-		}
-
-		#region Development
-		// TODO: make some optimisations
-		// NOTE: code below here is really bad
-		private static Task GetPiePlayerComparison(string c)
-		{
-			CService.CreateCommand(c)
-					.Description("Creates a pie plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.Any));
-
-			CService.CreateCommand(c + "sp")
-					.Description("Creates a pie plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.SinglePlayer));
-
-			CService.CreateCommand(c + "mp")
-					.Description("Creates a pie plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreatePieAsync(e, Portal2MapFilter.MultiPlayer));
-			return Task.FromResult(0);
-		}
-
-		private static Task GetLinePlayerComparison(string c)
-		{
-			CService.CreateCommand(c)
-					.Description("Creates a line plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.Any));
-
-			CService.CreateCommand(c + "sp")
-					.Description("Creates a line plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.SinglePlayer));
-
-			CService.CreateCommand(c + "mp")
-					.Description("Creates a line plot for a player comparison. Calculation might take a while.")
-					.Parameter("players", ParameterType.Multiple)
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e => await CreateGraphAsync(e, Portal2MapFilter.MultiPlayer));
-			return Task.FromResult(0);
-		}
-
-		private static async Task CreatePieAsync(CommandEventArgs e, Portal2MapFilter filter = default(Portal2MapFilter))
-		{
-			await e.Channel.SendIsTyping();
-			var msg = await e.Channel.SendMessage("This might take a while.");
-
-			var players = new Dictionary<Portal2User, List<Portal2Entry>>();
-			foreach (var player in e.Args)
-			{
-				var temp = await Portal2.GetUserStatsAsync($"https://board.iverb.me/profile/{player}");
-				if (temp == null)
-					continue;
-
-				var pbs = new List<Portal2Entry>();
-				var result = (await Data.Get<Portal2Maps>("p2maps")).Maps;
-				for (int i = 0; i < result.Count; i++)
-				{
-					// Ignore unsupported maps
-					if (string.IsNullOrEmpty(result[i].BestPortalsId))
-						continue;
-
-					switch (result[i].Filter)
-					{
-						case Portal2MapFilter.Any:
-						case Portal2MapFilter.SinglePlayer:
-						case Portal2MapFilter.MultiPlayer:
-							break;
-						default:
-							continue;
-					}
-					pbs.Add(await Portal2.GetUserRankAsync(temp.BoardLink, result[i]));
-				}
-				players.Add(temp, pbs);
-			}
-
-			if ((players.Count > 1)
-			&& (players.Count < 4))
-			{
-				// Don't count maps which you can't compare
-				var dontcount = new List<bool>();
-				foreach (var pb in players.First().Value)
-				{
-					if (pb == null)
-						dontcount.Add(true);
-					else
-						dontcount.Add(false);
-				}
-				foreach (var player in players.Skip(1))
-					for (int i = 0; i < dontcount.Count; i++)
-						if (player.Value[i] == null)
-							dontcount[i] = true;
-				// Get the best ranks of each map
-				var fastest = new List<string>();
-				for (int i = 0; i < players.First().Value.Count; i++)
-				{
-					if (dontcount[i])
-						fastest.Add(null);
-					else
-						fastest.Add(players.First().Value[i].Ranking);
-				}
-				foreach (var pbs in players.Values)
-				{
-					for (int i = 0; i < pbs.Count; i++)
-					{
-						if (dontcount[i])
-							continue;
-						var result = int.Parse(pbs[i].Ranking);
-						if (result < int.Parse(fastest[i]))
-							fastest[i] = result.ToString();
-					}
-				}
-				// Compare the rank of each player
-				var pie = new PieSeries();
-				var title = string.Empty;
-				foreach (var player in players)
-				{
-					var value = 0;
-					for (int i = 0; i < fastest.Count; i++)
-					{
-						if (dontcount[i])
-							continue;
-						if (fastest[i] == player.Value[i].Ranking)
-							value++;
-					}
-					title += $"{player.Key.Name} vs ";
-					pie.Slices.Add(new PieSlice(player.Key.Name, value));
-				}
-				// Create plot
-				var unknown = dontcount.Count(x => x);
-				if (unknown > 0)
-					pie.Slices.Add(new PieSlice("Unknown", unknown));
-				var plot = new PlotModel()
-				{
-					Title = "Player comparison: map percentage (including ties and non-cm maps)",
-					Subtitle = title.Substring(0, title.Length - " vs ".Length),
-					Background = OxyColors.White
-				};
-				plot.Series.Add(pie);
-				// Export as .svg file
-				var file = Path.Combine(await Utils.GetAppPath() + "/Resources/Cache/", "lb-pie-plot.svg");
-				using (var stream = File.Create(file))
-				{
-					new SvgExporter
-					{
-						Width = 800,
-						Height = 400
-					}
-					.Export(plot, stream);
-				}
-				await msg.Edit("Generated pie plot.");
-				await e.Channel.SendFile(file);
-			}
-			else
-			{
-				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage("A minimum of two (maximum four) player profiles are required.");
-			}
-		}
-
-		private static async Task CreateGraphAsync(CommandEventArgs e, Portal2MapFilter filter = default(Portal2MapFilter))
-		{
-			await e.Channel.SendIsTyping();
-			var msg = await e.Channel.SendMessage("This might take a while.");
-
-			var players = new Dictionary<Portal2User, List<Portal2Entry>>();
-			foreach (var player in e.Args)
-			{
-				var temp = await Portal2.GetUserStatsAsync($"https://board.iverb.me/profile/{player}");
-				if (temp == null)
-					continue;
-
-				var pbs = new List<Portal2Entry>();
-				var result = (await Data.Get<Portal2Maps>("p2maps")).Maps;
-				for (int i = 0; i < result.Count; i++)
-				{
-					// Ignore unsupported maps
-					if (string.IsNullOrEmpty(result[i].BestPortalsId))
-						continue;
-
-					switch (result[i].Filter)
-					{
-						case Portal2MapFilter.Any:
-						case Portal2MapFilter.SinglePlayer:
-						case Portal2MapFilter.MultiPlayer:
-							break;
-						default:
-							continue;
-					}
-					pbs.Add(await Portal2.GetUserRankAsync(temp.BoardLink, result[i]));
-				}
-				players.Add(temp, pbs);
-			}
-
-			if ((players.Count > 1)
-			&& (players.Count < 4))
-			{
-				// Don't count maps which you can't compare
-				var dontcount = new List<bool>();
-				foreach (var pb in players.First().Value)
-				{
-					if (pb == null)
-						dontcount.Add(true);
-					else
-						dontcount.Add(false);
-				}
-				foreach (var player in players.Skip(1))
-					for (int i = 0; i < dontcount.Count; i++)
-						if (player.Value[i] == null)
-							dontcount[i] = true;
-				// Create data points, sum player times
-				var lines = new List<LineSeries>();
-				var title = string.Empty;
-				foreach (var player in players)
-				{
-					title += $"{player.Key.Name} vs ";
-					var count = 0;
-					var sum = (double)0;
-					var series = new LineSeries();
-					for (int i = 0; i < player.Value.Count; i++)
-					{
-						if (dontcount[i])
-							continue;
-						else
-						{
-							if (!(TimeSpan.TryParseExact(player.Value[i].Time, "ss'.'ff", CultureInfo.CurrentCulture, out var result)))
-								if (!(TimeSpan.TryParseExact(player.Value[i].Time, "s'.'ff", CultureInfo.CurrentCulture, out result)))
-									if (!(TimeSpan.TryParseExact(player.Value[i].Time, "m':'ss'.'ff", CultureInfo.CurrentCulture, out result)))
-										if (!(TimeSpan.TryParseExact(player.Value[i].Time, "mm':'ss'.'ff", CultureInfo.CurrentCulture, out result)))
-											throw new Exception("Couldn't parse entry time. (Leaderboard.CreateGraphAsync)");
-							sum += result.TotalSeconds;
-							series.Points.Add(new DataPoint(count++, sum));
-						}
-					}
-					lines.Add(series);
-				}
-				// Create plot
-				var plot = new PlotModel()
-				{
-					Title = "Player comparison: map progression (including non-cm maps, sorted in alphabetical order)",
-					Subtitle = title.Substring(0, title.Length - " vs ".Length),
-					Background = OxyColors.White
-				};
-				foreach (var line in lines)
-					plot.Series.Add(line);
-				// Export as .svg file
-				var file = Path.Combine(await Utils.GetAppPath() + "/Resources/Cache/", "lb-line-plot.svg");
-				using (var stream = File.Create(file))
-				{
-					new SvgExporter
-					{
-						Width = 800,
-						Height = 400
-					}
-					.Export(plot, stream);
-				}
-				await msg.Edit("Generated line plot.");
-				await e.Channel.SendFile(file);
-			}
-			else
-			{
-				await e.Channel.SendIsTyping();
-				await e.Channel.SendMessage("A minimum of two (maximum four) player profiles are required.");
-			}
-		}
-#endregion
-
-		private static Task LeaderboardCommands(string c)
-		{
-			CService.CreateGroup(c, GBuilder =>
-			{
-				GBuilder.CreateCommand("boardparameter")
-						.Alias("bp")
-						.Description("Sets a new parameter for the automatic leaderboard updater.")
-						.Parameter("name", ParameterType.Required)
-						.AddCheck(Permissions.BotOwnerOnly)
-						.Hide()
-						.Do(async e =>
-						{
-							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Portal2.AutoUpdater.SetNewBoardParameterAsync(e.Args[0]));
-						});
-
-				GBuilder.CreateCommand("cachetime")
-						.Alias("ct")
-						.Description("Shows the time when the leaderboard cache gets cleared.")
-						.AddCheck(Permissions.BotOwnerOnly)
-						.Hide()
-						.Do(async e =>
-						{
-							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Portal2.Cache.GetCleanCacheTime());
-						});
-
-				GBuilder.CreateCommand("setcachetime")
-						.Alias("setct")
-						.Description("Sets a new time when the bot will clear the leaderboard cache.")
-						.Parameter("value", ParameterType.Required)
-						.AddCheck(Permissions.BotOwnerOnly)
-						.Hide()
-						.Do(async e =>
-						{
-							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage(await Portal2.Cache.SetCleanCacheTimeAsync(e.Args[0]));
-						});
-			});
 			return Task.FromResult(0);
 		}
 	}

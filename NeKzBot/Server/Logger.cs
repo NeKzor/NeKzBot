@@ -95,9 +95,6 @@ namespace NeKzBot.Server
 				case LogColor.Dropbox:
 					source = "[Dropbox]";
 					break;
-				case LogColor.Giveaway:
-					source = "[Giveaway]";
-					break;
 				case LogColor.Leaderboard:
 					source = "[Leaderboard]";
 					break;

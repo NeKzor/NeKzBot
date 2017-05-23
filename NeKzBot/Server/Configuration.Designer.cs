@@ -34,7 +34,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.9.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.9.1")]
         public string AppVersion {
             get {
                 return ((string)(this["AppVersion"]));
@@ -91,55 +91,10 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("69")]
-        public string GiveawayCode {
-            get {
-                return ((string)(this["GiveawayCode"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public uint GiveawayMaxTries {
-            get {
-                return ((uint)(this["GiveawayMaxTries"]));
-            }
-            set {
-                this["GiveawayMaxTries"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool GiveawayEnabled {
-            get {
-                return ((bool)(this["GiveawayEnabled"]));
-            }
-            set {
-                this["GiveawayEnabled"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Resources/Private/vars/")]
         public string DataPath {
             get {
                 return ((string)(this["DataPath"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        public uint CachingTime {
-            get {
-                return ((uint)(this["CachingTime"]));
-            }
-            set {
-                this["CachingTime"] = value;
             }
         }
         
@@ -172,25 +127,7 @@ namespace NeKzBot.Server {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Streamer")]
-        public string StreamingRoleName {
-            get {
-                return ((string)(this["StreamingRoleName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("World Record Holder")]
-        public string WorldRecordRoleName {
-            get {
-                return ((string)(this["WorldRecordRoleName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Portal 2 Challenge Mode World Records")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Portal 2 Challenge Mode World Records A Twitter bot made by @nekznekz")]
         public string TwitterDescription {
             get {
                 return ((string)(this["TwitterDescription"]));

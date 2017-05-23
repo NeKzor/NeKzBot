@@ -59,31 +59,31 @@ namespace NeKzBot.Utilities
 			return "**Error.**";
 		}
 
-		public async static Task<string> GetDurationAsync(DateTime time, bool withseconds = true)
-			=> await GetDurationFromTimeSpan((time != default(DateTime))
+		public async static Task<string> GetDurationAsync(DateTime? time, bool withseconds = true)
+			=> await GetDurationFromTimeSpan((time != default(DateTime?))
 									   ? DateTime.UtcNow - time
-									   : default(TimeSpan), withseconds);
+									   : default(TimeSpan?), withseconds);
 
-		public static Task<string> GetDurationFromTimeSpan(TimeSpan duration, bool withseconds = true)
+		public static Task<string> GetDurationFromTimeSpan(TimeSpan? duration, bool withseconds = true)
 		{
-			if (duration == default(TimeSpan))
+			if (duration == default(TimeSpan?))
 				return Task.FromResult(default(string));
 
-			var output = (duration.Days > 0)
-										? $"{duration.Days} Day{(duration.Days == 1 ? string.Empty : "s")} "
+			var output = (duration?.Days > 0)
+										? $"{duration?.Days} Day{(duration?.Days == 1 ? string.Empty : "s")} "
 										: string.Empty;
-			output += (duration.Hours > 0)
-									  ? $"{duration.Hours} Hour{(duration.Hours == 1 ? string.Empty : "s")} "
+			output += (duration?.Hours > 0)
+									  ? $"{duration?.Hours} Hour{(duration?.Hours == 1 ? string.Empty : "s")} "
 									  : string.Empty;
-			output += (duration.Minutes > 0)
-										? $"{duration.Minutes} Minute{(duration.Minutes == 1 ? string.Empty : "s")} "
+			output += (duration?.Minutes > 0)
+										? $"{duration?.Minutes} Minute{(duration?.Minutes == 1 ? string.Empty : "s")} "
 										: string.Empty;
-			output += ((duration.Seconds > 0) && (withseconds))
-										? $"{duration.Seconds} Second{(duration.Seconds == 1 ? string.Empty : "s")}"
+			output += ((duration?.Seconds > 0) && (withseconds))
+										? $"{duration?.Seconds} Second{(duration?.Seconds == 1 ? string.Empty : "s")}"
 										: string.Empty;
-			output += ((duration.Days > 0)
-			&& (duration.TotalDays > 365))
-								   ? $" (about {Math.Round((decimal)duration.TotalDays / 365, 1)} Year{(Math.Round((decimal)duration.TotalDays / 365, 1) == (decimal)1.0 ? string.Empty : "s")})"
+			output += ((duration?.Days > 0)
+			&& (duration?.TotalDays > 365))
+								   ? $" (about {Math.Round((decimal)duration?.TotalDays / 365, 1)} Year{(Math.Round((decimal)duration?.TotalDays / 365, 1) == (decimal)1.0 ? string.Empty : "s")})"
 								   : string.Empty;
 			return Task.FromResult((output != string.Empty)
 										   ? output

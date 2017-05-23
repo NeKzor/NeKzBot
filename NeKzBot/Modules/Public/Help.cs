@@ -118,16 +118,6 @@ namespace NeKzBot.Modules.Public
 						await e.Channel.SendMessage(Data.VipServersOnly);
 					});
 
-			CService.CreateCommand("development")
-					.Alias("developer", "dev")
-					.AddCheck(Permissions.DevelopersOnly)
-					.Hide()
-					.Do(async e =>
-					{
-						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage(Data.MainServerOnly);
-					});
-
 			CService.CreateCommand("private")
 					.AddCheck(Permissions.BotOwnerOnly)
 					.Hide()
@@ -135,6 +125,14 @@ namespace NeKzBot.Modules.Public
 					{
 						await e.Channel.SendIsTyping();
 						await e.Channel.SendMessage($"{Data.LeaderboardPrivate}\n{Data.BotOwnerOnly}");
+					});
+
+			CService.CreateCommand("special")
+					.Hide()
+					.Do(async e =>
+					{
+						await e.Channel.SendIsTyping();
+						await e.Channel.SendMessage(Data.SpecialPermissionsOnly);
 					});
 
 			CService.CreateCommand("hidden")

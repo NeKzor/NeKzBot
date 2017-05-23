@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using NeKzBot.Extensions;
 using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -17,7 +15,6 @@ namespace NeKzBot.Modules.Private.Owner
 		{
 			await Logger.SendAsync("Loading Admin Module", LogColor.Init);
 			await AdminCommands(Configuration.Default.BotCmd);
-			await SpecialPermissionCommands(Configuration.Default.BotCmd);
 		}
 
 		private static Task AdminCommands(string name)
@@ -118,157 +115,6 @@ namespace NeKzBot.Modules.Private.Owner
 
 							await channel.SendIsTyping();
 							await channel.SendMessage(await Utils.CutMessageAsync(e.GetArg("message"), badchars: false));
-						});
-			});
-			return Task.FromResult(0);
-		}
-
-		private static Task SpecialPermissionCommands(string name)
-		{
-			CService.CreateGroup(name, GBuilder =>
-			{
-				// I don't know why but some emojis don't work
-				GBuilder.CreateCommand("react")
-						.Description("Reacts to a message with the give emoji.")
-						.Parameter("channel_id", ParameterType.Required)
-						.Parameter("message_id", ParameterType.Required)
-						.Parameter("emoji", ParameterType.Required)
-						.Hide()
-						.Do(async e =>
-						{
-							// Check permission
-							if (Utils.CheckRolePermissionsAsync(e.User, DiscordConstants.AddReactionsFlag).GetAwaiter().GetResult())
-							{
-								if (await Utils.CheckRolePermissionsAsync(await Utils.GetBotUserObject(e.Channel), DiscordConstants.AddReactionsFlag))
-								{
-									var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
-														  ? result
-														  : e.Channel.Id;
-									var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
-														  ? result
-														  : e.Message.Id;
-									await Bot.SendAsync(CustomRequest.AddReaction(channelid, messageid, e.GetArg("emoji")), null);
-								}
-								else
-								{
-									await e.Channel.SendIsTyping();
-									await e.Channel.SendMessage("The permission to add reactions is required.");
-								}
-							}
-							else
-							{
-								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("You don't have a role which allows to add reactions to messages.");
-							}
-						});
-
-				GBuilder.CreateCommand("setnickname")
-						.Alias("setnick", "changenickname", "changenick")
-						.Description("Sets the nickname of the bot.")
-						.Parameter("name", ParameterType.Unparsed)
-						.Hide()
-						.Do(async e =>
-						{
-							if (e.User.ServerPermissions.ManageNicknames)
-							{
-								var bot = await Utils.GetBotUserObject(e.Channel);
-								if (bot?.ServerPermissions.ChangeNickname == true)
-									await bot.Edit(nickname: string.IsNullOrEmpty(e.GetArg("name")) ? Bot.Client.CurrentUser.Name : e.GetArg("name"));
-								else
-								{
-									await e.Channel.SendIsTyping();
-									await e.Channel.SendMessage("The permission to change nickname is required.");
-								}
-							}
-							else
-							{
-								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("You are not allowed to manage nicknames.");
-							}
-						});
-
-				GBuilder.CreateCommand("pin")
-						.Description("Pins a message.")
-						.Parameter("channel_id", ParameterType.Required)
-						.Parameter("message_id", ParameterType.Required)
-						.Hide()
-						.Do(async e =>
-						{
-							// Check permission
-							if ((e.User.ServerPermissions.ManageMessages)
-							&& (e.User.GetPermissions(e.Channel).ManageMessages))
-							{
-								var bot = await Utils.GetBotUserObject(e.Channel);
-								if ((bot?.ServerPermissions.ManageMessages == true)
-								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
-								{
-									var channelid = (ulong.TryParse(e.GetArg("channel_id"), out var result))
-														  ? result
-														  : e.Channel.Id;
-									var messageid = (ulong.TryParse(e.GetArg("message_id"), out result))
-														  ? result
-														  : e.Message.Id;
-									await Bot.SendAsync(CustomRequest.PinMessage(channelid, messageid), null);
-								}
-								else
-								{
-									await e.Channel.SendIsTyping();
-									await e.Channel.SendMessage("The permission to manage messages is required.");
-								}
-							}
-							else
-							{
-								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("You don't have the permission to manage messages.");
-							}
-						});
-
-				GBuilder.CreateCommand("cleanup")
-						.Alias("cleanuptime")
-						.Description("Deletes the latest messages in the channel (max. 33 messages per cleanup and bulk delete mode only).")
-						.Parameter("message_count", ParameterType.Required)
-						.Hide()
-						.Do(async e =>
-						{
-							if ((e.User.ServerPermissions.ManageMessages)
-							&& (e.User.GetPermissions(e.Channel).ManageMessages))
-							{
-								// NOTE: bot would also need the permission to read message history
-								var bot = await Utils.GetBotUserObject(e.Channel);
-								if ((bot?.ServerPermissions.ManageMessages == true)
-								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
-								{
-									if (uint.TryParse(e.GetArg("message_count"), out var count))
-									{
-										// Bulk delete only
-										var messages = (await e.Channel.DownloadMessages((int)count, e.Message.Id, Relative.Before))
-											// Am I doing this right?
-											.Where(m => (DateTime.UtcNow - m.Timestamp.Date.ToUniversalTime()).TotalMilliseconds < (1000 * 60 * 60 * 24 * 7 * 2));
-										await e.Message.Delete();
-										var msgcount = messages.Count();
-										if (msgcount > 0)
-										{
-											await e.Channel.DeleteMessages(messages.Take(33).ToArray());
-											await Logger.SendAsync($"{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) deleted {msgcount} message{((msgcount == 1) ? string.Empty : "s")} in channel #{e.Channel.Name} (ID {e.Channel.Id}).");
-										}
-									}
-									else
-									{
-										await e.Channel.SendIsTyping();
-										await e.Channel.SendMessage("Parameter should be an unsigned integer.");
-									}
-								}
-								else
-								{
-									await e.Channel.SendIsTyping();
-									await e.Channel.SendMessage("The permission to manage messages is required.");
-								}
-							}
-							else
-							{
-								await e.Channel.SendIsTyping();
-								await e.Channel.SendMessage("You are not allowed to manage messages.");
-							}
 						});
 			});
 			return Task.FromResult(0);

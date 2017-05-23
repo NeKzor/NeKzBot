@@ -18,9 +18,9 @@ namespace NeKzBot.Resources
 		public static string ResourcesPublic;
 		public static string RestPublic;
 		public static string VipServersOnly;
-		public static string MainServerOnly;
 		public static string LeaderboardPrivate;
 		public static string BotOwnerOnly;
+		public static string SpecialPermissionsOnly;
 
 		public static List<string> TwitterLocations { get; set; } = new List<string>
 		{
@@ -45,10 +45,10 @@ namespace NeKzBot.Resources
 		public static readonly string SpeedrunComIconUrl = "https://www.speedrun.com/themes/default/favicon.png";
 		public static readonly string TwitchTvIconUrl = "https://www.twitch.tv/favicon.ico";
 		public static readonly string SteamcommunityIconUrl = "https://steamcommunity.com/favicon.ico";
-		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me."
-															  + $"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com."
-															  + $"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com."
-															  + $"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use because this is a private list).";
+		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me." +
+																$"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com." +
+																$"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com." +
+																$"\n• `{TwitchTvWebhookKeyword}` notifies you when somebody from the streaming list goes live (not recommended to use because this is a private list).";
 		public static readonly string HiddenMessage = "**[Hidden Commands & Neat Shortcuts]**\n" +
 													  $"• You can execute commands at the end of your text too: `this would also work {Configuration.Default.PrefixCmd}{Configuration.Default.BotCmd}`.\n" +
 													  "• You can also use a mention to execute commands: `<@user_id> commands`.\n" +
@@ -97,11 +97,13 @@ namespace NeKzBot.Resources
 		public const string SpeedrunComSourceWebhookKeyword = "source";
 		public const string SpeedrunComPortal2WebhookKeyword = "portal2";
 		public const string TwitchTvWebhookKeyword = "twitch";
-		public const string LatestChangelog = "\n• Added a new community game" +
-											  "\n• Improved a data command" +
-											  "\n• Fixed TimeZoneNotFoundException" +
-											  "\n• Json serialization for Twitch API objects" +
-											  "\n• Improved Twitch game search by exact name";
+		public const string LatestChangelog = "\n• Improved cleanup command" +
+											  "\n• Fixed empty speedruncom resource notification" +
+											  "\n• Portal2Board tasks are now 97% faster" +
+											  "\n• Removed Portal2Board caching" +
+											  "\n• Fixed event exceptions" +
+											  "\n• Removed giveaway game" +
+											  "\n• Some other cleanup here and there";
 
 		public static async Task GenerateModuleListsAsync()
 		{
@@ -115,9 +117,9 @@ namespace NeKzBot.Resources
 			ResourcesPublic = await Utils.GenerateModuleListAsync("Resource Module", commands: new[] { "scripts", "dialogue", "segmented" });
 			RestPublic = await Utils.GenerateModuleListAsync("Rest Module", commands: new[] { "invite", "join", "view", "credits" });
 			VipServersOnly = await Utils.GenerateModuleListAsync("VIP Module", commands: new[] { "sound", "twitch", "upload", "cloud", "dbfolder", "dbdelete", "bot connect", "bot disconnect", "bot stop", "bot subscribe", "bot unsubscribe" });
-			MainServerOnly = await Utils.GenerateModuleListAsync("Bot Module - Developer Server Only", commands: new[] { "giveaway", "giveaway maxtries", "giveaway setstate", "giveaway status", "pie", "line" });
-			LeaderboardPrivate = await Utils.GenerateModuleListAsync("Leaderboard Module - Bot Owner Only", specialprefix: $"{Configuration.Default.LeaderboardCmd} ", commands: new[] { "boardparameter", "cachetime", "setcachetime" });
+			LeaderboardPrivate = await Utils.GenerateModuleListAsync("Portal 2 Leaderboard Module - Bot Owner Only", specialprefix: $"{Configuration.Default.LeaderboardCmd} ", commands: new[] { "cachetime", "setcachetime" });
 			BotOwnerOnly = await Utils.GenerateModuleListAsync("Bot Module - Bot Owner Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "newgame", "setgame", "echo", "send", "add", "delete", "reload", "showdata", "datavars", "cleanconfig", "revive", "taskstatus", "watches", "webhooktest", "react", "contestrules", "contestgame", "contestmap", "setcontest", "opencontest", "closecontest" });
+			SpecialPermissionsOnly = await Utils.GenerateModuleListAsync("Bot Module - Special Permissions Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "react", "setnickname", "pin", "cleanup", "cleanuprange" });
 		}
 	}
 }

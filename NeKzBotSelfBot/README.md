@@ -1,8 +1,7 @@
-# NeKzBotSelfBot
-[![NeKz Server](https://discordapp.com/api/guilds/208570520805965826/embed.png?style=banner2)](https://discord.gg/rEazbJn)
+# NeKzBotSelfBot (DEPRECATED)
 
 ## Features
-* Edit any message with an embed
+* Sens any message as an embed
 * Static caching system
 * File caching system
 * Cache reset timer

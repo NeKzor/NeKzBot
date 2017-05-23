@@ -28,7 +28,7 @@ namespace NeKzBot.Server
 			}
 			catch (Exception ex)
 			{
-				await Logger.SendToChannelAsync("Events.OnReceiveAsync Error", ex);
+				await Logger.SendToChannelAsync($"Events.OnReceiveAsync Error\nMessage: {e.Message.RawText}", ex);
 			}
 		}
 
@@ -43,7 +43,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))?
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))
 					.SendMessage($"**{await Utils.GetLocalTimeAsync()}**" +
 								 $"\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} joined a server." +
 								 $"\nName • {await Utils.AsRawText(e.Server?.Name) ?? "*Unavailable*"} (ID {e.Server?.Id ?? 0})" +
@@ -60,7 +60,7 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))?
+				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName))
 					.SendMessage($"**{await Utils.GetLocalTimeAsync()}**" +
 								 $"\n{Bot.Client.CurrentUser.Name}#{Bot.Client.CurrentUser.Discriminator.ToString("D4")} left a server." +
 								 $"\nName • {await Utils.AsRawText(e.Server?.Name) ?? "*Unavailable*"} (ID {e.Server?.Id ?? 0})" +
@@ -77,9 +77,11 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?
+				// One day we can do await? instead of this crap
+				await ((await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?
 					.SendMessage($"**{await Utils.GetLocalTimeAsync()}**" +
-								 $"\n{e.User?.Name ?? "*Unavailable*"}#{e.User?.Discriminator.ToString("D4") ?? "0"} (ID {e.User?.Id ?? 0}) joined the server.");
+								 $"\n{e.User?.Name ?? "*Unavailable*"}#{e.User?.Discriminator.ToString("D4") ?? "0"} (ID {e.User?.Id ?? 0}) joined the server.")
+					?? Task.FromResult(default(Message)));
 			}
 			catch (Exception ex)
 			{
@@ -92,9 +94,10 @@ namespace NeKzBot.Server
 		{
 			try
 			{
-				await (await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?
+				await ((await Utils.FindTextChannel(Configuration.Default.LogChannelName, e.Server))?
 					.SendMessage($"**{await Utils.GetLocalTimeAsync()}**" +
-								 $"\n{e.User?.Name ?? "*Unavailable*"}#{e.User?.Discriminator.ToString("D4") ?? "0"} (ID {e.User?.Id ?? 0}) left the server.");
+								 $"\n{e.User?.Name ?? "*Unavailable*"}#{e.User?.Discriminator.ToString("D4") ?? "0"} (ID {e.User?.Id ?? 0}) left the server.")
+					?? Task.FromResult(default(Message)));
 			}
 			catch (Exception ex)
 			{

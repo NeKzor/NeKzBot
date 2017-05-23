@@ -67,11 +67,11 @@
     <Reference Include="Hammock.ClientProfile, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c148cfba29ed1a4d, processorArchitecture=MSIL">
       <HintPath>..\packages\TweetMoaSharp.4.0.0\lib\4.5\Hammock.ClientProfile.dll</HintPath>
     </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.4.9.5, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.4.9.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.5.0.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.5.0-beta4\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Nito.AsyncEx, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nito.AsyncEx.3.0.1\lib\net45\Nito.AsyncEx.dll</HintPath>
@@ -85,10 +85,14 @@
     <Reference Include="OxyPlot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
       <HintPath>..\packages\OxyPlot.Core.1.0.0\lib\net45\OxyPlot.dll</HintPath>
     </Reference>
+    <Reference Include="Portal2Boards.Net, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\Portal2Boards.Net.dll</HintPath>
+    </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="SourceDemoParser.Net, Version=1.0.0.17543, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="SourceDemoParser.Net, Version=1.0.0.17582, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\libs\SourceDemoParser.Net.dll</HintPath>
     </Reference>
@@ -113,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bot.cs" />
+    <Compile Include="Classes\Portal2Map.cs" />
     <Compile Include="Internals\Entities\Portal2Maps.cs" />
     <Compile Include="Classes\SteamWorkshop.cs" />
     <Compile Include="Extensions\Constants.cs" />
@@ -129,11 +134,11 @@
     <Compile Include="Internals\Entities\Submissions.cs" />
     <Compile Include="Internals\InternalData.cs" />
     <Compile Include="Internals\Entities\Simple.cs" />
+    <Compile Include="Modules\Private\Members\Special.cs" />
     <Compile Include="Modules\Public\Vip\Service.cs" />
     <Compile Include="Resources\IData.cs" />
     <Compile Include="Internals\InternalWatch.cs" />
     <Compile Include="Classes\Web.cs" />
-    <Compile Include="Classes\Portal2Board.cs" />
     <Compile Include="Classes\Speedrun.cs" />
     <Compile Include="Classes\TwitchApi.cs" />
     <Compile Include="Classes\Twitter.cs" />
@@ -146,6 +151,8 @@
     <Compile Include="Modules\Public\Others\Resource.cs" />
     <Compile Include="Server\Fetcher.cs" />
     <Compile Include="Modules\Public\Contest.cs" />
+    <Compile Include="Server\Timer.cs" />
+    <Compile Include="Tasks\Leaderboard\Portal2Board.cs" />
     <Compile Include="Tasks\TwitchTv.cs" />
     <Compile Include="Utilities\RngUtils.cs" />
     <Compile Include="Utilities\FileUtils.cs" />
@@ -160,7 +167,6 @@
     <Compile Include="Webhooks\WebhookObject.cs" />
     <Compile Include="Webhooks\WebhookService.cs" />
     <Compile Include="Modules\Private\Owner\Admin.cs" />
-    <Compile Include="Modules\Private\MainServer\Giveaway.cs" />
     <Compile Include="Modules\Public\Help.cs" />
     <Compile Include="Modules\Public\Info.cs" />
     <Compile Include="Modules\Public\Leaderboard.cs" />
@@ -191,8 +197,6 @@
     </Compile>
     <Compile Include="Tasks\VoiceChannel.cs" />
     <Compile Include="Tasks\Leaderboard\AutoUpdater.cs" />
-    <Compile Include="Tasks\Leaderboard\Portal2.cs" />
-    <Compile Include="Tasks\Leaderboard\Cache.cs" />
     <Compile Include="Tasks\NonModules\DemoParser.cs" />
     <Compile Include="Tasks\NonModules\DemoTools.cs" />
     <Compile Include="Tasks\NonModules\Steam.cs" />
@@ -201,7 +205,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Docs\Commands.md" />
     <None Include="Docs\Permissions.md" />
     <None Include="Docs\RaspberryPi.md" />
     <None Include="Docs\Changelog.md" />

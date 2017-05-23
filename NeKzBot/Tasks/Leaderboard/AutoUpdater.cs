@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Portal2Boards.Net;
+using Portal2Boards.Net.API;
+using Portal2Boards.Net.Entities;
+using Portal2Boards.Net.Extensions;
 using TweetSharp;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
@@ -15,7 +20,7 @@ using NeKzBot.Webhooks;
 
 namespace NeKzBot.Tasks.Leaderboard
 {
-	public static partial class Portal2
+	public static partial class Portal2Board
 	{
 		internal static class AutoUpdater
 		{
@@ -24,27 +29,31 @@ namespace NeKzBot.Tasks.Leaderboard
 			internal static TwitterService LeaderboardTwitterAccount { get; private set; }
 			private static Stopwatch _refreshWatch;
 			private static string _cacheKey;
-			private static uint _entryCount;
 			private static uint _refreshTime;
+			private static ChangelogParameters _latestWorldRecords { get; set; }
+			private static Portal2BoardsClient _client { get; set; }
 
 			public static async Task InitAsync()
 			{
-				await Logger.SendAsync("Initializing Portal2 AutoUpdater", LogColor.Init);
+				await Logger.SendAsync("Initializing Portal2Board AutoUpdater", LogColor.Init);
 				LeaderboardTwitterAccount = await Twitter.Account.CreateServiceAsync(Credentials.Default.TwitterConsumerKey,
 																					 Credentials.Default.TwitterConsumerSecret,
 																					 Credentials.Default.TwitterAppToken,
 																					 Credentials.Default.TwitterAppTokenSecret);
 				_refreshWatch = new Stopwatch();
 				_cacheKey = "autolb";
-				_entryCount = 10;
 				_refreshTime = 20 * 60 * 1000;  // 20 minutes
+
+				// My library :)
+				_latestWorldRecords = new ChangelogParameters { [Parameters.WorldRecord] = 1 };
+				_client = new Portal2BoardsClient(_latestWorldRecords);
 			}
 
 			public static async Task StartAsync(int serverdelay = 8000)
 			{
 				// Wait some time till bot is on server
 				await Task.Delay(serverdelay);
-				await Logger.SendAsync("Portal2 AutoUpdater Started", LogColor.Leaderboard);
+				await Logger.SendAsync("Portal2Board AutoUpdater Started", LogColor.Leaderboard);
 				IsRunning = true;
 
 				try
@@ -57,81 +66,80 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					for (;;)
 					{
-						await Logger.SendAsync("Portal2 AutoUpdater Checking", LogColor.Leaderboard);
+						await Logger.SendAsync("Portal2Board AutoUpdater Checking", LogColor.Leaderboard);
 						// Get cache from file
 						var cache = await Caching.CFile.GetFileAsync(_cacheKey);
-						if (cache == null)
-							_entryCount = 1;
 
-						// Download entry
-						var entryupdates = await GetEntryUpdateAsync("http://board.iverb.me/changelog" + Configuration.Default.BoardParameter, _entryCount);
-						var sendupdates = new List<Portal2EntryUpdate>();
-
-						// Method returns null when an error occurs, ignore it
-						if ((entryupdates != null)
-						&& (entryupdates?.Count > 0))
+						// Download changelog
+						var entryupdates = await _client.GetChangelogAsync();
+						if (entryupdates != null)
 						{
-							// Find the last entry
-							foreach (var update in entryupdates)
+							var sendupdates = new List<EntryData>();
+							if (!(string.IsNullOrEmpty(cache)))
 							{
-								if (cache != update.CacheFormat)
-									sendupdates.Add(update);
-								else
-									break;
+								// Find the last entry
+								foreach (var update in entryupdates)
+								{
+									// Cache is now the entry id
+									if (cache != $"{update.Id}")
+										sendupdates.Add(update);
+									else
+										break;
+								}
+								cache = null;
 							}
-							cache = null;
+							else
+								sendupdates.Add(entryupdates.First());
 
-							// Send new updates
-							if (sendupdates.Count > 0)
+							// Send every new entry
+							sendupdates.Reverse();
+							foreach (var update in sendupdates)
 							{
-								// Send every new entry
-								sendupdates.Reverse();
-								foreach (var update in sendupdates)
+								// Inject a nice feature which the leaderboard doesn't have
+								var delta = await GetWorldRecordDelta(update) ?? -1;
+								var wrdelta = (delta != -1)
+														? $" (-{delta.ToString("N2")})"
+														: string.Empty;
+								// RIP channel messages, webhooks are the future
+								foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
 								{
-									// Inject a nice feature which the leaderboard doesn't have
-									var wrdelta = await GetWorldRecordDifference($"https://board.iverb.me/changelog?wr=1&chamber={update.Entry.Map.BestTimeId}", update.Entry) ?? -1;
-									update.Entry.Time += (wrdelta != -1)
-																  ? $" (-{wrdelta.ToString("N2")})"
-																  : string.Empty;
-									// RIP channel messages, webhooks are the future
-									foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
+									await WebhookService.ExecuteWebhookAsync(item, new Webhook
 									{
-										await WebhookService.ExecuteWebhookAsync(item, new Webhook
-										{
-											UserName = "Portal2Records",
-											AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
-											Embeds = new Embed[] { await CreateEmbedAsync(update.Entry) }
-										});
-									}
-
-									// Send it to Twitter too but make sure it's world record
-									var tweet = await FormatMainTweetAsync($"New World Record in {update.Entry.Map.ChallengeModeName}\n{update.Entry.Time} by {update.Entry.Player.Name}\n{update.Entry.Date}", update.Entry.Demo, update.Entry.YouTube);
-									if ((tweet != string.Empty)
-									&& (Configuration.Default.BoardParameter == "?wr=1"))
-									{
-										var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
-
-										// Send player comment as reply to the sent tweet
-										var reply = update.Tweet.CommentMessage;
-										if ((send?.Response.StatusCode == HttpStatusCode.OK)
-										&& (reply != string.Empty))
-											await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, send.Value.Id);
-									}
+										UserName = "Portal2Records",
+										AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
+										Embeds = new Embed[] { await CreateEmbedAsync(update, wrdelta) }
+									});
 								}
 
-								// Save last entry for caching
-								var newcache = sendupdates[sendupdates.Count - 1].CacheFormat;
-								await Logger.SendAsync($"Portal2.AutoUpdater.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
-								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
-								newcache = null;
-
-								// Bad joke about Twitter location
-								foreach (var item in entryupdates)
+								// Send it to Twitter too but make sure it's world record
+								var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
+																	   $"{update.Score.Current.AsTime()}{wrdelta} by {update.Player.Name}\n" +
+																	   $"{update.Date?.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss")} (UTC)", update.DemoLink, $"https://youtu.be/{update.YouTubeId}");
+								if ((tweet != string.Empty)
+								&& (_client.Parameters[Parameters.WorldRecord] == 1 as object))
 								{
-									var name = item.Tweet.Location;
-									if (!(Data.TwitterLocations.Contains($"{name}'s basement")))
-										Data.TwitterLocations.Add($"{name}'s basement");
+									var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
+
+									// Send player comment as reply to the sent tweet
+									var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
+									if ((send?.Response.StatusCode == HttpStatusCode.OK)
+									&& (reply != string.Empty))
+										await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, send.Value.Id);
 								}
+							}
+
+							// Save last entry for caching
+							var last = sendupdates.Last();
+							var newcache = $"{last.Id}";
+							await Logger.SendAsync($"Portal2Board.AutoUpdater.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
+							await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
+							newcache = null;
+
+							// Bad joke about Twitter location
+							foreach (var item in entryupdates)
+							{
+								if (!(Data.TwitterLocations.Contains($"{last.Player.Name}'s basement")))
+									Data.TwitterLocations.Add($"{last.Player.Name}'s basement");
 							}
 							entryupdates = null;
 							sendupdates = null;
@@ -141,70 +149,88 @@ namespace NeKzBot.Tasks.Leaderboard
 
 						// Wait then refresh
 						_refreshWatch?.Restart();
-						var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Portal2.AutoUpdater.StartAsync Delay Took -> ");
+						var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Portal2Board.AutoUpdater.StartAsync Delay Took -> ");
 						await Task.Delay((delay > 0) ? delay : 0);	// I don't think this will ever happen but who knows...
 						await Watch.RestartAsync();
 					}
 				}
 				catch (Exception e)
 				{
-					await Logger.SendToChannelAsync("Portal2.Autoupdater.StartAsync Cancelled/Error", e);
+					await Logger.SendToChannelAsync("Portal2Board.Autoupdater.StartAsync Cancelled/Error", e);
 				}
 				IsRunning = false;
-				await Logger.SendToChannelAsync("Portal2.Autoupdater.StartAsync Ended", LogColor.Leaderboard);
+				await Logger.SendToChannelAsync("Portal2Board.Autoupdater.StartAsync Ended", LogColor.Leaderboard);
 				await Twitter.UpdateDescriptionAsync(LeaderboardTwitterAccount, $"{Configuration.Default.TwitterDescription} #OFFLINE");
 			}
 
-			// Set board parameter after /changelog (example: ?wr=1)
-			public static async Task<string> SetNewBoardParameterAsync(string s)
+			private static async Task<float?> GetWorldRecordDelta(EntryData wr)
 			{
-				if (s == Configuration.Default.BoardParameter)
-					return "Board parameter is already set with the same value.";
-				Configuration.Default.BoardParameter = s;
-				Configuration.Default.Save();
-				return (s == string.Empty)
-						  ? "Saved. Board parameter isn't set."
-						  : await Utils.CutMessageAsync($"Saved. New board parameter is to **{s}** now.", badchars: false);
+				// Don't allow this for cooperative wrs because:
+				// 1.) Partner entries do not always match their date (<- the actual issue)
+				// 2.) One of the world record holder can tie it again with another partner
+				var map = await Portal2.GetMapByName(wr.Map.Name);
+				if (map.Type == MapType.SinglePlayer)
+				{
+					var found = false;
+					foreach (var entry in await _client.GetChangelogAsync($"?wr=1&chamber={map.BestTimeId}"))
+					{
+						if (found)
+						{
+							var oldwr = entry.Score.Current.AsTime();
+							var newwr = wr.Score.Current.AsTime();
+							if (oldwr == newwr)
+								return 0;
+							if (newwr < oldwr)
+								return oldwr - newwr;
+							break;
+						}
+
+						// Search current wr, then take the next one
+						if (entry.Date == wr.Date)  // This will do it for now, single player only
+							found = true;
+					}
+				}
+				return default(float?);
 			}
 
 			// Embedding <3
-			private static async Task<Embed> CreateEmbedAsync(Portal2Entry wr)
+			private static async Task<Embed> CreateEmbedAsync(EntryData wr, string feature)
 			{
 				var embed = new Embed
 				{
-					Author = new EmbedAuthor(wr.Player.Name, wr.Player.SteamLink, wr.Player.SteamAvatar),
+					Author = new EmbedAuthor(wr.Player.Name, wr.Player.Link, wr.Player.SteamAvatarLink),
 					Title = "New Portal 2 World Record",
 					Url = "https://board.iverb.me/changelog?wr=1",
 					Color = Data.BoardColor.RawValue,
-					Image = new EmbedImage(wr.ImageLink),
+					Image = new EmbedImage(wr.Map.ImageLinkFull),
 					Timestamp = DateTime.UtcNow.ToString("s"),  // Close enough
 					Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
 					Fields = new EmbedField[]
 					{
-						new EmbedField("Map", wr.Map.ChallengeModeName, true),
-						new EmbedField("Time", wr.Time, true),
+						new EmbedField("Map", wr.Map.Name, true),
+						new EmbedField("Time", $"{wr.Score.Current.AsTimeToString()}{feature}", true),
 						new EmbedField("Player", await Utils.AsRawText(wr.Player.Name), true),
-						new EmbedField("Date", wr.Date, true)
+						new EmbedField("Date", wr.Date?.DateTimeToString() + " UTC", true)
 					}
 				};
 
-				if ((wr.Demo != string.Empty)
-				|| (wr.YouTube != string.Empty))
+				if ((wr.DemoExists)
+				|| (wr.VideoExists))
 				{
 					embed.AddField(field =>
 					{
 						field.Name = "Demo File";
-						field.Value = (wr.Demo != string.Empty) ? $"[Download]({wr.Demo})" : "_Not available._";
+						field.Value = (wr.DemoExists) ? $"[Download]({wr.DemoLink})" : "_Not available._";
 						field.Inline = true;
 					});
 					embed.AddField(field =>
 					{
 						field.Name = "Video Link";
-						field.Value = (wr.YouTube != string.Empty) ? $"[Watch]({wr.YouTube})" : "_Not available._";
+						field.Value = (wr.VideoExists) ? $"[Watch]({wr.VideoLink})" : "_Not available._";
 						field.Inline = true;
 					});
 				}
-				if (wr.Comment != string.Empty)
+				if (wr.CommentExists)
 				{
 					embed.AddField(async field =>
 					{

@@ -22,6 +22,10 @@ namespace NeKzBot.Tasks.NonModules
 		{
 			try
 			{
+				// Could be useful
+				if (args.Message.Text.EndsWith($"{Configuration.Default.PrefixCmd}donotparse"))
+					return true;
+
 				// I've never seen a message that had more than one attachment
 				if (args.Message.Attachments.Length == 1)
 				{

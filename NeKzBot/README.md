@@ -1,5 +1,4 @@
 # NeKzBot
-[![NeKz Server](https://discordapp.com/api/guilds/208570520805965826/embed.png?style=banner2)](https://discord.gg/rEazbJn)
 
 ## Features
 * Streaming audio in voice channel

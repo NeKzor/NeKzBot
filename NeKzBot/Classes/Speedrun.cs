@@ -83,13 +83,18 @@ namespace NeKzBot.Classes
 			{
 				try
 				{
-					// TODO: parse notification type "guide"
+					// NOTE: notification type "guide" is missing
 					if (Type == SpeedrunNotificationType.Thread)
 						return $"New thread post:\n_[{ContentText.Substring(ContentText.LastIndexOf(" forum: ") + " forum: ".Length)}]({Utils.AsRawText(ContentLink).GetAwaiter().GetResult()})_";
 					if (Type == SpeedrunNotificationType.Post)
 						return $"New thread response:\n_[{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}]({Utils.AsRawText(ContentLink).GetAwaiter().GetResult()})_";
 					if (Type == SpeedrunNotificationType.Resource)
-						return $"The resource _{ContentText.Substring(ContentText.IndexOf("'") + 1, ContentText.LastIndexOf("'") - ContentText.IndexOf("'") - 1)}_ has been updated or added.";
+					{
+						if (ContentText.EndsWith("updated. "))
+							return $"The resource _{ContentText.Substring(ContentText.IndexOf("The tool resource '") + "The tool resource '".Length + 1, ContentText.LastIndexOf("' for ") - ContentText.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}_ has been updated.";
+						if (ContentText.EndsWith("added."))
+							return $"The resource _{ContentText.Substring(ContentText.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, ContentText.LastIndexOf(", has been added to ") - ContentText.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}_ has been added.";
+					}
 					if (Type == SpeedrunNotificationType.Run)
 						return $"New {(ContentText.Contains(" beat the WR in ") ? "world record" : "personal best")} in [{Utils.AsRawText(Game.Name).GetAwaiter().GetResult()}]({((string.IsNullOrEmpty(Game.Link)) ? Utils.AsRawText(ContentLink).GetAwaiter().GetResult() : Utils.AsRawText(Game.Link).GetAwaiter().GetResult())})\nwith a time of {ContentText.Substring(ContentText.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
 					if (Type == SpeedrunNotificationType.Moderator)

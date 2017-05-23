@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
 using NeKzBot.Internals.Entities;
-using NeKzBot.Modules.Private.MainServer;
 using NeKzBot.Resources;
 using NeKzBot.Server;
 using NeKzBot.Tasks;
@@ -49,9 +48,9 @@ namespace NeKzBot.Modules.Private.Owner
 							switch (e.Args[0])
 							{
 								case "lb":
-									if (!(Portal2.AutoUpdater.IsRunning))
+									if (!(Portal2Board.AutoUpdater.IsRunning))
 									{
-										await Task.Factory.StartNew(async () => await Portal2.AutoUpdater.StartAsync());
+										await Task.Factory.StartNew(async () => await Portal2Board.AutoUpdater.StartAsync());
 										await e.Channel.SendMessage("Restarted task.");
 									}
 									else
@@ -75,17 +74,8 @@ namespace NeKzBot.Modules.Private.Owner
 									else
 										await e.Channel.SendMessage("Task hasn't finished yet.");
 									break;
-								case "giveaway":
-									if (!(Giveaway.IsRunning))
-									{
-										await Task.Factory.StartNew(async () => await Giveaway.ResetAsync());
-										await e.Channel.SendMessage("Restarted task.");
-									}
-									else
-										await e.Channel.SendMessage("Task hasn't finished yet.");
-									break;
 								default:
-									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`, `giveaway`.");
+									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`.");
 									break;
 							}
 						});
@@ -102,7 +92,7 @@ namespace NeKzBot.Modules.Private.Owner
 							switch (e.Args[0])
 							{
 								case "lb":
-									await e.Channel.SendMessage($"{(Portal2.AutoUpdater.IsRunning ? "Is running" : "Dead")}");
+									await e.Channel.SendMessage($"{(Portal2Board.AutoUpdater.IsRunning ? "Is running" : "Dead")}");
 									break;
 								case "twitch":
 									await e.Channel.SendMessage($"{(TwitchTv.IsRunning ? "Is running" : "Dead")}");
@@ -110,17 +100,13 @@ namespace NeKzBot.Modules.Private.Owner
 								case "nf":
 									await e.Channel.SendMessage($"{(SpeedrunCom.AutoNotification.IsRunning ? "Is running" : "Dead")}");
 									break;
-								case "giveaway":
-									await e.Channel.SendMessage($"{(Giveaway.IsRunning ? "Is running" : "Dead")}");
-									break;
 								case "":
-									await e.Channel.SendMessage($"Leaderboard{(Portal2.AutoUpdater.IsRunning ? " - Running" : " - Dead")}\n"
-															  + $"TwitchTv{(TwitchTv.IsRunning ? " - Running" : " - Dead")}\n"
-															  + $"SpeedrunCom{(SpeedrunCom.AutoNotification.IsRunning ? " - Running" : " - Dead")}\n"
-															  + $"Giveaway{(Giveaway.IsRunning ? " - Running" : " - Dead")}");
+									await e.Channel.SendMessage($"Leaderboard{(Portal2Board.AutoUpdater.IsRunning ? " - Running" : " - Dead")}\n" +
+																$"TwitchTv{(TwitchTv.IsRunning ? " - Running" : " - Dead")}\n" +
+																$"SpeedrunCom{(SpeedrunCom.AutoNotification.IsRunning ? " - Running" : " - Dead")}");
 									break;
 								default:
-									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`, `giveaway`.");
+									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`.");
 									break;
 							}
 						});
@@ -132,11 +118,10 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"Portal2.AutoUpdater • *{(Portal2.AutoUpdater.Watch.IsRunning ? "Running" : $"On Hold ({Portal2.AutoUpdater.Watch.LastCheckedTimeValue})")}*"
-													  + $"\nPortal2.Cache • *{(Portal2.Cache.Watch.IsRunning ? "Running" : $"On Hold ({Portal2.Cache.Watch.LastCheckedTimeValue})")}*"
-													  + $"\nSpeedrunCom.AutoNotification • *{(SpeedrunCom.AutoNotification.Watch.IsRunning ? "Running" : $"On Hold ({SpeedrunCom.AutoNotification.Watch.LastCheckedTimeValue})")}*"
-													  + $"\nTwitch • *{(TwitchTv.Watch.IsRunning ? "Running" : $"On Hold ({TwitchTv.Watch.LastCheckedTimeValue})")}*"
-													  + $"\nGiveaway • *{(Giveaway.Watch.IsRunning ? "Running" : $"On Hold({ Giveaway.Watch.LastCheckedTimeValue})")}*");
+							await e.Channel.SendMessage($"Portal2.AutoUpdater • *{(Portal2Board.AutoUpdater.Watch.IsRunning ? "Running" : $"On Hold ({Portal2Board.AutoUpdater.Watch.LastCheckedTimeValue})")}*" +
+														$"\nServer.Timer • *{(Timer.IsRunning ? "Running" : $"On Hold ({Timer.Watch.LastCheckedTimeValue})")}*" +
+														$"\nSpeedrunCom.AutoNotification • *{(SpeedrunCom.AutoNotification.Watch.IsRunning ? "Running" : $"On Hold ({SpeedrunCom.AutoNotification.Watch.LastCheckedTimeValue})")}*" +
+														$"\nTwitch • *{(TwitchTv.Watch.IsRunning ? "Running" : $"On Hold ({TwitchTv.Watch.LastCheckedTimeValue})")}*");
 						});
 
 				GBuilder.CreateCommand("webhooktest")
@@ -219,11 +204,11 @@ namespace NeKzBot.Modules.Private.Owner
 							}
 
 							await Logger.SendAsync($"Cleaned webhook data. File I/O errors: {errorcount}");
-							await e.Channel.SendMessage($"Sent {totalhooks} ping test{((totalhooks == 1) ? string.Empty : "s")} in total and removed:"
-													  + $"\n• {p2count} webhook{((p2count == 1) ? string.Empty : "s")} from {Data.Portal2WebhookKeyword}"
-													  + $"\n• {srcomsourcecount} webhook{((srcomsourcecount == 1) ? string.Empty : "s")} from {Data.SpeedrunComSourceWebhookKeyword}"
-													  + $"\n• {srcomportal2count} webhook{((srcomportal2count == 1) ? string.Empty : "s")} from {Data.SpeedrunComPortal2WebhookKeyword}"
-													  + $"\n• {twtvcount} webhook{((twtvcount == 1) ? string.Empty : "s")} from {Data.TwitchTvWebhookKeyword}");
+							await e.Channel.SendMessage($"Sent {totalhooks} ping test{((totalhooks == 1) ? string.Empty : "s")} in total and removed:" +
+														$"\n• {p2count} webhook{((p2count == 1) ? string.Empty : "s")} from {Data.Portal2WebhookKeyword}" +
+														$"\n• {srcomsourcecount} webhook{((srcomsourcecount == 1) ? string.Empty : "s")} from {Data.SpeedrunComSourceWebhookKeyword}" +
+														$"\n• {srcomportal2count} webhook{((srcomportal2count == 1) ? string.Empty : "s")} from {Data.SpeedrunComPortal2WebhookKeyword}" +
+														$"\n• {twtvcount} webhook{((twtvcount == 1) ? string.Empty : "s")} from {Data.TwitchTvWebhookKeyword}");
 						});
 
 				GBuilder.CreateCommand("errormessages")

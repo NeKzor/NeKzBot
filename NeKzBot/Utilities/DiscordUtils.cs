@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -13,9 +14,9 @@ namespace NeKzBot.Utilities
 		// Find channel
 		public static Task<Channel> FindTextChannel(string name, Discord.Server guild = null)
 			=> Task.FromResult(((guild == null)
-									  ? Bot.Client?.Servers?.FirstOrDefault(server => server.Id == Credentials.Default.DiscordMainServerId)
-									  : Bot.Client?.Servers?.FirstOrDefault(server => server.Id == guild.Id))?.TextChannels?
-															.FirstOrDefault(channel => channel.Name == name));
+										? Bot.Client?.Servers?.FirstOrDefault(server => server.Id == Credentials.Default.DiscordMainServerId)
+										: Bot.Client?.Servers?.FirstOrDefault(server => server.Id == guild.Id))?.TextChannels?
+											.FirstOrDefault(channel => channel.Name == name));
 
 		// Find guild
 		public static Task<Discord.Server> FindGuild(ulong id)
@@ -96,6 +97,19 @@ namespace NeKzBot.Utilities
 				if (await FlagIsSet(role.Permissions.RawValue, flag))
 					return true;
 			return false;
+		}
+
+		public static async Task DeleteMessagesAsync(CommandEventArgs e, ulong id, int count)
+		{
+			// Bulk delete only
+			var messages = (await e.Channel.DownloadMessages(count, id, Relative.Before))
+				// Am I doing this right?
+				.Where(m => (DateTime.UtcNow - m.Timestamp.Date.ToUniversalTime()).TotalMilliseconds < (1000 * 60 * 60 * 24 * 7 * 2))
+				.Select(m => m.Id)
+				.ToList();
+			messages.Add(id);
+			await e.Channel.DeleteMessages(messages.Take(101).ToArray());
+			await Logger.SendAsync($"{e.User.Name}#{e.User.Discriminator.ToString("D4")} (ID {e.User.Id}) deleted {messages.Count} message{((messages.Count == 1) ? string.Empty : "s")} in channel #{e.Channel.Name} (ID {e.Channel.Id}).");
 		}
 	}
 }

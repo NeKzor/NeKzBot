@@ -4,7 +4,7 @@ using Discord;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
 using NeKzBot.Internals.Entities;
-using NeKzBot.Modules.Private.MainServer;
+using NeKzBot.Modules.Private.Members;
 using NeKzBot.Modules.Private.Owner;
 using NeKzBot.Modules.Public;
 using NeKzBot.Modules.Public.Others;
@@ -38,7 +38,7 @@ namespace NeKzBot
 
 		private static void OnExit(object _, EventArgs __)
 			=> Task.WaitAll(Logger.SendAsync("Bot Shutdown..."),
-							Twitter.UpdateDescriptionAsync(Portal2.AutoUpdater.LeaderboardTwitterAccount,
+							Twitter.UpdateDescriptionAsync(Portal2Board.AutoUpdater.LeaderboardTwitterAccount,
 														   $"{Configuration.Default.TwitterDescription} #OFFLINE"));
 
 		public async Task StartAsync()
@@ -86,12 +86,10 @@ namespace NeKzBot
 				await Caching.InitAsync();
 				await WebhookService.InitAsync();
 				// ^Important stuff first
-				await Portal2.Cache.InitAsync();
-				await Portal2.AutoUpdater.InitAsync();
 				await Steam.InitAsync();
 				await TwitchTv.InitAsync();
-				await Giveaway.InitAsync();
 				await DropboxCom.InitAsync();
+				await Portal2Board.AutoUpdater.InitAsync();
 				await SpeedrunCom.InitAsync();
 				await SpeedrunCom.AutoNotification.InitAsync();
 			}
@@ -112,7 +110,7 @@ namespace NeKzBot
 				await Contest.LoadAsync();
 				await DataBase.LoadAsync();
 				await Debugging.LoadAsync();
-				await Giveaway.LoadAsync();
+				await Special.LoadAsync();
 				// Public
 				await Help.LoadAsync();
 				await Info.LoadAsync();
@@ -159,10 +157,8 @@ namespace NeKzBot
 		{
 			await Logger.SendAsync("Loading Tasks");
 			Task.WaitAll(
-				Giveaway.ResetAsync(),
+				Portal2Board.AutoUpdater.StartAsync(),
 				TwitchTv.StartAsync(),
-				Portal2.Cache.ResetAsync(),
-				Portal2.AutoUpdater.StartAsync(),
 				SpeedrunCom.AutoNotification.StartAsync()
 			);
 			await Task.Delay(-1);

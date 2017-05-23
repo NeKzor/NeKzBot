@@ -1,5 +1,14 @@
 ﻿# Changelog
 
+## Version 1.9.1
+* Improved cleanup command
+* Fixed empty speedruncom resource notification
+* Portal2Board tasks are now 97% faster
+* Removed Portal2Board caching
+* Fixed event exceptions
+* Removed giveaway game
+* Some other cleanup here and there
+
 ## Version 1.9.0
 * Added a new community game
 * Improved a data command
