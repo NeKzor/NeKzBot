@@ -22,7 +22,7 @@ namespace NeKzBot.Modules.Public
 		public static async Task LoadAsync()
 		{
 			await Logger.SendAsync("Loading Leaderboard Module", LogColor.Init);
-			_client = new Portal2BoardsClient(await new Fetcher().GetClient());
+			_client = new Portal2BoardsClient(await new Fetcher().GetClient(), noSsl: true);
 			await GetLatestWorldRecord("latestwr");
 			await GetCurrentWorldRecord("wr");
 			await GetLatestLeaderboardEntry("latestentry");

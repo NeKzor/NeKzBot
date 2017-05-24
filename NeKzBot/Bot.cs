@@ -38,8 +38,7 @@ namespace NeKzBot
 
 		private static void OnExit(object _, EventArgs __)
 			=> Task.WaitAll(Logger.SendAsync("Bot Shutdown..."),
-							Twitter.UpdateDescriptionAsync(Portal2Board.AutoUpdater.LeaderboardTwitterAccount,
-														   $"{Configuration.Default.TwitterDescription} #OFFLINE"));
+							Twitter.UpdateDescriptionAsync(Portal2Board.AutoUpdater.LeaderboardTwitterAccount, $"{Configuration.Default.TwitterDescription} #OFFLINE"));
 
 		public async Task StartAsync()
 		{
@@ -112,17 +111,17 @@ namespace NeKzBot
 				await Debugging.LoadAsync();
 				await Special.LoadAsync();
 				// Public
+				await Builder.LoadAsync();
+				await Fun.LoadAsync();
 				await Help.LoadAsync();
 				await Info.LoadAsync();
 				await Leaderboard.LoadAsync();
-				await Sound.LoadAsync();
-				await Speedrun.LoadAsync();
-				await Builder.LoadAsync();
-				await Fun.LoadAsync();
 				await RaspberryPi.LoadAsync();
 				await Resource.LoadAsync();
 				await Rest.LoadAsync();
 				await Service.LoadAsync();
+				await Sound.LoadAsync();
+				await Speedrun.LoadAsync();
 				// ^Load these before generating module lists
 				await Data.GenerateModuleListsAsync();
 			}
@@ -158,15 +157,15 @@ namespace NeKzBot
 			await Logger.SendAsync("Loading Tasks");
 			Task.WaitAll(
 				Portal2Board.AutoUpdater.StartAsync(),
-				TwitchTv.StartAsync(),
-				SpeedrunCom.AutoNotification.StartAsync()
+				SpeedrunCom.AutoNotification.StartAsync(),
+				TwitchTv.StartAsync()
 			);
 			await Task.Delay(-1);
 		}
 
 		public void Dispose()
 		{
-			Client = default(DiscordClient);
+			Client = null;
 			GC.Collect();
 		}
 	}
