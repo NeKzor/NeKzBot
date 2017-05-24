@@ -48,7 +48,7 @@ namespace NeKzBot.Tasks.Leaderboard
 
 				// My library :)
 				_latestWorldRecords = new ChangelogParameters { [Parameters.WorldRecord] = 1 };
-				_client = new Portal2BoardsClient(_latestWorldRecords, await new Fetcher().GetClient());
+				_client = new Portal2BoardsClient(_latestWorldRecords, await new Fetcher().GetClient(), false) { NoSsl = true };
 			}
 
 			public static async Task StartAsync(int serverdelay = 8000)

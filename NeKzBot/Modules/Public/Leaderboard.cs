@@ -347,7 +347,7 @@ namespace NeKzBot.Modules.Public
 							if (profile != null)
 							{
 								var user = (UserData)profile.Data;
-								var data = user.Times.GetMapData(map);
+								var data = await user.Times.GetMapData(map);
 								var embed = new Embed
 								{
 									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
@@ -465,7 +465,7 @@ namespace NeKzBot.Modules.Public
 							if (profile != null)
 							{
 								var user = (UserData)profile.Data;
-								var data = user.Times.GetMapData(map);
+								var data = await user.Times.GetMapData(map);
 								var embed = new Embed
 								{
 									Author = new EmbedAuthor(user.DisplayName, user.Link, user.SteamAvatarLink),
@@ -623,7 +623,7 @@ namespace NeKzBot.Modules.Public
 									};
 									foreach (var user in users)
 									{
-										var data = user.Times.GetMapData(map);
+										var data = await user.Times.GetMapData(map);
 										if (data == null)
 											break;
 
