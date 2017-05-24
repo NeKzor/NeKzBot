@@ -181,17 +181,15 @@ namespace NeKzBot.Modules.Private.Members
 								if ((bot?.ServerPermissions.ManageMessages == true)
 								&& (bot?.GetPermissions(e.Channel).ManageMessages == true))
 								{
-									if (ulong.TryParse(e.GetArg("first_id"), out var firstid) && ulong.TryParse(e.GetArg("second_id"), out var secondid))
+									if ((ulong.TryParse(e.GetArg("first_id"), out var firstid))
+									&& (ulong.TryParse(e.GetArg("second_id"), out var secondid)))
 									{
 										var index = (await e.Channel.DownloadMessages(100, firstid, Relative.Before)).ToList()
 																													 .FindIndex(m => m.Id == secondid);
-										if ((index != -1) && (index <= 100))
+										if ((index != -1) && (index <= 99))
 											await Utils.DeleteMessagesAsync(e, firstid, index + 1);
-										else
-											await e.Message.Delete();
 									}
-									else
-										await e.Message.Delete();
+									await e.Message.Delete();
 								}
 								else
 								{

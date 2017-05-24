@@ -13,9 +13,9 @@ namespace NeKzBot.Tasks.Leaderboard
 					   : points.ToString();
 
 		public static string FormatAveragePlaceToString(this float? place)
-			=> place == default(float?)
-					 ? "NO"
-					 : place?.ToString("N1");
+			=> (place == default(float?))
+					  ? "NO"
+					  : place?.ToString("N1");
 
 		public static string FormatRankToString(this uint? rank)
 		{
@@ -57,7 +57,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			}
 			catch (Exception e)
 			{
-				await Logger.SendToChannelAsync("Portal2.FormatMainTweetAsync Error", e);
+				await Logger.SendToChannelAsync("Portal2Board.FormatMainTweetAsync Error", e);
 			}
 			return string.Empty;
 		}
@@ -88,7 +88,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			}
 			catch (Exception e)
 			{
-				await Logger.SendToChannelAsync("Portal2.FormatReplyTweetAsync Error", e);
+				await Logger.SendToChannelAsync("Portal2Board.FormatReplyTweetAsync Error", e);
 			}
 			return string.Empty;
 		}

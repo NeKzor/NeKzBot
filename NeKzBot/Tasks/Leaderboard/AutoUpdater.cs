@@ -30,6 +30,7 @@ namespace NeKzBot.Tasks.Leaderboard
 			private static Stopwatch _refreshWatch;
 			private static string _cacheKey;
 			private static uint _refreshTime;
+			private static uint _rateLimit;
 			private static ChangelogParameters _latestWorldRecords { get; set; }
 			private static Portal2BoardsClient _client { get; set; }
 
@@ -43,6 +44,7 @@ namespace NeKzBot.Tasks.Leaderboard
 				_refreshWatch = new Stopwatch();
 				_cacheKey = "autolb";
 				_refreshTime = 5 * 60 * 1000;  // 5 minutes
+				_rateLimit = 10;				// ^Max 10 wrs in this time
 
 				// My library :)
 				_latestWorldRecords = new ChangelogParameters { [Parameters.WorldRecord] = 1 };
@@ -66,7 +68,6 @@ namespace NeKzBot.Tasks.Leaderboard
 
 					for (;;)
 					{
-						await Logger.SendAsync("Portal2Board AutoUpdater Checking", LogColor.Leaderboard);
 						// Get cache from file
 						var cache = await Caching.CFile.GetFileAsync(_cacheKey);
 
@@ -91,62 +92,71 @@ namespace NeKzBot.Tasks.Leaderboard
 							else
 								sendupdates.Add(entryupdates.First());
 
-							// Send every new entry
-							sendupdates.Reverse();
-							foreach (var update in sendupdates)
+							// Rate limit for sending webhooks and tweets
+							if (sendupdates.Count <= _rateLimit)
 							{
-								// Inject a nice feature which the leaderboard doesn't have
-								var delta = await GetWorldRecordDelta(update) ?? -1;
-								var wrdelta = (delta != -1)
-														? $" (-{delta.ToString("N2")})"
-														: string.Empty;
-								// RIP channel messages, webhooks are the future
-								foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
+								// Send every new entry
+								sendupdates.Reverse();
+								foreach (var update in sendupdates)
 								{
-									await WebhookService.ExecuteWebhookAsync(item, new Webhook
+									// Inject a nice feature which the leaderboard doesn't have
+									var delta = await GetWorldRecordDelta(update) ?? -1;
+									var wrdelta = (delta != -1)
+															? $" (-{delta.ToString("N2")})"
+															: string.Empty;
+
+									// RIP channel messages, webhooks are the future
+									foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
 									{
-										UserName = "Portal2Records",
-										AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
-										Embeds = new Embed[] { await CreateEmbedAsync(update, wrdelta) }
-									});
+										await WebhookService.ExecuteWebhookAsync(item, new Webhook
+										{
+											UserName = "Portal2Records",
+											AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
+											Embeds = new Embed[] { await CreateEmbedAsync(update, wrdelta) }
+										});
+									}
+
+									// Send it to Twitter too but make sure it's world record
+									var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
+																		   $"{update.Score.Current.AsTime()}{wrdelta} by {update.Player.Name}\n" +
+																		   $"{update.Date?.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss")} (UTC)", update.DemoLink, $"https://youtu.be/{update.YouTubeId}");
+									if ((tweet != string.Empty)
+									&& (_client.Parameters[Parameters.WorldRecord] == 1 as object))
+									{
+										var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
+
+										// Send player comment as reply to the sent tweet
+										var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
+										if ((send?.Response.StatusCode == HttpStatusCode.OK)
+										&& (reply != string.Empty))
+											await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, send.Value.Id);
+									}
 								}
 
-								// Send it to Twitter too but make sure it's world record
-								var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
-																	   $"{update.Score.Current.AsTime()}{wrdelta} by {update.Player.Name}\n" +
-																	   $"{update.Date?.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss")} (UTC)", update.DemoLink, $"https://youtu.be/{update.YouTubeId}");
-								if ((tweet != string.Empty)
-								&& (_client.Parameters[Parameters.WorldRecord] == 1 as object))
+								if (sendupdates.Count >= 1)
 								{
-									var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
+									// Save last entry for caching
+									var last = sendupdates.Last();
+									var newcache = $"{last.Id}";
+									await Logger.SendAsync($"Portal2Board.AutoUpdater.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
+									await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
 
-									// Send player comment as reply to the sent tweet
-									var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
-									if ((send?.Response.StatusCode == HttpStatusCode.OK)
-									&& (reply != string.Empty))
-										await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, send.Value.Id);
+									// Bad joke about Twitter location
+									foreach (var item in entryupdates)
+									{
+										if (!(Data.TwitterLocations.Contains($"{last.Player.Name}'s basement")))
+											Data.TwitterLocations.Add($"{last.Player.Name}'s basement");
+									}
+									newcache = null;
+									last = null;
 								}
 							}
+							else
+								await Logger.SendAsync("Portal2Board.AutoUpdater.StartAsync Rate Limit Exceeded", LogColor.Error);
 
-							// Save last entry for caching
-							var last = sendupdates.Last();
-							var newcache = $"{last.Id}";
-							await Logger.SendAsync($"Portal2Board.AutoUpdater.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
-							await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
-							newcache = null;
-
-							// Bad joke about Twitter location
-							foreach (var item in entryupdates)
-							{
-								if (!(Data.TwitterLocations.Contains($"{last.Player.Name}'s basement")))
-									Data.TwitterLocations.Add($"{last.Player.Name}'s basement");
-							}
 							entryupdates = null;
 							sendupdates = null;
 						}
-						// Update Twitter location
-						await Twitter.UpdateLocationAsync(LeaderboardTwitterAccount, await Utils.RngStringAsync(Data.TwitterLocations));
-
 						// Wait then refresh
 						_refreshWatch?.Restart();
 						var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Portal2Board.AutoUpdater.StartAsync Delay Took -> ");

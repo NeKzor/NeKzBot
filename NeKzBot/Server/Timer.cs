@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Threading.Tasks;
+using NeKzBot.Classes;
 using NeKzBot.Internals;
 using NeKzBot.Internals.Entities;
 using NeKzBot.Resources;
+using NeKzBot.Tasks.Leaderboard;
 using NeKzBot.Utilities;
 
 namespace NeKzBot.Server
@@ -12,7 +14,7 @@ namespace NeKzBot.Server
 		public static bool IsRunning { get; private set; } = false;
 		public static InternalWatch Watch { get; } = new InternalWatch();
 		private static Stopwatch _cacheWatch;
-		private const uint _globalDelay = 10;
+		private const uint _globalDelay = 20;
 
 		// Timer
 		public static async Task RunAsync()
@@ -30,6 +32,7 @@ namespace NeKzBot.Server
 					await Watch.RestartAsync();
 					await Task.Factory.StartNew(async () => Bot.Client.SetGame(await Utils.RngAsync((await Data.Get<Simple>("games")).Value)));
 					await Task.Factory.StartNew(async () => Bot.Client.SetStatus(await Utils.RngAsync(Data.BotStatus)));
+					await Twitter.UpdateLocationAsync(Portal2Board.AutoUpdater.LeaderboardTwitterAccount, await Utils.RngStringAsync(Data.TwitterLocations));
 				}
 			}
 			catch
