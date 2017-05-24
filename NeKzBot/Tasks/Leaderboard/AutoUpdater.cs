@@ -175,30 +175,49 @@ namespace NeKzBot.Tasks.Leaderboard
 
 			private static async Task<float?> GetWorldRecordDelta(EntryData wr)
 			{
-				// Don't allow this for cooperative wrs because:
-				// 1.) Partner entries do not always match their date (<- the actual issue)
-				// 2.) One of the world record holder can tie it again with another partner
 				var map = await Portal2.GetMapByName(wr.Map.Name);
-				if (map.Type == MapType.SinglePlayer)
+				var found = false;
+				var foundcoop = false;
+				foreach (var entry in await _client.GetChangelogAsync($"?wr=1&chamber={map.BestTimeId}"))
 				{
-					var found = false;
-					foreach (var entry in await _client.GetChangelogAsync($"?wr=1&chamber={map.BestTimeId}"))
+					// I think this only applies for Container Ride and Core
+					if (entry.IsBanned)
+						continue;
+
+					if (found)
 					{
-						if (found)
+						var oldwr = entry.Score.Current.AsTime();
+						var newwr = wr.Score.Current.AsTime();
+
+						if (map.Type == MapType.Cooperative)
 						{
-							var oldwr = entry.Score.Current.AsTime();
-							var newwr = wr.Score.Current.AsTime();
+							if (foundcoop)
+							{
+								if (oldwr == newwr)
+									return 0;
+								if (newwr < oldwr)
+									return oldwr - newwr;
+							}
+							else if (oldwr == newwr)
+							{
+								// We found the partner score or a tie here, take the next one
+								foundcoop = true;
+								continue;
+							}
+						}
+						else if (map.Type == MapType.SinglePlayer)
+						{
 							if (oldwr == newwr)
 								return 0;
 							if (newwr < oldwr)
 								return oldwr - newwr;
-							break;
 						}
-
-						// Search current wr, then take the next one
-						if (entry.Date == wr.Date)  // This will do it for now, single player only
-							found = true;
+						break;
 					}
+
+					// Search current wr, then take the next one
+					if (entry.Id == wr.Id)
+						found = true;
 				}
 				return default(float?);
 			}
