@@ -24,19 +24,6 @@ namespace NeKzBot.Modules.Private.Owner
 		{
 			CService.CreateGroup(name, GBuilder =>
 			{
-				GBuilder.CreateCommand("cleanconfig")
-						.Alias("resetcfg", "restorecfg")
-						.Description("Resets the default settings of the application.")
-						.AddCheck(Permissions.BotOwnerOnly)
-						.Hide()
-						.Do(async e =>
-						{
-							await e.Channel.SendIsTyping();
-							Configuration.Default.Reset();
-							Configuration.Default.Save();
-							await e.Channel.SendMessage("Default settings have been restored.");
-						});
-
 				GBuilder.CreateCommand("revive")
 						.Description("Checks if a task has ended and will restart it when it has.")
 						.Parameter("task", ParameterType.Unparsed)
@@ -74,8 +61,17 @@ namespace NeKzBot.Modules.Private.Owner
 									else
 										await e.Channel.SendMessage("Task hasn't finished yet.");
 									break;
+								case "timer":
+									if (!(Timer.IsRunning))
+									{
+										await Task.Factory.StartNew(async () => await Timer.RunAsync());
+										await e.Channel.SendMessage("Restarted task.");
+									}
+									else
+										await e.Channel.SendMessage("Task hasn't finished yet.");
+									break;
 								default:
-									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`.");
+									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`, `timer`.");
 									break;
 							}
 						});
@@ -100,13 +96,17 @@ namespace NeKzBot.Modules.Private.Owner
 								case "nf":
 									await e.Channel.SendMessage($"{(SpeedrunCom.AutoNotification.IsRunning ? "Is running" : "Dead")}");
 									break;
+								case "timer":
+									await e.Channel.SendMessage($"{(Timer.IsRunning ? "Is running" : "Dead")}");
+									break;
 								case "":
-									await e.Channel.SendMessage($"Leaderboard{(Portal2Board.AutoUpdater.IsRunning ? " - Running" : " - Dead")}\n" +
-																$"TwitchTv{(TwitchTv.IsRunning ? " - Running" : " - Dead")}\n" +
-																$"SpeedrunCom{(SpeedrunCom.AutoNotification.IsRunning ? " - Running" : " - Dead")}");
+									await e.Channel.SendMessage($"Portal2Board.AutoUpdater{(Portal2Board.AutoUpdater.IsRunning ? " - Running" : " - Dead")}\n" +
+																$"SpeedrunCom.AutoNotification{(SpeedrunCom.AutoNotification.IsRunning ? " - Running" : " - Dead")}\n" +
+																$"Timer{(Timer.IsRunning ? " - Running" : " - Dead")}\n" +
+																$"TwitchTv{(TwitchTv.IsRunning ? " - Running" : " - Dead")}");
 									break;
 								default:
-									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`.");
+									await e.Channel.SendMessage("Couldn't find task name. Try one of these: `lb`, `twitch`, `nf`, `timer`.");
 									break;
 							}
 						});
@@ -118,10 +118,10 @@ namespace NeKzBot.Modules.Private.Owner
 						.Do(async e =>
 						{
 							await e.Channel.SendIsTyping();
-							await e.Channel.SendMessage($"Portal2.AutoUpdater • *{(Portal2Board.AutoUpdater.Watch.IsRunning ? "Running" : $"On Hold ({Portal2Board.AutoUpdater.Watch.LastCheckedTimeValue})")}*" +
-														$"\nServer.Timer • *{(Timer.IsRunning ? "Running" : $"On Hold ({Timer.Watch.LastCheckedTimeValue})")}*" +
-														$"\nSpeedrunCom.AutoNotification • *{(SpeedrunCom.AutoNotification.Watch.IsRunning ? "Running" : $"On Hold ({SpeedrunCom.AutoNotification.Watch.LastCheckedTimeValue})")}*" +
-														$"\nTwitch • *{(TwitchTv.Watch.IsRunning ? "Running" : $"On Hold ({TwitchTv.Watch.LastCheckedTimeValue})")}*");
+							await e.Channel.SendMessage($"Portal2Board.AutoUpdater • *{(Portal2Board.AutoUpdater.Watch.IsRunning ? "Running" : $"On Hold ({Portal2Board.AutoUpdater.Watch.LastCheckedTimeValue})")}*\n" +
+														$"SpeedrunCom.AutoNotification • *{(SpeedrunCom.AutoNotification.Watch.IsRunning ? "Running" : $"On Hold ({SpeedrunCom.AutoNotification.Watch.LastCheckedTimeValue})")}*\n" +
+														$"Timer • *{(Timer.IsRunning ? "Running" : $"On Hold ({Timer.Watch.LastCheckedTimeValue})")}*\n" +
+														$"TwitchTv • *{(TwitchTv.Watch.IsRunning ? "Running" : $"On Hold ({TwitchTv.Watch.LastCheckedTimeValue})")}*");
 						});
 
 				GBuilder.CreateCommand("webhooktest")

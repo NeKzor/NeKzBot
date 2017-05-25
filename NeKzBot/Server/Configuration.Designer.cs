@@ -77,18 +77,6 @@ namespace NeKzBot.Server {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("?wr=1")]
-        public string BoardParameter {
-            get {
-                return ((string)(this["BoardParameter"]));
-            }
-            set {
-                this["BoardParameter"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Resources/Private/vars/")]

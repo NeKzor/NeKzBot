@@ -239,7 +239,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						new EmbedField("Map", wr.Map.Name, true),
 						new EmbedField("Time", $"{wr.Score.Current.AsTimeToString()}{feature}", true),
 						new EmbedField("Player", await Utils.AsRawText(wr.Player.Name), true),
-						new EmbedField("Date", wr.Date?.DateTimeToString() + " UTC", true)
+						new EmbedField("Date", wr.Date?.DateTimeToString(), true)
 					}
 				};
 

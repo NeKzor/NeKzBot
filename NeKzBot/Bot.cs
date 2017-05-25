@@ -158,6 +158,7 @@ namespace NeKzBot
 			Task.WaitAll(
 				Portal2Board.AutoUpdater.StartAsync(),
 				SpeedrunCom.AutoNotification.StartAsync(),
+				Timer.RunAsync(),
 				TwitchTv.StartAsync()
 			);
 			await Task.Delay(-1);

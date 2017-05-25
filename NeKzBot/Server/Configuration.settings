@@ -20,9 +20,6 @@
     <Setting Name="AudioPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Resources/Private/audio/</Value>
     </Setting>
-    <Setting Name="BoardParameter" Type="System.String" Scope="User">
-      <Value Profile="(Default)">?wr=1</Value>
-    </Setting>
     <Setting Name="DataPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Resources/Private/vars/</Value>
     </Setting>
