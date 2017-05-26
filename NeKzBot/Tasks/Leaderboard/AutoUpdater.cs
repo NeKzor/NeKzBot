@@ -116,19 +116,23 @@ namespace NeKzBot.Tasks.Leaderboard
 										});
 									}
 
-									// Send it to Twitter too but make sure it's world record
+									// Send it to Twitter too (please don't have a long username, thanks)
 									var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
-																		   $"{update.Score.Current.AsTime()}{wrdelta} by {update.Player.Name}\n" +
-																		   $"{update.Date?.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss")} (UTC)", update.DemoLink, $"https://youtu.be/{update.YouTubeId}");
+																		   $"{update.Score.Current.AsTimeToString()}{wrdelta} by {update.Player.Name}\n" +
+																		   $"{update.Date?.DateTimeToString()} (UTC)",
+																		   (update.DemoExists) ? update.DemoLink : string.Empty,
+																		   (update.VideoExists) ? update.VideoLink : string.Empty);
 									if (tweet != string.Empty)
 									{
-										var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
+										var sent = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
 
 										// Send player comment as reply to the sent tweet
 										var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
-										if ((send?.Response.StatusCode == HttpStatusCode.OK)
+										if ((sent?.Response.StatusCode == HttpStatusCode.OK)
 										&& (reply != string.Empty))
-											await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, send.Value.Id);
+											await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, sent.Value.Id);
+										else
+											await Logger.SendAsync("Portal2Board.AutoUpdater.StartAsync Tweet Error", LogColor.Error);
 									}
 								}
 
