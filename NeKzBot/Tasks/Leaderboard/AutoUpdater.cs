@@ -120,8 +120,7 @@ namespace NeKzBot.Tasks.Leaderboard
 									var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
 																		   $"{update.Score.Current.AsTime()}{wrdelta} by {update.Player.Name}\n" +
 																		   $"{update.Date?.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss")} (UTC)", update.DemoLink, $"https://youtu.be/{update.YouTubeId}");
-									if ((tweet != string.Empty)
-									&& (_client.Parameters[Parameters.WorldRecord] == 1 as object))
+									if (tweet != string.Empty)
 									{
 										var send = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
 
