@@ -188,6 +188,7 @@ namespace NeKzBot.Tasks.Leaderboard
 						var oldwr = entry.Score.Current.AsTime();
 						var newwr = wr.Score.Current.AsTime();
 
+						// My head hurts when I look at this...
 						if (map.Type == MapType.Cooperative)
 						{
 							if (foundcoop)
@@ -202,6 +203,13 @@ namespace NeKzBot.Tasks.Leaderboard
 								// We found the partner score or a tie here, take the next one
 								foundcoop = true;
 								continue;
+							}
+							else
+							{
+								if (oldwr == newwr)
+									return 0;
+								if (newwr < oldwr)
+									return oldwr - newwr;
 							}
 						}
 						else if (map.Type == MapType.SinglePlayer)
