@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Portal2Boards.Net;
 using Portal2Boards.Net.API.Models;
 using Portal2Boards.Net.Entities;
 using Portal2Boards.Net.Extensions;
+using SourceDemoParser.Net;
 using NeKzBot.Extensions;
 using NeKzBot.Resources;
 using NeKzBot.Server;
@@ -30,6 +32,7 @@ namespace NeKzBot.Modules.Public
 			await GetUserRank("player");
 			await GetPlayerComparison("compare");
 			await GetLeaderboard("top");
+			await GetDemoInformation("analyze");
 		}
 
 		private static Task GetLatestWorldRecord(string c)
@@ -291,10 +294,10 @@ namespace NeKzBot.Modules.Public
 						await e.Channel.SendIsTyping();
 						if (string.IsNullOrEmpty(e.GetArg("map_name")))
 						{
-							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
+							var profile = await _client.GetProfileAsync(e.User.Name);
 							if ((profile == null)
 							&& (e.User.Nickname != null))
-								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
+								profile = await _client.GetProfileAsync(e.User.Nickname);
 
 							if (profile != null)
 							{
@@ -339,10 +342,10 @@ namespace NeKzBot.Modules.Public
 								return;
 							}
 
-							var profile = await _client.GetProfileAsync(e.User.Name.Trim());
+							var profile = await _client.GetProfileAsync(e.User.Name);
 							if ((profile == null)
 							&& (e.User.Nickname != null))
-								profile = await _client.GetProfileAsync(e.User.Nickname.Trim());
+								profile = await _client.GetProfileAsync(e.User.Nickname);
 
 							if (profile != null)
 							{
@@ -720,6 +723,31 @@ namespace NeKzBot.Modules.Public
 						}
 						else
 							await e.Channel.SendMessage("Couldn't parse a leaderboard.");
+					});
+			return Task.FromResult(0);
+		}
+
+		private static Task GetDemoInformation(string c)
+		{
+			CService.CreateCommand(c)
+					.Alias("demoinfo")
+					.Description("Returns information about an entry demo with a given changelog id.")
+					.Parameter("changelog_id", ParameterType.Required)
+					.Do(async e =>
+					{
+						if (uint.TryParse(e.GetArg("changelog_id"), out var id))
+						{
+							var content = await _client.GetDemoContentAsync(id);
+							if (content != default(string))
+							{
+								var demo = await SourceDemo.ParseContentAsync(Encoding.UTF8.GetBytes(content));
+								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(await Utils.GenerateDemoEmbed(demo)));
+							}
+							else
+								await e.Channel.SendMessage("Couldn't get any information about this id.");
+						}
+						else
+							await e.Channel.SendMessage("Changelog id should be an unsigned integer.");
 					});
 			return Task.FromResult(0);
 		}

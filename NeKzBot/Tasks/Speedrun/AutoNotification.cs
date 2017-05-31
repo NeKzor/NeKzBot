@@ -21,7 +21,7 @@ namespace NeKzBot.Tasks.Speedrun
 			private static uint _notificationCount;
 			private static uint _refreshTime;
 			private static string _cacheKey;
-			private static readonly string _webhookavatar = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png";	// Should make a static link instead because this might break once...
+			private static readonly string _webhookAvatar = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png";	// Should make a static link instead because this might break once...
 
 			public static async Task InitAsync()
 			{
@@ -74,7 +74,7 @@ namespace NeKzBot.Tasks.Speedrun
 									var hook = new Webhook
 									{
 										UserName = "SpeedrunCom",
-										AvatarUrl = _webhookavatar,
+										AvatarUrl = _webhookAvatar,
 										Embeds = new Embed[] { await CreateEmbedAsync(notification) }
 									};
 

@@ -18,7 +18,6 @@ namespace NeKzBot.Resources
 		public static string ResourcesPublic;
 		public static string RestPublic;
 		public static string VipServersOnly;
-		public static string LeaderboardPrivate;
 		public static string BotOwnerOnly;
 		public static string SpecialPermissionsOnly;
 
@@ -58,7 +57,8 @@ namespace NeKzBot.Resources
 													  "• You can also set a custom tickrate like this: `1=sec66`.\n" +
 													  "• You can create a startdemos command very quickly with this: `10->demo_`.\n" +
 													  "• You can view the image preview of a Steam workshop item by just sending a valid uri which should have `https` or `http` in the beginning.\n" +
-													  "• Source Engine demo files will be parsed automatically if you upload them as an attachment (parsing means that information about that demo will be returned).";
+													  "• Source Engine demo files will be parsed automatically if you upload them as an attachment (parsing means that information about that demo will be returned).\n" +
+													  $"• If you don't want to parse your demo then put `{Configuration.Default.PrefixCmd}donotparse` at the end of your text message.";
 
 		public static readonly string[] BotGreetings = { "Hey!", "Yo!", "Hi!", "Hello!", "Hei!", "Hej!", "Hallo!", "Beep boop!", "Hola!", "Salut!", "Привет!", "Ciao!" };
 		public static readonly string[] BotFeelings = { ":grinning:", ":grimacing:", ":grin:", ":smiley:", ":smile:", ":sweat_smile:", ":wink:", ":slight_smile:", ":rage:", ":yum:", ":blush:", ":robot:", ":thumbsup:", ":ok_hand:", ":v:", ":heart:" };
@@ -109,14 +109,13 @@ namespace NeKzBot.Resources
 			ListModules = await Utils.GenerateModuleListAsync("Available Modules", "Invoke one of them to show the full list.", commands: new[] { "fun", "info", "portal2", "speedrun", "other", "raspberry", "resource", "rest", "vip" });
 			FunPublic = await Utils.GenerateModuleListAsync("Fun Module", commands: new[] { "cheat", "exploit", "funfact", "hello", "ris", "meme", "routecredit", "question" });
 			InfoPublic = await Utils.GenerateModuleListAsync("Info Module", commands: new[] { "when", "idinfo", "bot uptime", "bot location", "bot info", "bot version", "bot changelog", "bot guilds" });
-			LeaderboardPublic = await Utils.GenerateModuleListAsync("Portal 2 Leaderboard Module", commands: new[] { "latestwr", "wr", "rank", "player", "latestentry", "compare", "top" });
+			LeaderboardPublic = await Utils.GenerateModuleListAsync("Portal 2 Leaderboard Module", commands: new[] { "latestwr", "wr", "rank", "player", "latestentry", "compare", "top", "analyze" });
 			SpeedrunComPublic = await Utils.GenerateModuleListAsync("SpeedrunCom Module", specialprefix: Configuration.Default.PrefixCmd.ToString(), commands: new[] { "wr", "wrs", "top", "pbs", "game", "player", "moderators", "haswr", "rules", "ilrules", "notification", "category", "categories" });
 			OthersPublic = await Utils.GenerateModuleListAsync("Other Module", commands: new[] { "meme", "tool", "link", "quote" });
 			LinuxOnly = await Utils.GenerateModuleListAsync("Raspberry Pi Module", specialprefix: "rpi ", commands: new[] { "specs", "date", "uptime", "temperature", "os" });
 			ResourcesPublic = await Utils.GenerateModuleListAsync("Resource Module", commands: new[] { "scripts", "dialogue", "segmented" });
 			RestPublic = await Utils.GenerateModuleListAsync("Rest Module", commands: new[] { "invite", "join", "view", "credits" });
 			VipServersOnly = await Utils.GenerateModuleListAsync("VIP Module", commands: new[] { "sound", "twitch", "upload", "cloud", "dbfolder", "dbdelete", "bot connect", "bot disconnect", "bot stop", "bot subscribe", "bot unsubscribe" });
-			LeaderboardPrivate = await Utils.GenerateModuleListAsync("Portal 2 Leaderboard Module - Bot Owner Only", specialprefix: $"{Configuration.Default.LeaderboardCmd} ", commands: new[] { "cachetime", "setcachetime" });
 			BotOwnerOnly = await Utils.GenerateModuleListAsync("Bot Module - Bot Owner Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "newgame", "setgame", "echo", "send", "add", "delete", "reload", "showdata", "datavars", "cleanconfig", "revive", "taskstatus", "watches", "webhooktest", "react", "contestrules", "contestgame", "contestmap", "setcontest", "opencontest", "closecontest" });
 			SpecialPermissionsOnly = await Utils.GenerateModuleListAsync("Bot Module - Special Permissions Only", specialprefix: $"{Configuration.Default.BotCmd} ", commands: new[] { "react", "setnickname", "pin", "cleanup", "cleanuprange" });
 		}

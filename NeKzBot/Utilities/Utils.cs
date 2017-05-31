@@ -4,7 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
+using SourceDemoParser.Net;
+using NeKzBot.Extensions;
 using NeKzBot.Internals.Entities;
+using NeKzBot.Resources;
 using NeKzBot.Server;
 
 namespace NeKzBot.Utilities
@@ -119,6 +122,59 @@ namespace NeKzBot.Utilities
 			return (string.IsNullOrEmpty(footer))
 						  ? $"**[{title}]**{desc}{output}"
 						  : $"**[{title}]**{desc}{output}\n{footer}";
+		}
+
+		public static Task<Embed> GenerateDemoEmbed(SourceDemo demo)
+		{
+			var game = demo.GameInfo.Name;
+			var mode = demo.GameInfo.Mode;
+			var player = demo.Client;
+			var mapname = demo.MapName;
+			var alias = demo.GameInfo.GetMapAlias(mapname);
+			var adjusted = demo.AdjustedTicks;
+			var ticks = demo.PlaybackTicks;
+			var time = demo.PlaybackTime;
+			var tickrate = demo.GetTickrate();
+			if (ticks != adjusted)
+			{
+				ticks = adjusted;
+				time = demo.GetAdjustedTime();
+			}
+			// Just filling the last embed field with useless and inaccurate information because I don't know what else I could put in there
+			// Calculate jump count (not a real jump but if you could somehow combine this by looking for the FL_ONGROUND flag then it should work)
+			var jumps = demo.ConsoleCommands.Where(frame => frame.ConsoleCommand.StartsWith("+jump"));
+			var registeredjumps = jumps.Count();
+			var command = jumps.FirstOrDefault();
+			var actualjumps = 0;
+			if (registeredjumps > 1)
+			{
+				foreach (var frame in jumps.Skip(1))
+				{
+					if (command.CurrentTick != frame.CurrentTick)
+						actualjumps++;
+					command = frame;
+				}
+			}
+			else
+				actualjumps = registeredjumps;
+
+			return Task.FromResult(new Embed
+			{
+				Title = "Demo Info",
+				Url = "https://github.com/NeKzor/SourceDemoParser.Net",
+				Color = Data.BasicColor.RawValue,
+				Fields = new EmbedField[]
+				{
+					// I trust you guys, do not try to break this :s (escaping)
+					new EmbedField("Game",  game + $"{((string.IsNullOrEmpty(mode)) ? string.Empty : $"\n{mode}")}", true),
+					new EmbedField("Player", player, true),
+					new EmbedField("Time", $"{ticks} ticks\n{time.ToString("N3")}s", true),
+					new EmbedField("Map",  mapname + $"{((string.IsNullOrEmpty(alias)) ? string.Empty : $"\n{alias}")}", true),
+					new EmbedField("Tickrate", $"{tickrate}", true),
+					new EmbedField("Stats", $"Jump Inputs: {registeredjumps}\nJump Ticks: {actualjumps}", true)
+				},
+				Footer = new EmbedFooter("Parsed with SourceDemoParser.Net")
+			});
 		}
 	}
 }

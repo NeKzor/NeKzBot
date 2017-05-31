@@ -15,8 +15,8 @@ namespace NeKzBot.Tasks.Speedrun
 		private static List<WebHeader> _headers;
 		private static Fetcher _fetchClient;
 
-		private const int _maxnfcount = 10;
-		private const int _maxnffetchcount = 100;
+		private const int _maxCount = 10;
+		private const int _maxFetchCount = 100;
 
 		public static async Task InitAsync()
 		{
@@ -32,7 +32,7 @@ namespace NeKzBot.Tasks.Speedrun
 				new WebHeader("User-Agent", $"{Configuration.Default.AppName}/{Configuration.Default.AppVersion}")
 			};
 			_fetchClient = new Fetcher(_headers);
-			if (!_client.IsAccessTokenValid)
+			if (!(_client.IsAccessTokenValid))
 				await Logger.SendAsync("Invalid Token");
 		}
 
@@ -494,7 +494,7 @@ namespace NeKzBot.Tasks.Speedrun
 			var json = default(string);
 			try
 			{
-				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}");
+				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxFetchCount}");
 			}
 			catch (Exception e)
 			{
@@ -504,7 +504,7 @@ namespace NeKzBot.Tasks.Speedrun
 			try
 			{
 				if (string.Equals(scount, "x", StringComparison.CurrentCultureIgnoreCase))
-					scount = _maxnfcount.ToString();
+					scount = _maxCount.ToString();
 
 				if (!(uint.TryParse(scount, out var count)))
 					return null;
@@ -566,7 +566,7 @@ namespace NeKzBot.Tasks.Speedrun
 			var json = default(string);
 			try
 			{
-				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxnffetchcount}");
+				json = await _fetchClient.GetStringAsync($"https://www.speedrun.com/api/v1/notifications?max={_maxFetchCount}");
 			}
 			catch (Exception e)
 			{

@@ -161,8 +161,8 @@ namespace NeKzBot.Modules.Public
 				var data = (await Data.Get<Submissions>("contest")).Players.Find(s => s.UserId == msg.User.Id);
 				if (data != null)
 				{
-					if (await SourceDemo.TryParse(await Utils.GetAppPath() + $"/Resources/Private/submissions/{msg.User.Id}.dem", out var demo))
-						await msg.Channel.SendMessage($"**[{data.SubmisionDate.ToString("s")}]**\n{demo.MapName} in {demo.AdjustedTicks} ({demo.AdjustedTime.ToString("N3")}s) by {demo.Client}.");
+					if (await SourceDemo.TryParseFile(await Utils.GetAppPath() + $"/Resources/Private/submissions/{msg.User.Id}.dem", out var demo))
+						await msg.Channel.SendMessage($"**[{data.SubmisionDate.ToString("s")}]**\n{demo.MapName} in {demo.AdjustedTicks} ({demo.GetAdjustedTime().ToString("N3")}s) by {demo.Client}.");
 					else
 						await msg.Channel.SendMessage("Your demo could not be found or parsed. Please contact the bot owner.");
 				}
@@ -210,7 +210,7 @@ namespace NeKzBot.Modules.Public
 							else
 							{
 								// Validate file
-								if (await SourceDemo.TryParse(cachefile, out var demo))
+								if (await SourceDemo.TryParseFile(cachefile, out var demo))
 								{
 									if (demo.GameInfo.Name != contest.GameName)
 										return SubmissionError.WrongGame;

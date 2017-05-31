@@ -124,7 +124,7 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"{Data.LeaderboardPrivate}\n{Data.BotOwnerOnly}");
+						await e.Channel.SendMessage($"{Data.BotOwnerOnly}");
 					});
 
 			CService.CreateCommand("special")
