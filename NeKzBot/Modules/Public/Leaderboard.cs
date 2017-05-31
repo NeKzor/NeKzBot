@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Portal2Boards.Net;
@@ -738,9 +737,9 @@ namespace NeKzBot.Modules.Public
 						if (uint.TryParse(e.GetArg("changelog_id"), out var id))
 						{
 							var content = await _client.GetDemoContentAsync(id);
-							if (content != default(string))
+							if (content != default(byte[]))
 							{
-								var demo = await SourceDemo.ParseContentAsync(Encoding.UTF8.GetBytes(content));
+								var demo = await SourceDemo.ParseContentAsync(content);
 								await Bot.SendAsync(CustomRequest.SendMessage(e.Channel.Id), new CustomMessage(await Utils.GenerateDemoEmbed(demo)));
 							}
 							else

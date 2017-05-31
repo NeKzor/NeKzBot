@@ -33,12 +33,10 @@ namespace NeKzBot.Modules.Public
 					.Do(async e =>
 					{
 						await e.Channel.SendIsTyping();
-						if (e.Server.Id == Credentials.Default.DiscordMainServerId)
-							await e.Channel.SendMessage($"{Data.ListModules}\n• `{Configuration.Default.PrefixCmd}development`{Data.MoreInformation}");
-						else if (e.User.Id == Credentials.Default.DiscordBotOwnerId)
-							await e.Channel.SendMessage($"{Data.ListModules}\n• `{Configuration.Default.PrefixCmd}development`\n• `{Configuration.Default.PrefixCmd}private`\n• `{Configuration.Default.PrefixCmd}hidden`{Data.MoreInformation}");
-						else
-							await e.Channel.SendMessage(Data.ListModules + Data.MoreInformation);
+						var botowner = (e.User.Id == Credentials.Default.DiscordBotOwnerId)
+												  ? $"\n• `{Configuration.Default.PrefixCmd}private`\n• `{Configuration.Default.PrefixCmd}hidden`"
+												  : string.Empty;
+						await e.Channel.SendMessage(Data.ListModules + botowner + Data.MoreInformation);
 					});
 
 			CService.CreateCommand("fun")

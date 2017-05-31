@@ -75,16 +75,6 @@ namespace NeKzBot.Modules.Public.Others
 							await e.Channel.SendFile(path);
 						}
 					});
-
-			// Hidden
-			CService.CreateCommand("devserver")
-					.Description("Returns the static invite link of the developer server.")
-					.Hide()
-					.Do(async e =>
-					{
-						await e.Channel.SendIsTyping();
-						await e.Channel.SendMessage($"https://discord.gg/{Credentials.Default.DiscordMainServerLinkId}");
-					});
 			return Task.FromResult(0);
 		}
 
