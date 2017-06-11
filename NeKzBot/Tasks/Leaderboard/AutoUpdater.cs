@@ -101,8 +101,8 @@ namespace NeKzBot.Tasks.Leaderboard
 									// Inject a nice feature which the leaderboard doesn't have
 									var delta = await GetWorldRecordDelta(update) ?? -1;
 									var wrdelta = (delta != -1)
-															? $" (-{delta.ToString("N2")})"
-															: string.Empty;
+														 ? $" (-{delta.ToString("N2")})"
+														 : string.Empty;
 
 									// RIP channel messages, webhooks are the future
 									foreach (var item in (await Data.Get<Subscription>("p2hook")).Subscribers)
@@ -117,21 +117,24 @@ namespace NeKzBot.Tasks.Leaderboard
 
 									// Send it to Twitter too (please don't have a long username, thanks)
 									var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
-																			$"{update.Score.Current.AsTimeToString()}{wrdelta} by {update.Player.Name}\n" +
-																			$"{update.Date?.DateTimeToString()} (UTC)",
-																			(update.DemoExists) ? update.DemoLink : string.Empty,
-																			(update.VideoExists) ? update.VideoLink : string.Empty);
+																		   $"{update.Score.Current.AsTimeToString()}{wrdelta} by {update.Player.Name}\n" +
+																		   $"{update.Date?.DateTimeToString()} (UTC)",
+																		   (update.DemoExists) ? update.DemoLink : string.Empty,
+																		   (update.VideoExists) ? update.VideoLink : string.Empty);
 									if (tweet != string.Empty)
 									{
 										var sent = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
 
 										// Send player comment as reply to the sent tweet
-										var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
-										if ((sent?.Response.StatusCode == HttpStatusCode.OK)
-										&& (reply != string.Empty))
-											await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, sent.Value.Id);
-										else
-											await Logger.SendAsync("Portal2Board.AutoUpdater.StartAsync Tweet Error", LogColor.Error);
+										if (update.CommentExists)
+										{
+											var reply = await FormatReplyTweetAsync(update.Player.Name, update.Comment);
+											if ((sent?.Response.StatusCode == HttpStatusCode.OK)
+											&& (reply != string.Empty))
+												await Twitter.SendReplyAsync(LeaderboardTwitterAccount, reply, sent.Value.Id);
+											else
+												await Logger.SendAsync("Portal2Board.AutoUpdater.StartAsync Tweet Error", LogColor.Error);
+										}
 									}
 								}
 

@@ -82,13 +82,13 @@ namespace NeKzBot.Resources
 		public const string CreditsCommand = "credits";
 		public const string ExploitCommand = "exploit";
 		public const string SegmentedRunCommand = "segmented";
-		public const string Portal2RecordsIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/portal2records_icon.png";
-		public const string SpeedrunComIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/speedruncom_icon.png";
-		public const string TwitchTvIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/twitchtv_icon.ico";
-		public const string SteamCommunityIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/steamcommunity_icon.ico";
-		public const string Portal2RecordsWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
-		public const string SpeedrunComWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/speedruncom_webhookavatar.png";
-		public const string TwitchTvWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/twitchtv_webhookavatar.png";
+		public const string Portal2RecordsIconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/portal2records_icon.png";
+		public const string SpeedrunComIconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/speedruncom_icon.png";
+		public const string TwitchTvIconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/twitchtv_icon.png";
+		public const string SteamCommunityIconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/steamcommunity_icon.png";
+		public const string Portal2RecordsWebhookAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
+		public const string SpeedrunComWebhookAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/speedruncom_webhookavatar.png";
+		public const string TwitchTvWebhookAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/NeKzBot/Resources/Public/twitchtv_webhookavatar.png";
 		public const string ServerSpecs = "**Architecture**\n • ARMv8 64/32-bit\n" +
 										  "**SoC**\n • Broadcom BCM2837\n" +
 										  "**CPU**\n • 1.2 GHz 64-bit quad-core ARM Cortex-A53\n" +

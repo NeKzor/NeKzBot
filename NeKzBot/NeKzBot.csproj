@@ -236,8 +236,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Resources\Public\" />
+    <Content Include="Resources\Public\portal2records_icon.png" />
+    <Content Include="Resources\Public\portal2records_webhookavatar.jpg" />
+    <Content Include="Resources\Public\speedruncom_icon.png" />
+    <Content Include="Resources\Public\speedruncom_webhookavatar.png" />
+    <Content Include="Resources\Public\steamcommunity_icon.png" />
+    <Content Include="Resources\Public\twitchtv_icon.png" />
+    <Content Include="Resources\Public\twitchtv_webhookavatar.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
