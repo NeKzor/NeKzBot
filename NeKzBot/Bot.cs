@@ -166,8 +166,7 @@ namespace NeKzBot
 
 		public void Dispose()
 		{
-			Client = null;
-			GC.Collect();
+			Client?.Dispose();
 		}
 	}
 }

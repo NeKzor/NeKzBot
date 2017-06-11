@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NeKzBot.Classes;
 using NeKzBot.Extensions;
@@ -20,14 +21,15 @@ namespace NeKzBot.Tasks.Speedrun
 			public static InternalWatch Watch { get; } = new InternalWatch();
 			private static uint _notificationCount;
 			private static uint _refreshTime;
+			private static uint _rateLimit;
 			private static string _cacheKey;
-			private static readonly string _webhookAvatar = "https://pbs.twimg.com/profile_images/500500884757831682/L0qajD-Q_400x400.png";	// Should make a static link instead because this might break once...
 
 			public static async Task InitAsync()
 			{
 				await Logger.SendAsync("Initializing SpeedrunCom AutoNotification", LogColor.Init);
-				_notificationCount = 10;
-				_refreshTime = 1 * 60 * 1000;	// 1 minute
+				_notificationCount = 50;
+				_refreshTime = 1 * 60 * 1000;   // 1 minute
+				_rateLimit = 20;                // ^Max 10 notifications in this time
 				_cacheKey = "autonf";
 
 				// Reserve cache memory
@@ -53,28 +55,28 @@ namespace NeKzBot.Tasks.Speedrun
 													? await GetNotificationUpdatesAsync(1)
 													: await GetNotificationUpdatesAsync(_notificationCount);
 
-						if ((notifications != null)
-						&& (notifications?.Count > 0))
+						if (notifications?.Count > 0)
 						{
 							// Find the last notification
 							var nfstosend = new List<SpeedrunNotification>();
 							foreach (var notification in notifications)
 							{
-								if (cache != notification.Cache)
+								if (cache != notification.Id)
 									nfstosend.Add(notification);
 								else
 									break;
 							}
-							if (nfstosend?.Count > 0)
+
+							// Rate limit
+							if (nfstosend.Count <= _rateLimit)
 							{
 								nfstosend.Reverse();
-								// NOTE: this can hit the rate limit pretty easily if the bot is offline for a while
 								foreach (var notification in nfstosend)
 								{
 									var hook = new Webhook
 									{
 										UserName = "SpeedrunCom",
-										AvatarUrl = _webhookAvatar,
+										AvatarUrl = Data.SpeedrunComWebhookAvatar,
 										Embeds = new Embed[] { await CreateEmbedAsync(notification) }
 									};
 
@@ -87,12 +89,22 @@ namespace NeKzBot.Tasks.Speedrun
 									foreach (var subscriber in (await Data.Get<Subscription>("srcomsourcehook")).Subscribers)
 										await WebhookService.ExecuteWebhookAsync(subscriber, hook);
 								}
-								// Save cache
-								var newcache = nfstosend[nfstosend.Count - 1].Cache;
-								await Logger.SendAsync($"SpeedrunCom.AutoNotification.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
-								await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
+
+								if (nfstosend.Count >= 1)
+								{
+									// Save cache
+									var newcache = nfstosend.Last().Id;
+									await Logger.SendAsync($"SpeedrunCom.AutoNotification.StartAsync Caching -> {await Utils.StringInBytes(newcache)} bytes", LogColor.Caching);
+									await Caching.CFile.SaveCacheAsync(_cacheKey, newcache);
+									newcache = null;
+								}
 							}
+							else
+								await Logger.SendAsync("SpeedrunCom.AutoNotification.StartAsync Rate Limit Exceeded", LogColor.Error);
+							nfstosend = null;
 						}
+						notifications = null;
+						cache = null;
 						// Check every minute (max speed request is 100 per min tho)
 						var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "Speedrun.AutoNotification.StartAsync Delay Took -> ");
 						await Task.Delay((delay > 0) ? delay : 0);
@@ -110,7 +122,7 @@ namespace NeKzBot.Tasks.Speedrun
 			private static async Task<Embed> CreateEmbedAsync(SpeedrunNotification nf)
 			{
 				if (string.IsNullOrEmpty(nf.FormattedText))
-					await Logger.SendToChannelAsync("SpeedrunCom.CreateEmbedAsync Text Is Empty", LogColor.Speedrun);
+					await Logger.SendToChannelAsync($"SpeedrunCom.CreateEmbedAsync Text Is Empty (ID = {nf.Id}", LogColor.Speedrun);
 
 				var embed = new Embed
 				{

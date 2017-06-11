@@ -69,25 +69,24 @@ namespace NeKzBot.Tasks.Leaderboard
 					for (;;)
 					{
 						// Get cache from file
-						var cache = await Caching.CFile.GetFileAsync(_cacheKey);
+						uint.TryParse(await Caching.CFile.GetFileAsync(_cacheKey), out var cache);
 
 						// Download changelog
 						var entryupdates = await _client.GetChangelogAsync();
 						if (entryupdates != null)
 						{
 							var sendupdates = new List<EntryData>();
-							if (!(string.IsNullOrEmpty(cache)))
+							if (cache != default(uint))
 							{
 								// Find the last entry
 								foreach (var update in entryupdates)
 								{
-									// Cache is now the entry id
-									if (cache != $"{update.Id}")
-										sendupdates.Add(update);
-									else
+									// Also take next one if the entry doesn't exist anymore
+									if (cache >= update.Id)
 										break;
+									sendupdates.Add(update);
 								}
-								cache = null;
+								cache = default(uint);
 							}
 							else
 								sendupdates.Add(entryupdates.First());
@@ -111,17 +110,17 @@ namespace NeKzBot.Tasks.Leaderboard
 										await WebhookService.ExecuteWebhookAsync(item, new Webhook
 										{
 											UserName = "Portal2Records",
-											AvatarUrl = "https://pbs.twimg.com/profile_images/822441679529635840/eqTCg0eb.jpg",
+											AvatarUrl = Data.Portal2RecordsWebhookAvatar,
 											Embeds = new Embed[] { await CreateEmbedAsync(update, wrdelta) }
 										});
 									}
 
 									// Send it to Twitter too (please don't have a long username, thanks)
 									var tweet = await FormatMainTweetAsync($"New World Record in {update.Map.Name}\n" +
-																		   $"{update.Score.Current.AsTimeToString()}{wrdelta} by {update.Player.Name}\n" +
-																		   $"{update.Date?.DateTimeToString()} (UTC)",
-																		   (update.DemoExists) ? update.DemoLink : string.Empty,
-																		   (update.VideoExists) ? update.VideoLink : string.Empty);
+																			$"{update.Score.Current.AsTimeToString()}{wrdelta} by {update.Player.Name}\n" +
+																			$"{update.Date?.DateTimeToString()} (UTC)",
+																			(update.DemoExists) ? update.DemoLink : string.Empty,
+																			(update.VideoExists) ? update.VideoLink : string.Empty);
 									if (tweet != string.Empty)
 									{
 										var sent = await Twitter.SendTweetAsync(LeaderboardTwitterAccount, tweet);
@@ -244,7 +243,7 @@ namespace NeKzBot.Tasks.Leaderboard
 					Color = Data.BoardColor.RawValue,
 					Image = new EmbedImage(wr.Map.ImageLinkFull),
 					Timestamp = DateTime.UtcNow.ToString("s"),  // Close enough
-					Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+					Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 					Fields = new EmbedField[]
 					{
 						new EmbedField("Map", wr.Map.Name, true),

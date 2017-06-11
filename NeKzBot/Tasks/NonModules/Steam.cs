@@ -43,7 +43,7 @@ namespace NeKzBot.Tasks.NonModules
 						Description = $"{await Utils.AsRawText(result.ItemTitle)} made by [{await Utils.AsRawText(result.UserName)}]({result.UserLink})",
 						Url = result.ItemLink,
 						Image = new EmbedImage(result.ItemImage),
-						Footer = new EmbedFooter("steamcommunity.com", Data.SteamcommunityIconUrl)
+						Footer = new EmbedFooter("steamcommunity.com", Data.SteamCommunityIconUrl)
 					}));
 					result = null;
 				}

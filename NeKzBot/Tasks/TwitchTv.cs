@@ -40,82 +40,86 @@ namespace NeKzBot.Tasks
 			{
 				// Reserve cache memory
 				await Caching.CFile.AddKeyAsync(_cacheKey);
+				var cache = (await Caching.CFile.GetFileAsync(_cacheKey))?.Split('|').ToList();
+				if (cache == null)
+					await Caching.CFile.SaveCacheAsync(_cacheKey, string.Empty);
 
 				for (;;)
 				{
 					// Get cache
-					var cache = (await Caching.CFile.GetFileAsync(_cacheKey))?.Split('|').ToList();
-					if (cache == null)
+					cache = (await Caching.CFile.GetFileAsync(_cacheKey))?.Split('|').ToList();
+					if (cache != null)
 					{
-						await Caching.CFile.SaveCacheAsync(_cacheKey, string.Empty);
-						continue;
-					}
 #if DEBUG
 					await Logger.SendAsync(await Utils.CollectionToList(cache, delimiter: "|"));
 #endif
-					var streamers = (await Data.Get<Simple>("streamers")).Value;
-					foreach (var streamer in streamers.ToArray())
-					{
-						// Giving this a scanning rate because why not
-						await Task.Delay((int)_delayFactor * streamers.Count);
-
-						var obj = await TwitchApi.GetStreamAsync(streamer);
-						if (obj == null)
-							continue;
-
-						// Check if streamer is offline
-						var stream = obj.Stream;
-						if (stream != null)
+						var streamers = (await Data.Get<Simple>("streamers")).Value;
+						foreach (var streamer in streamers.ToArray())
 						{
-							// Ignore when already streaming
-							if (cache.Contains(streamer))
+							// Giving this a scanning rate because why not
+							await Task.Delay((int)_delayFactor * streamers.Count);
+
+							var obj = await TwitchApi.GetStreamAsync(streamer);
+							if (obj == null)
 								continue;
 
-							await Logger.SendAsync($"{streamer} IS LIVE", LogColor.Twitch);
-							await Logger.SendAsync($"TwitchTv.StartAsync Caching -> {await Utils.StringInBytes(streamer)} bytes", LogColor.Caching);
-							cache.Add(streamer);
-
-							// Save preview image, upload to dropbox and create a link
-							var filename = $"{stream.Channel?.DisplayName ?? "error"}.jpg";
-							var path = await Utils.GetAppPath() + $"/Resources/Cache/{filename}";
-							await _fetchClient.GetFileAsync(stream.Preview.Large, path);
-
-							// Not sure if this is actually a good idea, it delays everything :c
-							await DropboxCom.DeleteFileAsync("TwitchCache", filename);
-							await DropboxCom.UploadAsync("TwitchCache", filename, path);
-
-							// Overwrite new preview link
-							var link = await DropboxCom.CreateLinkAsync($"TwitchCache/{filename}");
-							stream.Preview.Large = (link != null)
-														 ? $"{link}&raw=1"
-														 : stream.Preview.Large;
-
-							foreach (var item in (await Data.Get<Subscription>("twtvhook")).Subscribers)
+							// Check if streamer is offline
+							var stream = obj.Stream;
+							if (stream != null)
 							{
-								await WebhookService.ExecuteWebhookAsync(item, new Webhook
+								// Ignore when already streaming
+								if (cache.Contains(streamer))
+									continue;
+
+								await Logger.SendAsync($"{streamer} IS LIVE", LogColor.Twitch);
+								await Logger.SendAsync($"TwitchTv.StartAsync Caching -> {await Utils.StringInBytes(streamer)} bytes", LogColor.Caching);
+								cache.Add(streamer);
+
+								//// Save preview image, upload to dropbox and create a link
+								//var filename = $"{stream.Channel?.DisplayName ?? "error"}.jpg";
+								//var path = await Utils.GetAppPath() + $"/Resources/Cache/{filename}";
+								//await _fetchClient.GetFileAsync(stream.Preview.Large, path);
+
+								//// Not sure if this is actually a good idea, it delays everything :c
+								//await DropboxCom.DeleteFileAsync("TwitchCache", filename);
+								//await DropboxCom.UploadAsync("TwitchCache", filename, path);
+
+								//// Overwrite new preview link
+								//var link = await DropboxCom.CreateLinkAsync($"TwitchCache/{filename}");
+								//if (link != null)
+								//	stream.Preview.Large = $"{link}&raw=1";
+								//await Logger.SendAsync(link ?? "ERROR LINK");
+#if RELEASE
+								foreach (var item in (await Data.Get<Subscription>("twtvhook")).Subscribers)
 								{
-									UserName = "TwitchTv",
-									AvatarUrl = "https://s3-us-west-2.amazonaws.com/web-design-ext-production/p/Glitch_474x356.png",
-									Embeds = new Embed[] { await CreateEmbedAsync(stream) }
-								});
-							}
-						}
-						// Remove from cache when not streaming
-						else if (cache.Contains(streamer))
-							cache.Remove(streamer);
-						obj = null;
-					}
-					// Clean up cache
-					var newcache = new List<string>() { string.Empty };
-					foreach (var item in cache.Skip(1))
-						if (streamers.Contains(item))
-							newcache.Add(item);
-					// Save cache
-#if DEBUG
-					await Logger.SendAsync(await Utils.CollectionToList(newcache, delimiter: "|"));
+									await WebhookService.ExecuteWebhookAsync(item, new Webhook
+									{
+										UserName = "TwitchTv",
+										AvatarUrl = Data.TwitchTvWebhookAvatar,
+										Embeds = new Embed[] { await CreateEmbedAsync(stream) }
+									});
+								}
 #endif
-					await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(newcache, delimiter: "|"));
-					cache = newcache = null;
+							}
+							// Remove from cache when not streaming
+							else if (cache.Contains(streamer))
+								cache.Remove(streamer);
+							obj = null;
+						}
+						// Clean up cache
+						var newcache = new List<string>() { string.Empty };
+						foreach (var item in cache.Skip(1))
+							if (streamers.Contains(item))
+								newcache.Add(item);
+						// Save cache
+#if DEBUG
+						await Logger.SendAsync(await Utils.CollectionToList(newcache, delimiter: "|"));
+#endif
+						await Caching.CFile.SaveCacheAsync(_cacheKey, await Utils.CollectionToList(newcache, delimiter: "|"));
+						cache = newcache = null;
+					}
+					else
+						await Logger.SendAsync("TwitchTv.StartAsync Cache Error");
 
 					var delay = (int)(_refreshTime) - await Watch.GetElapsedTime(debugmsg: "TwitchTv.StartAsync Delay Took -> ");
 					await Task.Delay((delay > 0 ) ? delay : 0);

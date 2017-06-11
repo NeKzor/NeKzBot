@@ -97,7 +97,7 @@ namespace NeKzBot.Tasks.Speedrun
 						EntryStatus = ((wr.Status.Type == RunStatusType.Verified)
 								   && (game.Ruleset.RequiresVerification)
 								   && (wr.Status.ExaminerUserID != null))
-																? $"Verified by {wr.Status.Examiner.Name}" + $"{(wr.Status.VerifyDate == null ? string.Empty : $" on {wr.Status.VerifyDate.Value.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")}")}"
+																? $"Verified by {wr.Status.Examiner.Name}{(wr.Status.VerifyDate == null ? string.Empty : $" on {wr.Status.VerifyDate.Value.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")}")}"
 																: string.Empty,
 						EntryComment = (string.IsNullOrEmpty(wr.Comment))
 											   ? string.Empty
@@ -549,7 +549,6 @@ namespace NeKzBot.Tasks.Speedrun
 							notification.Game.Link = game?.WebLink?.AbsoluteUri ?? string.Empty;
 							notification.Game.CoverLink = game?.Assets?.CoverSmall?.Uri?.AbsoluteUri ?? string.Empty;
 						}
-						await notification.BuildCache();
 						updates.Add(notification);
 					}
 				}
@@ -591,6 +590,7 @@ namespace NeKzBot.Tasks.Speedrun
 
 					var notification = new SpeedrunNotification()
 					{
+						Id = data?.id.ToString(),
 						CreationDate = data?.created.ToString() ?? string.Empty,
 						ContentText = data?.text.ToString() ?? string.Empty,
 						Type = (SpeedrunNotificationType)data?.item?.rel,
@@ -609,7 +609,6 @@ namespace NeKzBot.Tasks.Speedrun
 							notification.Game.Link = game?.WebLink?.AbsoluteUri ?? string.Empty;
 							notification.Game.CoverLink = game?.Assets?.CoverSmall?.Uri?.AbsoluteUri ?? string.Empty;
 						}
-						await notification.BuildCache();
 						updates.Add(notification);
 					}
 				}

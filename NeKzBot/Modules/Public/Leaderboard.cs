@@ -68,7 +68,7 @@ namespace NeKzBot.Modules.Public
 								Title = "Portal 2 World Record",
 								Url = changelog.RequestUrl,
 								Image = new EmbedImage(entry.ImageLinkFull),
-								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+								Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 								Fields = new EmbedField[]
 								{
 									new EmbedField("Map", entry.Map.Name, true),
@@ -151,7 +151,7 @@ namespace NeKzBot.Modules.Public
 								Title = "Portal 2 Entry",
 								Url = changelog.RequestUrl,
 								Image = new EmbedImage(entry.ImageLinkFull),
-								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+								Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 								Fields = new EmbedField[]
 								{
 									new EmbedField("Map", entry.Map.Name, true),
@@ -233,7 +233,7 @@ namespace NeKzBot.Modules.Public
 								Title = "Portal 2 World Record",
 								Url = changelog.RequestUrl,
 								Image = new EmbedImage(entry.ImageLinkFull),
-								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+								Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 								Fields = new EmbedField[]
 								{
 									new EmbedField("Map", entry.Map.Name, true),
@@ -307,7 +307,7 @@ namespace NeKzBot.Modules.Public
 									Color = Data.BoardColor.RawValue,
 									Title = "Portal 2 Profile",
 									Url = profile.RequestUrl,
-									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+									Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 									Fields = new EmbedField[]
 									{
 										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.PlayerRank.FormatRankToString()}\n" +
@@ -357,7 +357,7 @@ namespace NeKzBot.Modules.Public
 									Title = "Personal Record",
 									Url = profile.RequestUrl,
 									Image = new EmbedImage(map.ImageLinkFull),
-									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+									Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 									Fields = new EmbedField[]
 									{
 										new EmbedField("Map", map.Alias, true),
@@ -429,7 +429,7 @@ namespace NeKzBot.Modules.Public
 									Color = Data.BoardColor.RawValue,
 									Title = "Portal 2 Profile",
 									Url = profile.RequestUrl,
-									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+									Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 									Fields = new EmbedField[]
 									{
 										new EmbedField("Rank", $"Single Player • {user.Points.SinglePlayer.PlayerRank.FormatRankToString()}\n" +
@@ -475,7 +475,7 @@ namespace NeKzBot.Modules.Public
 									Title = "Personal Record",
 									Url = profile.RequestUrl,
 									Image = new EmbedImage(map.ImageLinkFull),
-									Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl),
+									Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl),
 									Fields = new EmbedField[]
 									{
 										new EmbedField("Map", map.Alias, true),
@@ -563,7 +563,7 @@ namespace NeKzBot.Modules.Public
 										Title = "Player Profile Comparison",
 										Description = await Utils.AsRawText(await Utils.CollectionToList(users.Select(user => user.DisplayName), delimiter: " vs ")),
 										Url = "https://board.iverb.me",
-										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
+										Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl)
 									};
 									foreach (var user in users)
 									{
@@ -621,7 +621,7 @@ namespace NeKzBot.Modules.Public
 										Title = "Player Rank Comparison",
 										Description = $"{await Utils.AsRawText(await Utils.CollectionToList(users.Select(user => user.DisplayName), delimiter: " vs "))}\non {map.Alias}",
 										Url = "https://board.iverb.me",
-										Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
+										Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl)
 									};
 									foreach (var user in users)
 									{
@@ -703,7 +703,7 @@ namespace NeKzBot.Modules.Public
 								Title = $"Portal 2 Top {data.Count()}",
 								Url = map.Link,
 								Image = new EmbedImage(map.ImageLinkFull),
-								Footer = new EmbedFooter("board.iverb.me", Data.Portal2IconUrl)
+								Footer = new EmbedFooter("board.iverb.me", Data.Portal2RecordsIconUrl)
 							}
 							.AddField(async field =>
 							{

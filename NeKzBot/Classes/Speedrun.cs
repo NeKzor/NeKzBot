@@ -52,12 +52,12 @@ namespace NeKzBot.Classes
 
 	public sealed class SpeedrunNotification
 	{
+		public string Id { get; set; }
 		public string ContentText { get; set; }
 		public string CreationDate { get; set; }
 		public string ContentLink { get; set; }
 		public SpeedrunNotificationType Type { get; set; }
 		public SpeedrunGame Game { get; private set; }
-		public string Cache { get; private set; }
 		public SpeedrunNotificationStatus Status { get; set; }
 		public SpeedrunPlayerProfile Author
 			=> (Type != SpeedrunNotificationType.Resource)
@@ -68,11 +68,6 @@ namespace NeKzBot.Classes
 		public Task BuildGame()
 		{
 			Game = new SpeedrunGame(ParsedGame);
-			return Task.FromResult(0);
-		}
-		public Task BuildCache()
-		{
-			Cache = CreationDate + ContentLink + ContentText;
 			return Task.FromResult(0);
 		}
 

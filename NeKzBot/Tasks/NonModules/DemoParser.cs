@@ -13,8 +13,8 @@ namespace NeKzBot.Tasks.NonModules
 	public static class DemoParser
 	{
 		private static readonly Fetcher _fetchClient = new Fetcher();
-		private static readonly string _cacheKey = "demo";
 
+		private const string _cacheKey = "demo";
 		private const uint _maxFileSize = 5000 * 1024;   // 5MB
 
 		// Parse demo files
@@ -24,6 +24,10 @@ namespace NeKzBot.Tasks.NonModules
 			{
 				// Could be useful
 				if (args.Message.Text.EndsWith($"{Configuration.Default.PrefixCmd}donotparse"))
+					return true;
+				if (args.Message.Text.EndsWith($"{Configuration.Default.PrefixCmd}dontparse"))
+					return true;
+				if (args.Message.Text.StartsWith("+render"))	// Support for GamingAndStuffs's bot
 					return true;
 
 				// I've never seen a message that had more than one attachment

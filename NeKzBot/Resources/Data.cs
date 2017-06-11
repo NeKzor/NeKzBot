@@ -36,14 +36,6 @@ namespace NeKzBot.Resources
 		public static readonly Color SteamColor = new Color(22, 26, 33);
 
 		public static readonly string MoreInformation = $"\n\nTry `{Configuration.Default.PrefixCmd}help <command>` for more information.";
-		public static readonly string CheatCommand = "cheat";
-		public static readonly string CreditsCommand = "credits";
-		public static readonly string ExploitCommand = "exploit";
-		public static readonly string SegmentedRunCommand = "segmented";
-		public static readonly string Portal2IconUrl = "https://lh5.ggpht.com/uOc3iqkehwJddeJ1d1HtaAQdSAVaViqPydyRfDFN8GGU9zrTkxKA5x7YDJ_3fkJSZA=w300"; // <- this link could break
-		public static readonly string SpeedrunComIconUrl = "https://www.speedrun.com/themes/default/favicon.png";
-		public static readonly string TwitchTvIconUrl = "https://www.twitch.tv/favicon.ico";
-		public static readonly string SteamcommunityIconUrl = "https://steamcommunity.com/favicon.ico";
 		public static readonly string SubscriptionListMessage = $"List of available subscriptions:\n• `{Portal2WebhookKeyword}` updates you about the latest Portal 2 challenge mode world records on board.iverb.me." +
 																$"\n• `{SpeedrunComSourceWebhookKeyword}` gets you the latest notifications about GoldSrc and Source Engine on speedrun.com." +
 																$"\n• `{SpeedrunComPortal2WebhookKeyword}` gets you the latest Portal 2 notifications on speedrun.com." +
@@ -86,6 +78,17 @@ namespace NeKzBot.Resources
 			UserStatus.DoNotDisturb
 		};
 
+		public const string CheatCommand = "cheat";
+		public const string CreditsCommand = "credits";
+		public const string ExploitCommand = "exploit";
+		public const string SegmentedRunCommand = "segmented";
+		public const string Portal2RecordsIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/portal2records_icon.png";
+		public const string SpeedrunComIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/speedruncom_icon.png";
+		public const string TwitchTvIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/twitchtv_icon.ico";
+		public const string SteamCommunityIconUrl = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/steamcommunity_icon.ico";
+		public const string Portal2RecordsWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
+		public const string SpeedrunComWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/speedruncom_webhookavatar.png";
+		public const string TwitchTvWebhookAvatar = "https://github.com/NeKzor/NeKzBot/raw/master/NeKzBot/Resources/Public/twitchtv_webhookavatar.png";
 		public const string ServerSpecs = "**Architecture**\n • ARMv8 64/32-bit\n" +
 										  "**SoC**\n • Broadcom BCM2837\n" +
 										  "**CPU**\n • 1.2 GHz 64-bit quad-core ARM Cortex-A53\n" +
