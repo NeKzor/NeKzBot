@@ -18,11 +18,11 @@
 * Runs on Linux + [Mono](https://www.mono-project.com)
 
 ## Documentation
-* [Permissions](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Permissions.md)
-* [Settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Settings.md)
-* [Audio](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Audio.md)
-* [RaspberryPi](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/RaspberryPi.md)
-* [Changelog](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Docs/Changelog.md)
+* [Permissions](NeKzBot/Docs/Permissions.md)
+* [Settings](NeKzBot/Docs/Settings.md)
+* [Audio](NeKzBot/Docs/Audio.md)
+* [RaspberryPi](NeKzBot/Docs/RaspberryPi.md)
+* [Changelog](NeKzBot/Docs/Changelog.md)
 
 ## Server
 * [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b)
