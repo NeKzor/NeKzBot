@@ -298,12 +298,8 @@
     <None Include="Data\Private\private.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Docs\Modules.md" />
-    <None Include="Docs\Settings.md" />
-    <None Include="Docs\Changelog.md" />
     <None Include="NeKzBotSelfBot.ruleset" />
     <None Include="packages.config" />
-    <None Include="README.md" />
     <None Include="Server\Configuration.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Configuration.Designer.cs</LastGenOutput>

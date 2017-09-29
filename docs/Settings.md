@@ -1,6 +1,6 @@
 ﻿# Settings
 
-## [/Server/Configuration.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Server/Configuration.settings)
+## [/Server/Configuration.settings](../NeKzBotSelfBot/Server/Configuration.settings)
 | Name | Description |
 | --- | --- |
 | AppName | Name of application, used for user agent. |
@@ -10,7 +10,7 @@
 | DropboxFolderName | Main folder in your app folder on dropbox.com. |
 | TwitchChannelLink | The default link of your Twitch channel, if you have one. |
 
-## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBotSelfBot/Server/Credentials.settings)
+## [/Server/Credentials.settings](../NeKzBotSelfBot/Server/Credentials.settings)
 | Name | Description |
 | --- | --- |
 | DiscordUserToken | Your own Discord account token, be careful with this, DO NOT share it with anyone. |
