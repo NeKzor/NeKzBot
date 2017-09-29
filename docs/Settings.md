@@ -1,6 +1,6 @@
 ﻿# Settings
 
-## [/Server/Configuration.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Configuration.settings)
+## [/Server/Configuration.settings](../NeKzBot/Server/Configuration.settings)
 | Name | Scope | Description |
 | --- | :-: | --- |
 | AppName | Application | Name of application, used for user agents. |
@@ -16,7 +16,7 @@
 | TwitterDescription | Application | Static Twitter description for the online-offline event updater. |
 | BotPermissions | Application | Integer of the permissions invite link value. Here's a nice [calculator](https://finitereality.github.io/permissions/?v=0) for that. |
 
-## [/Server/Credentials.settings](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Credentials.settings)
+## [/Server/Credentials.settings](../NeKzBot/Server/Credentials.settings)
 | Name | Description |
 | --- | --- |
 | DiscordBotOwnerId | Your Discord user id. |
@@ -39,6 +39,6 @@
 | /Resources/Private | All your json files are in there. |
 
 ## Other Settings
-* The default internal separator '|' can be changed in this class [Utils.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Utilities/FileUtils.cs#L15).
-* The default caching extension '.tmp' can be changed in this class [Caching.cs](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Server/Caching.cs#L37).
-* Don't forget to change the [assembly information](https://github.com/NeKzor/NeKzBot/blob/master/NeKzBot/Properties/AssemblyInfo.cs) too.
+* The default internal separator '|' can be changed in this class [Utils.cs](../NeKzBot/Utilities/FileUtils.cs#L15).
+* The default caching extension '.tmp' can be changed in this class [Caching.cs](../NeKzBot/Server/Caching.cs#L37).
+* Don't forget to change the [assembly information](../NeKzBot/Properties/AssemblyInfo.cs) too.

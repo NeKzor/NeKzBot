@@ -202,13 +202,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Docs\Permissions.md" />
-    <None Include="Docs\RaspberryPi.md" />
-    <None Include="Docs\Changelog.md" />
-    <None Include="Docs\Audio.md" />
-    <None Include="Docs\Settings.md" />
     <None Include="packages.config" />
-    <None Include="README.md" />
     <None Include="Resources\Cache\cache.tmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
