@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <Authors>NeKz</Authors>
+    <Company>NeKz</Company>
+    <Description>yo</Description>
+    <CodeAnalysisRuleSet>$(SolutionDir)\NeKzBot.ruleset</CodeAnalysisRuleSet>
+    <Version>2.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="credentials.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00832" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-alpha-build-00832" />
+    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-alpha-build-00832" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00832" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00832" />
+    <PackageReference Include="LiteDB" Version="3.1.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
+    <PackageReference Include="Portal2Boards.Net" Version="1.1.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Tasks\" />
+  </ItemGroup>
+</Project>

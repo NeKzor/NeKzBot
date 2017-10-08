@@ -1,53 +1,33 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeKzBot", "NeKzBot\NeKzBot.csproj", "{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeKzBot", "src\NeKzBot.csproj", "{D82A5042-732E-40C5-87AF-018F6D668C55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeKzBotSelfBot", "NeKzBotSelfBot\NeKzBotSelfBot.csproj", "{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E8099976-1410-4A42-9F74-7F222F4D2152}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A94F1E1C-C909-473B-A9CE-7677ABD6F509}"
 	ProjectSection(SolutionItems) = preProject
+		credentials.json = credentials.json
+		docs\Modules.md = docs\Modules.md
+		docs\Permissions.md = docs\Permissions.md
 		README.md = README.md
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|x64.Build.0 = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Debug|x86.Build.0 = Debug|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|x64.ActiveCfg = Release|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|x64.Build.0 = Release|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|x86.ActiveCfg = Release|Any CPU
-		{5083AFBC-D33F-46B5-A6DA-D6101A8F49CE}.Release|x86.Build.0 = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|x64.Build.0 = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Debug|x86.Build.0 = Debug|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|x64.ActiveCfg = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|x64.Build.0 = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|x86.ActiveCfg = Release|Any CPU
-		{B52C4B83-635C-4EE9-A97D-3B0DC9E04B9D}.Release|x86.Build.0 = Release|Any CPU
+		{D82A5042-732E-40C5-87AF-018F6D668C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D82A5042-732E-40C5-87AF-018F6D668C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D82A5042-732E-40C5-87AF-018F6D668C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D82A5042-732E-40C5-87AF-018F6D668C55}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A26A50E7-ACF8-4443-A7B8-DAAF0C6D6BEA}
 	EndGlobalSection
 EndGlobal
