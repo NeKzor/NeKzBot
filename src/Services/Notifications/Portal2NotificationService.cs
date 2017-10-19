@@ -18,26 +18,32 @@ namespace NeKzBot.Services.Notifciations
 {
 	public class Portal2NotificationService : NotificationService
 	{
-		public IConfiguration Config { get; set; }
-		public LiteDatabase DataBase { get; set; }
+		private readonly IConfiguration _config;
+		private readonly LiteDatabase _dataBase;
+		private readonly ChangelogParameters _parameters;
+		private Portal2BoardsClient _client;
 
-		private Portal2BoardsClient _client { get; }
-		private ChangelogParameters _parameters { get; }
+		public Portal2NotificationService(IConfiguration config, LiteDatabase dataBase)
+		{
+			_config = config;
+			_dataBase = dataBase;
+		}
 
-		public Portal2NotificationService()
+		public Task Initialize()
 		{
 			UserName = "Portal2Records";
 			UserAvatar = "https://github.com/NeKzor/NeKzBot/blob/old/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
 			SleepTime = 5 * 60 * 1000;
 
 			var http = new HttpClient();
-			http.DefaultRequestHeaders.UserAgent.ParseAdd(Config["user_agent"]);
+			http.DefaultRequestHeaders.UserAgent.ParseAdd(_config["user_agent"]);
 			var parameters = new ChangelogParameters
 			{
 				[Parameters.WorldRecord] = 1,
-				[Parameters.MaxDaysAgo] = 14,
+				[Parameters.MaxDaysAgo] = 14
 			};
 			_client = new Portal2BoardsClient(parameters, http, false);
+			return Task.CompletedTask;
 		}
 
 		public override async Task StartAsync()
@@ -48,7 +54,7 @@ namespace NeKzBot.Services.Notifciations
 				{
 					var watch = Stopwatch.StartNew();
 
-					var data = DataBase.GetCollection<Portal2NotificationCache>();
+					var data = _dataBase.GetCollection<Portal2NotificationCache>();
 					var cache = data.FindAll().FirstOrDefault();
 
 					var entries = await _client.GetChangelogAsync();
@@ -62,7 +68,7 @@ namespace NeKzBot.Services.Notifciations
 								break;
 							tosend.Add(entry);
 						}
-						cache.Id = default(uint);
+						cache.Id = default;
 					}
 					else
 						tosend.Add(entries.First());
@@ -189,7 +195,7 @@ namespace NeKzBot.Services.Notifciations
 				if (entry.Id == wr.Id)
 					found = true;
 			}
-			return default(float?);
+			return default;
 		}
 	}
 }
