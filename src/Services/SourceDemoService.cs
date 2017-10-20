@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using NeKzBot.API;
 using NeKzBot.Data;
 using SourceDemoParser;
+using SourceDemoParser.Extensions;
 
 namespace NeKzBot.Services
 {
@@ -27,6 +28,7 @@ namespace NeKzBot.Services
 			_defaultDemoPath = demoPath ?? @"demos\\";
 			_client = new WebClient(_config["user_agent"]);
 			_parser = new SourceParser(true);
+			SourceExtensions.DiscoverAsync();
 			return Task.CompletedTask;
 		}
 

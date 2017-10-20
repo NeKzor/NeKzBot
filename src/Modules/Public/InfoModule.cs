@@ -4,19 +4,20 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 
 namespace NeKzBot.Modules.Public
 {
-	public class InfoModule : ModuleBase<SocketCommandContext>
+	public class InfoModule : InteractiveBase<SocketCommandContext>
 	{
 		public CommandService Commands { get; set; }
 
 		[Command("info")]
 		public async Task Info()
 		{
-			await ReplyAsync("", embed: new EmbedBuilder
+			await ReplyAndDeleteAsync("", embed: new EmbedBuilder
 			{
 				Author = new EmbedAuthorBuilder
 				{
@@ -113,7 +114,8 @@ namespace NeKzBot.Modules.Public
 					output += $"\n**{module.Name}** with {module.Commands.Count} command{((module.Commands.Count == 1) ? string.Empty : "s")}";
 				field.Value = (output != string.Empty) ? output : "None modules are loaded.";
 			})
-			.Build());
+			.Build(),
+			timeout: TimeSpan.FromSeconds(60));
 		}
 
 		private Task<Color> GetColor(IUser user, IGuild guild)

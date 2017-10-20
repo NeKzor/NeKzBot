@@ -4,8 +4,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace NeKzBot.Services.Notifciations
 {
-	public class SpeedrunNotificationService : NotificationService
+	public class SpeedrunNotificationService : INotificationService
 	{
+		public string UserName { get; set; }
+		public string UserAvatar { get; set; }
+		public uint SleepTime { get; set; }
+		public bool Cancel { get; set; }
+
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _dataBase;
 
@@ -23,14 +28,24 @@ namespace NeKzBot.Services.Notifciations
 			return Task.CompletedTask;
 		}
 
-		public override Task StartAsync()
+		public Task StartAsync()
 		{
 			return Task.CompletedTask;
 		}
 
-		public override Task StopAsync()
+		public Task StopAsync()
 		{
 			return Task.CompletedTask;
+		}
+
+		public Task<bool> SubscribeAsync(ulong id, string token, bool test)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public Task<bool> UnsubscribeAsync(ulong id, bool test)
+		{
+			throw new System.NotImplementedException();
 		}
 	}
 }

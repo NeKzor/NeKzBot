@@ -1,14 +1,17 @@
 # NeKzBot 2.0
 
 ## Features
-* Notification Service
-  * [board.iverb.me](https://board.iverb.me)
-  * [speedrun.com](https://speedrun.com)
-* Support for .NET Core 1.1+
+* Services
+  * Notifications
+    * [board.iverb.me](https://board.iverb.me)
+    * [speedrun.com](https://speedrun.com)
+  * Source Engine
+    * Demo Parser
+    * Cvar Dictionary
 
 ## Documentation
-[Permissions](docs/Permissions.md)
-[Modules](docs/Modules.md)
+* [Permissions](docs/Permissions.md)
+* [Modules](docs/Modules.md)
 
 ## Credits
 * [Discord Developers](https://discordapp.com/developers)
@@ -16,6 +19,7 @@
 
 ## Libraries
 * [Discord.Addons.Interactive](https://github.com/foxbot/Discord.Addons.Interactive)
+* [Discord.Addons.Preconditions](https://github.com/Joe4evr/Discord.Addons/tree/master/src/Discord.Addons.Preconditions)
 * [LiteDB](https://github.com/mbdavid/LiteDB)
 * [Portal2Boards.Net](https://github.com/NeKzor/Portal2Boards.Net)
 * [SourceDemoParser.Net](https://github.com/NeKzor/SourceDemoParser.Net)

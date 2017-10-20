@@ -51,7 +51,7 @@ namespace NeKzBot.Services
 				if (message.Attachments.Count == 1)
 				{
 					var attachement = message.Attachments.ToList().First();
-					if ((attachement.Filename.EndsWith(".dem")) && (attachement.Size <= 5000 * 1024))
+					if ((attachement.Filename.EndsWith(".dem")) && (attachement.Size <= 5 * 1000 * 1000))
 						await _demoService.GetNewDemoAsync(message.Author.Id, attachement.Url);
 				}
 				return;
@@ -60,8 +60,10 @@ namespace NeKzBot.Services
 			var context = new SocketCommandContext(_client, message);
 			var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-			//if (result.Error.HasValue && result.Error.Value != CommandError.UnknownCommand)
-			//	await context.Channel.SendMessageAsync(result.ToString());
+#if DEBUG
+			if ((result.Error.HasValue) && (result.Error.Value != CommandError.UnknownCommand))
+				await context.Channel.SendMessageAsync(result.ToString());
+#endif
 		}
 	}
 }

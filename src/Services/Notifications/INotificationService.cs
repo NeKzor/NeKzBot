@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using Discord.Webhook;
+﻿using System.Threading.Tasks;
 
 namespace NeKzBot.Services.Notifciations
 {
@@ -10,10 +8,10 @@ namespace NeKzBot.Services.Notifciations
 		string UserAvatar { get; set; }
 		uint SleepTime { get; set; }
 		bool Cancel { get; set; }
-		ConcurrentDictionary<ulong, DiscordWebhookClient> Subscribers { get; set; }
-		Task<bool> SubscribeAsync(ulong id, string token, bool test);
-		Task<bool> UnsubscribeAsync(ulong id, bool test);
+		Task Initialize();
 		Task StartAsync();
 		Task StopAsync();
+		Task<bool> SubscribeAsync(ulong id, string token, bool test);
+		Task<bool> UnsubscribeAsync(ulong id, bool test);
 	}
 }

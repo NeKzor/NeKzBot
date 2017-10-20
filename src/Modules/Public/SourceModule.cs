@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
 using Discord.Commands;
 using NeKzBot.Services;
 using SourceDemoParser.Extensions;
@@ -10,7 +11,6 @@ namespace NeKzBot.Modules.Public
 {
 	public class SourceModule : ModuleBase<SocketCommandContext>
 	{
-		// TODO: Demo info, cvar dictionary
 		[Group("cvars"), Alias("cvar")]
 		public class CvarDictionary : InteractiveBase<SocketCommandContext>
 		{
@@ -102,6 +102,7 @@ namespace NeKzBot.Modules.Public
 				var demo = await DemoService.GetDemo(Context.User.Id);
 				await ReplyAndDeleteAsync((demo != null) ? $"{demo.SignOnLength}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
 			}
+			[Ratelimit(6, 1, Measure.Minutes)]
 			[Command("Messages"), Alias("msg")]
 			public async Task Messages()
 			{
@@ -128,6 +129,7 @@ end:
 					await PagedReplyAsync(pages);
 				}
 			}
+			[Ratelimit(6, 1, Measure.Minutes)]
 			[Command("Messages"), Alias("msg")]
 			public async Task Messages(int index)
 			{
@@ -159,6 +161,7 @@ end:
 				var demo = await DemoService.GetDemo(Context.User.Id);
 				await ReplyAndDeleteAsync((demo != null) ? $"{demo.GetTicksPerSecond()}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
 			}
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("AdjustExact()"), Alias("adj")]
 			public async Task AdjustExact()
 			{
@@ -176,6 +179,7 @@ end:
 					Console.WriteLine(ex.ToString());
 				}
 			}
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("AdjustFlag()"), Alias("adjf")]
 			public async Task AdjustFlag()
 			{
@@ -193,6 +197,7 @@ end:
 					Console.WriteLine(ex.ToString());
 				}
 			}
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("Adjust()"), Alias("adj2")]
 			public async Task Adjust()
 			{
@@ -217,14 +222,18 @@ end:
 			{
 				return ReplyAndDeleteAsync("Powered by SourceDemoParser.Net (v1.0-alpha)", timeout: TimeSpan.FromSeconds(60));
 			}
-			[Command("?"), Alias("o")]
+			[Command("?"), Alias("o", "help")]
 			public async Task QuestionMark()
 			{
 				var data = await DemoService.GetDemoData(Context.User.Id);
 				if (data == null)
-					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without invoking a bot command.", timeout: TimeSpan.FromSeconds(60));
 				else
-					await ReplyAndDeleteAsync($"[{data.Id}]\nDownload:\n{data.DownloadUrl}", timeout: TimeSpan.FromSeconds(60));
+				{
+					var index = data.DownloadUrl.LastIndexOf('\\');
+					var demoname = data.DownloadUrl.Substring(index, data.DownloadUrl.Length - index - 1);
+					await ReplyAndDeleteAsync($"Demo file *{demoname}* was uploaded by {data.Id}\nLink: {data.DownloadUrl}", timeout: TimeSpan.FromSeconds(60));
+				}
 			}
 		}
 	}

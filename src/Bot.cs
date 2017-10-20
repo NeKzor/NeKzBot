@@ -42,7 +42,7 @@ namespace NeKzBot
 			var p2s = services.GetRequiredService<Portal2NotificationService>();
 			var srs = services.GetRequiredService<SpeedrunNotificationService>();
 			var sds = services.GetRequiredService<SourceDemoService>();
-			var scs = services.GetRequiredService<SourceDemoService>();
+			var scs = services.GetRequiredService<SourceCvarService>();
 
 			await chs.Initialize(services);
 			await p2s.Initialize();

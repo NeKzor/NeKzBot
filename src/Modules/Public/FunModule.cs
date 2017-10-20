@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
 using Discord.Commands;
 using NeKzBot.Extensions;
 
 namespace NeKzBot.Modules.Public
 {
-	public class FunModule : ModuleBase<SocketCommandContext>
+	public class FunModule : InteractiveBase<SocketCommandContext>
 	{
+		[Ratelimit(6, 1, Measure.Minutes)]
 		[Command("ris")]
 		public async Task RegionalIndicatorSymbol([Remainder] string text)
 		{
@@ -39,7 +42,7 @@ namespace NeKzBot.Modules.Public
 					message += temp;
 			}
 			if (!string.IsNullOrEmpty(message))
-				await ReplyAsync(message);
+				await ReplyAndDeleteAsync(message, timeout: TimeSpan.FromSeconds(60));
 		}
 	}
 }
