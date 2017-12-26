@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using LiteDB;
 using NeKzBot.Services;
 using NeKzBot.Services.Notifciations;
+using Discord.Addons.Interactive;
 #if WIN7
 using Discord.Net.Providers.WS4Net;
 #endif
@@ -53,10 +54,10 @@ namespace NeKzBot
 			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
 			await _client.StartAsync();
 
-			await Task.WhenAll(
-				p2s.StartAsync(),
-				srs.StartAsync()
-			);
+			//await Task.WhenAll(
+			//	p2s.StartAsync()
+			//	srs.StartAsync()
+			//);
 
 			await Task.Delay(-1);
 		}
@@ -86,6 +87,7 @@ namespace NeKzBot
 #endif
 				}))
 				.AddSingleton<CommandHandlingService>()
+				.AddSingleton<InteractiveService>()
 				// Others
 				.AddSingleton<Portal2NotificationService>()
 				.AddSingleton<SpeedrunNotificationService>()

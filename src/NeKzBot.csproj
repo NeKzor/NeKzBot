@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Addons.Preconditions" Version="0.2.5-rc" />
     <PackageReference Include="Discord.Net" Version="2.0.0-alpha-build-00832" />
     <PackageReference Include="Discord.Net.Commands" Version="2.0.0-alpha-build-00832" />
     <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-alpha-build-00832" />

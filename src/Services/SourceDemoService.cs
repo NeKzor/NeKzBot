@@ -13,7 +13,6 @@ namespace NeKzBot.Services
 	{
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _dataBase;
-		private string _defaultDemoPath;
 		private WebClient _client;
 		private SourceParser _parser;
 
@@ -25,9 +24,8 @@ namespace NeKzBot.Services
 
 		public Task Initialize(string demoPath = null)
 		{
-			_defaultDemoPath = demoPath ?? @"demos\\";
 			_client = new WebClient(_config["user_agent"]);
-			_parser = new SourceParser(true);
+			_parser = new SourceParser(fastParsing: false, autoAdjustment: false);
 			SourceExtensions.DiscoverAsync();
 			return Task.CompletedTask;
 		}

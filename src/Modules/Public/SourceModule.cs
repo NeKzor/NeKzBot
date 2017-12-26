@@ -107,26 +107,30 @@ namespace NeKzBot.Modules.Public
 			public async Task Messages()
 			{
 				var demo = await DemoService.GetDemo(Context.User.Id);
-				if (demo != null)
+				if (demo == null)
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
 				else if (demo.Messages.Count == 0)
 					await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(60));
 				else
 				{
 					var pages = new List<string>();
-					for (int i = 0; i < demo.Messages.Count - 1; i += 3)
+					for (int i = 0; i < demo.Messages.Count - 1; i += 5)
 					{
 						var line = string.Empty;
-						for (int j = 0; j < 3; j++)
+						for (int j = 0; j < 5; j++)
 						{
 							if ((i + j) >= demo.Messages.Count)
 								goto end;
-							line += $"[{demo.Messages[i + j].Type}] at {demo.Messages[i + j].CurrentTick}\n-> {demo.Messages[i + j].Frame}";
+							line += $"[{i + j}] {demo.Messages[i + j].Type} at {demo.Messages[i + j].CurrentTick} -> {demo.Messages[i + j].Frame?.ToString() ?? "NULL"}\n";
 						}
 						pages.Add(line);
 					}
 end:
-					await PagedReplyAsync(pages);
+					await PagedReplyAsync(new PaginatedMessage
+					{
+						Color = Discord.Color.Blue,
+						Pages = pages
+					});
 				}
 			}
 			[Ratelimit(6, 1, Measure.Minutes)]
@@ -134,7 +138,7 @@ end:
 			public async Task Messages(int index)
 			{
 				var demo = await DemoService.GetDemo(Context.User.Id);
-				if (demo != null)
+				if (demo == null)
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
 				else if (demo.Messages.Count == 0)
 					await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(60));
@@ -143,7 +147,9 @@ end:
 				else
 				{
 					var result = demo.Messages[index];
-					var message = $"Type: {result.Type}\nTick: {result.CurrentTick}\nFrame: {result.Frame}";
+					var message = $"Type: {result.Type}\n" +
+						$"Tick: {result.CurrentTick}\n" +
+						$"Frame: {result.Frame?.ToString() ?? "NULL"}";
 					await ReplyAndDeleteAsync(message, timeout: TimeSpan.FromSeconds(60));
 				}
 			}
@@ -230,8 +236,8 @@ end:
 					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without invoking a bot command.", timeout: TimeSpan.FromSeconds(60));
 				else
 				{
-					var index = data.DownloadUrl.LastIndexOf('\\');
-					var demoname = data.DownloadUrl.Substring(index, data.DownloadUrl.Length - index - 1);
+					var index = data.DownloadUrl.LastIndexOf('/') + 1;
+					var demoname = data.DownloadUrl.Substring(index, data.DownloadUrl.Length - index);
 					await ReplyAndDeleteAsync($"Demo file *{demoname}* was uploaded by {data.Id}\nLink: {data.DownloadUrl}", timeout: TimeSpan.FromSeconds(60));
 				}
 			}

@@ -53,14 +53,14 @@ namespace NeKzBot.Services.Notifciations
 			_client = new Portal2BoardsClient(parameters, http, false);
 
 			_globalId = "Portal2NotificationService";
-			var data = _dataBase.GetCollection<CacheData>();
-			var cache = data.Find(d => d.Identifier == _globalId).FirstOrDefault();
+			var data = _dataBase.GetCollection<Portal2CacheData>();
+			var cache = data.FindOne(d => d.Identifier == _globalId);
 			if (cache == null)
 			{
-				cache = new CacheData()
+				cache = new Portal2CacheData()
 				{
 					Identifier = _globalId,
-					Value = new List<EntryData>()
+					Entries = new List<EntryData>()
 				};
 				data.Insert(cache);
 			}
@@ -75,17 +75,17 @@ namespace NeKzBot.Services.Notifciations
 				{
 					var watch = Stopwatch.StartNew();
 
-					var db = _dataBase.GetCollection<CacheData>();
-					var data = db.Find(d => d.Identifier == _globalId).FirstOrDefault();
+					var db = _dataBase.GetCollection<Portal2CacheData>();
+					var data = db.FindOne(d => d.Identifier == _globalId);
 					if (data == null)
 						throw new Exception("Data cache not found!");
 
-					var cache = data.Value as List<EntryData>;
+					var cache = data.Entries;
 					var entries = (await _client.GetChangelogAsync()).Where(x => !x.IsBanned);
 					var sending = new List<EntryData>();
 
 					// Will skip for the very first time
-					if (cache.Count != 0)
+					if (cache.Any())
 					{
 						// Check other cached entries too if the first one wasn't found (old score could be deleted/banned etc.)
 						foreach (var old in cache)
@@ -100,34 +100,36 @@ namespace NeKzBot.Services.Notifciations
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
 send:
-
 					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
-					if ((subscribers.Count() > 0) && (sending.Count <= 10))
+					if (subscribers.Count() > 0)
 					{
-						sending.Reverse();
-						foreach (var tosend in sending)
+						if (sending.Count <= 10)
 						{
+							sending.Reverse();
+							foreach (var tosend in sending)
+							{
 #if DEBUG
-							var watch2 = Stopwatch.StartNew();
+								var watch2 = Stopwatch.StartNew();
 #endif
-							var feature = await GetWorldRecordDelta(tosend) ?? -1;
+								var feature = await GetWorldRecordDelta(tosend) ?? -1;
 #if DEBUG
-							watch2.Stop();
-							Console.WriteLine($"Portal2NotificationService.GetWorldRecordDelta took: {watch2.ElapsedMilliseconds}ms");
+								watch2.Stop();
+								Console.WriteLine($"Portal2NotificationService.GetWorldRecordDelta took: {watch2.ElapsedMilliseconds}ms");
 #endif
-							var payload = (feature != default) ? $" (-{feature.ToString("N2")})" : string.Empty;
-							var embed = await CreateEmbed(tosend, payload);
+								var payload = (feature != default) ? $" (-{feature.ToString("N2")})" : string.Empty;
+								var embed = await CreateEmbed(tosend, payload);
 
-							// There might be a problem if we have lots of subscribers (retry then?)
-							foreach (var subscriber in subscribers.FindAll())
-								await subscriber.Client.SendMessageAsync("", embeds: new Embed[] { embed });
+								// There might be a problem if we have lots of subscribers (retry then?)
+								foreach (var subscriber in subscribers.FindAll())
+									await subscriber.Client.SendMessageAsync("", embeds: new Embed[] { embed });
+							}
 						}
+						else
+							throw new Exception("Webhook rate limit exceeded!");
 					}
-					else
-						throw new Exception("Webhook rate limit exceeded!");
 
 					// Cache
-					data.Value = entries;
+					data.Entries = entries.Take(10);
 					if (!db.Update(data))
 						throw new Exception("Failed to update cache!");
 
