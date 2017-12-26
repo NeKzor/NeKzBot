@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
+using Discord;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
+using NeKzBot.Data;
 
 namespace NeKzBot.Services.Notifciations
 {
@@ -38,12 +40,17 @@ namespace NeKzBot.Services.Notifciations
 			return Task.CompletedTask;
 		}
 
-		public Task<bool> SubscribeAsync(ulong id, string token, bool test)
+		public Task<bool> SubscribeAsync(IWebhook hook, bool test)
 		{
 			throw new System.NotImplementedException();
 		}
 
-		public Task<bool> UnsubscribeAsync(ulong id, bool test)
+		public Task<bool> UnsubscribeAsync(SubscriptionData subscription)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public Task<SubscriptionData> FindSubscription(ulong channelId)
 		{
 			throw new System.NotImplementedException();
 		}

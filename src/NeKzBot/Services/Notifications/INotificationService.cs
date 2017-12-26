@@ -1,4 +1,6 @@
 ﻿using System.Threading.Tasks;
+using Discord;
+using NeKzBot.Data;
 
 namespace NeKzBot.Services.Notifciations
 {
@@ -11,7 +13,8 @@ namespace NeKzBot.Services.Notifciations
 		Task Initialize();
 		Task StartAsync();
 		Task StopAsync();
-		Task<bool> SubscribeAsync(ulong id, string token, bool test);
-		Task<bool> UnsubscribeAsync(ulong id, bool test);
+		Task<bool> SubscribeAsync(IWebhook hook, bool test);
+		Task<bool> UnsubscribeAsync(SubscriptionData subscription);
+		Task<SubscriptionData> FindSubscription(ulong channelId);
 	}
 }

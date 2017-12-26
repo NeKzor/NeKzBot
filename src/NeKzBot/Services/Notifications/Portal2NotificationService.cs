@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Rest;
 using Discord.Webhook;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
@@ -27,7 +26,6 @@ namespace NeKzBot.Services.Notifciations
 
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _dataBase;
-		private readonly ChangelogParameters _parameters;
 		private Portal2BoardsClient _client;
 		private string _globalId;
 
@@ -39,8 +37,8 @@ namespace NeKzBot.Services.Notifciations
 
 		public Task Initialize()
 		{
-			UserName = "Portal2Records";
-			UserAvatar = "https://github.com/NeKzor/NeKzBot/blob/old/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
+			UserName = "Portal2Boards";
+			UserAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/old/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
 			SleepTime = 5 * 60 * 1000;
 
 			var http = new HttpClient();
@@ -48,11 +46,11 @@ namespace NeKzBot.Services.Notifciations
 			var parameters = new ChangelogParameters
 			{
 				[Parameters.WorldRecord] = 1,
-				[Parameters.MaxDaysAgo] = 14
+				[Parameters.MaxDaysAgo] = 31	// Increase this if needed
 			};
 			_client = new Portal2BoardsClient(parameters, http, false);
 
-			_globalId = "Portal2NotificationService";
+			_globalId = nameof(Portal2NotificationService);
 			var data = _dataBase.GetCollection<Portal2CacheData>();
 			var cache = data.FindOne(d => d.Identifier == _globalId);
 			if (cache == null)
@@ -121,7 +119,12 @@ send:
 
 								// There might be a problem if we have lots of subscribers (retry then?)
 								foreach (var subscriber in subscribers.FindAll())
-									await subscriber.Client.SendMessageAsync("", embeds: new Embed[] { embed });
+								{
+									using (var vc = new DiscordWebhookClient(subscriber.WebhookId, subscriber.WebhookToken))
+									{
+										await vc.SendMessageAsync("", embeds: new Embed[] { embed });
+									}
+								}
 							}
 						}
 						else
@@ -142,7 +145,7 @@ send:
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("[Portal2NotificationService] Exception:\n" + ex);
+				Console.WriteLine($"[{nameof(Portal2NotificationService)}] Exception:\n" + ex);
 			}
 		}
 
@@ -151,33 +154,40 @@ send:
 			return Task.CompletedTask;
 		}
 
-		public async Task<bool> SubscribeAsync(ulong id, string token, bool test)
+		public async Task<bool> SubscribeAsync(IWebhook hook, bool test)
 		{
 			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
-			var data = db.FindOne(d => d.Id == id);
+			var data = db.FindOne(d => d.ChannelId == hook.ChannelId);
+
 			if (data == null)
 			{
-				var subscriber = new SubscriptionData()
-				{
-					Id = id,
-					Client = new DiscordWebhookClient(id, token, new DiscordRestConfig
-					{
-#if DEBUG
-						LogLevel = LogSeverity.Debug
-#endif
-					})
-				};
 				if (test)
-					await subscriber.Client.SendMessageAsync("Portal2Records Webhook Test!");
-				return db.Upsert(subscriber);
+				{
+					using (var wc = new DiscordWebhookClient(hook))
+						await wc.SendMessageAsync("Portal2Boards Webhook Test!", username: UserName, avatarUrl: UserAvatar);
+				}
+
+				return db.Upsert(new SubscriptionData()
+				{
+					ChannelId = hook.ChannelId,
+					WebhookId = hook.Id,
+					WebhookToken = hook.Token
+				});
 			}
 			return default;
 		}
 
-		public Task<bool> UnsubscribeAsync(ulong id, bool test)
+		public Task<bool> UnsubscribeAsync(SubscriptionData subscription)
 		{
 			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
-			return Task.FromResult(db.Delete(d => d.Id == id) == 1);
+			return Task.FromResult(db.Delete(d => d.ChannelId == subscription.ChannelId) == 1);
+		}
+
+		public Task<SubscriptionData> FindSubscription(ulong channelId)
+		{
+			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
+			var data = db.FindOne(d => d.ChannelId == channelId);
+			return Task.FromResult(data);
 		}
 
 		private Task<Embed> CreateEmbed(EntryData wr, string payload)
@@ -202,7 +212,7 @@ send:
 				}
 			};
 			embed.AddField("Map", wr.Map.Name, true);
-			// "Inject" a nice feature which the leaderboard doesn't have v
+			// "Inject" a nice feature which the leaderboard doesn't have :v
 			embed.AddField("Time", wr.Score.Current.AsTimeToString() + payload, true);
 			embed.AddField("Player", wr.Player.Name.ToRawText(), true);
 			embed.AddField("Date", wr.Date?.DateTimeToString(), true);
@@ -266,7 +276,7 @@ send:
 			}
 
 			// Warning
-			Console.WriteLine("[Portal2NotificationService] Could not calculate the wr delta!");
+			Console.WriteLine($"[{nameof(Portal2NotificationService)}] Could not calculate the wr delta!");
 			return default;
 		}
 	}

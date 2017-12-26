@@ -49,7 +49,7 @@ namespace NeKzBot
 			await p2s.Initialize();
 			await srs.Initialize();
 			await sds.Initialize();
-			await scs.Initialize();
+			//await scs.Initialize();
 
 			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
 			await _client.StartAsync();
