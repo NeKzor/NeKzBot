@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
@@ -16,26 +15,22 @@ namespace Discord.Addons.Preconditions
 			_requiredRole = requiredRole;
 		}
 
-		public override async Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IServiceProvider services)
+		public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
 		{
-			var baseResult = await base.CheckPermissions(context, command, services);
+			var baseResult = await base.CheckPermissionsAsync(context, command, services);
 			if (baseResult.IsSuccess && ((IGuildUser)context.User).RoleIds.Contains(_requiredRole))
-			{
 				return PreconditionResult.FromSuccess();
-			}
 			else
-			{
 				return baseResult;
-			}
 		}
 	}
 
-	class Test
-	{
-		[RequireContext(ContextType.Guild)]
-		[RequireRole(12345ul)]
-		void M()
-		{
-		}
-	}
+	//class Test
+	//{
+	//	[RequireContext(ContextType.Guild)]
+	//	[RequireRole(12345ul)]
+	//	void M()
+	//	{
+	//	}
+	//}
 }

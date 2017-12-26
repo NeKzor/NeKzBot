@@ -59,7 +59,7 @@ namespace Discord.Addons.Preconditions
 		}
 
 		/// <inheritdoc />
-		public override Task<PreconditionResult> CheckPermissions(ICommandContext context, CommandInfo command, IServiceProvider services)
+		public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
 		{
 			if (_noLimitInDMs && context.Channel is IPrivateChannel)
 				return Task.FromResult(PreconditionResult.FromSuccess());
