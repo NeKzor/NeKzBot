@@ -9,8 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using LiteDB;
 using NeKzBot.Services;
-using NeKzBot.Services.Notifciations;
 using Discord.Addons.Interactive;
+using NeKzBot.Services.Notifications;
 #if WIN7
 using Discord.Net.Providers.WS4Net;
 #endif

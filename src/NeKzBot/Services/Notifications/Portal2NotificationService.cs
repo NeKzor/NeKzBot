@@ -15,30 +15,23 @@ using Portal2Boards.Net.API;
 using Portal2Boards.Net.Entities;
 using Portal2Boards.Net.Extensions;
 
-namespace NeKzBot.Services.Notifciations
+namespace NeKzBot.Services.Notifications
 {
-	public class Portal2NotificationService : INotificationService
+	public class Portal2NotificationService : NotificationService
 	{
-		public string UserName { get; set; }
-		public string UserAvatar { get; set; }
-		public uint SleepTime { get; set; }
-		public bool Cancel { get; set; }
-
-		private readonly IConfiguration _config;
-		private readonly LiteDatabase _dataBase;
 		private Portal2BoardsClient _client;
-		private string _globalId;
 
 		public Portal2NotificationService(IConfiguration config, LiteDatabase dataBase)
+			: base(config, dataBase)
 		{
-			_config = config;
-			_dataBase = dataBase;
 		}
 
-		public Task Initialize()
+		public override Task Initialize()
 		{
+			base.Initialize();
+
 			UserName = "Portal2Boards";
-			UserAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/old/NeKzBot/Resources/Public/portal2records_webhookavatar.jpg";
+			UserAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/portal2boards_avatar.jpg";
 			SleepTime = 5 * 60 * 1000;
 
 			var http = new HttpClient();
@@ -50,14 +43,13 @@ namespace NeKzBot.Services.Notifciations
 			};
 			_client = new Portal2BoardsClient(parameters, http, false);
 
-			_globalId = nameof(Portal2NotificationService);
 			var data = _dataBase.GetCollection<Portal2CacheData>();
-			var cache = data.FindOne(d => d.Identifier == _globalId);
+			var cache = data.FindOne(d => d.Identifier == GlobalId);
 			if (cache == null)
 			{
 				cache = new Portal2CacheData()
 				{
-					Identifier = _globalId,
+					Identifier = GlobalId,
 					Entries = new List<EntryData>()
 				};
 				data.Insert(cache);
@@ -65,7 +57,8 @@ namespace NeKzBot.Services.Notifciations
 			return Task.CompletedTask;
 		}
 
-		public async Task StartAsync()
+		// Notification tasks
+		public override async Task StartAsync()
 		{
 			try
 			{
@@ -74,7 +67,7 @@ namespace NeKzBot.Services.Notifciations
 					var watch = Stopwatch.StartNew();
 
 					var db = _dataBase.GetCollection<Portal2CacheData>();
-					var data = db.FindOne(d => d.Identifier == _globalId);
+					var data = db.FindOne(d => d.Identifier == GlobalId);
 					if (data == null)
 						throw new Exception("Data cache not found!");
 
@@ -98,7 +91,7 @@ namespace NeKzBot.Services.Notifciations
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
 send:
-					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
+					var subscribers = _dataBase.GetCollection<SubscriptionData>(GlobalId);
 					if (subscribers.Count() > 0)
 					{
 						if (sending.Count <= 10)
@@ -112,7 +105,7 @@ send:
 								var feature = await GetWorldRecordDelta(tosend) ?? -1;
 #if DEBUG
 								watch2.Stop();
-								Console.WriteLine($"Portal2NotificationService.GetWorldRecordDelta took: {watch2.ElapsedMilliseconds}ms");
+								Console.WriteLine($"{nameof(GetWorldRecordDelta)} took: {watch2.ElapsedMilliseconds}ms");
 #endif
 								var payload = (feature != default) ? $" (-{feature.ToString("N2")})" : string.Empty;
 								var embed = await CreateEmbed(tosend, payload);
@@ -132,7 +125,7 @@ send:
 					}
 
 					// Cache
-					data.Entries = entries.Take(10);
+					data.Entries = entries.Take(11);
 					if (!db.Update(data))
 						throw new Exception("Failed to update cache!");
 
@@ -147,47 +140,6 @@ send:
 			{
 				Console.WriteLine($"[{nameof(Portal2NotificationService)}] Exception:\n" + ex);
 			}
-		}
-
-		public Task StopAsync()
-		{
-			return Task.CompletedTask;
-		}
-
-		public async Task<bool> SubscribeAsync(IWebhook hook, bool test)
-		{
-			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
-			var data = db.FindOne(d => d.ChannelId == hook.ChannelId);
-
-			if (data == null)
-			{
-				if (test)
-				{
-					using (var wc = new DiscordWebhookClient(hook))
-						await wc.SendMessageAsync("Portal2Boards Webhook Test!", username: UserName, avatarUrl: UserAvatar);
-				}
-
-				return db.Upsert(new SubscriptionData()
-				{
-					ChannelId = hook.ChannelId,
-					WebhookId = hook.Id,
-					WebhookToken = hook.Token
-				});
-			}
-			return default;
-		}
-
-		public Task<bool> UnsubscribeAsync(SubscriptionData subscription)
-		{
-			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
-			return Task.FromResult(db.Delete(d => d.ChannelId == subscription.ChannelId) == 1);
-		}
-
-		public Task<SubscriptionData> FindSubscription(ulong channelId)
-		{
-			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
-			var data = db.FindOne(d => d.ChannelId == channelId);
-			return Task.FromResult(data);
 		}
 
 		private Task<Embed> CreateEmbed(EntryData wr, string payload)
@@ -208,7 +160,7 @@ send:
 				Footer = new EmbedFooterBuilder
 				{
 					Text = "board.iverb.me",
-					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/old/NeKzBot/Resources/Public/portal2records_icon.png"
+					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/portal2boards_icon.png"
 				}
 			};
 			embed.AddField("Map", wr.Map.Name, true);
@@ -225,7 +177,6 @@ send:
 				embed.AddField("Comment", wr.Comment.ToRawText());
 			return Task.FromResult(embed.Build());
 		}
-
 		// My head still hurts when I look at this...
 		private async Task<float?> GetWorldRecordDelta(EntryData wr)
 		{

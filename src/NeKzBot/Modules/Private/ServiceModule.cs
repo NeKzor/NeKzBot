@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-using NeKzBot.Services.Notifciations;
+using NeKzBot.Services.Notifications;
 
 namespace NeKzBot.Modules.Private
 {
@@ -39,7 +39,7 @@ namespace NeKzBot.Modules.Private
 						var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync(Service.UserName);
 						if (webhook != null)
 						{
-							var subscribed = await Service.SubscribeAsync(webhook, true);
+							var subscribed = await Service.SubscribeAsync(webhook, true, "Portal2Boards Webhook Test!");
 							if (!subscribed)
 								await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
 						}
@@ -85,7 +85,7 @@ namespace NeKzBot.Modules.Private
 						var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync(Service.UserName);
 						if (webhook != null)
 						{
-							var subscribed = await Service.SubscribeAsync(webhook, true);
+							var subscribed = await Service.SubscribeAsync(webhook, true, "SpeedrunCom Webhook Test!");
 							if (!subscribed)
 								await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
 						}

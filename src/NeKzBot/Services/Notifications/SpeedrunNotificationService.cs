@@ -1,58 +1,199 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Discord;
+using Discord.Webhook;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
+using NeKzBot.API;
 using NeKzBot.Data;
+using NeKzBot.Extensions;
 
-namespace NeKzBot.Services.Notifciations
+namespace NeKzBot.Services.Notifications
 {
-	public class SpeedrunNotificationService : INotificationService
+	public class SpeedrunNotificationService : NotificationService
 	{
-		public string UserName { get; set; }
-		public string UserAvatar { get; set; }
-		public uint SleepTime { get; set; }
-		public bool Cancel { get; set; }
-
-		private readonly IConfiguration _config;
-		private readonly LiteDatabase _dataBase;
+		private SpeedrunComApiClient _client;
 
 		public SpeedrunNotificationService(IConfiguration config, LiteDatabase dataBase)
+			: base (config, dataBase)
 		{
-			_config = config;
-			_dataBase = dataBase;
 		}
 
-		public Task Initialize()
+		public override Task Initialize()
 		{
+			base.Initialize();
+
 			UserName = "SpeedrunCom";
-			UserAvatar = "https://github.com/NeKzor/NeKzBot/blob/old/NeKzBot/Resources/Public/speedruncom_webhookavatar.png";
+			UserAvatar = "https://github.com/NeKzor/NeKzBot/blob/master/public/resources/avatars/speedruncom_avatar.png";
 			SleepTime = 1 * 60 * 1000;
+
+			_client = new SpeedrunComApiClient(_config["user_agent"], _config["speedrun_token"]);
+
+			var data = _dataBase.GetCollection<SpeedrunCacheData>();
+			var cache = data.FindOne(d => d.Identifier == GlobalId);
+			if (cache == null)
+			{
+				cache = new SpeedrunCacheData()
+				{
+					Identifier = GlobalId,
+					Notifications = new List<SpeedrunNotification>()
+				};
+				data.Insert(cache);
+			}
+
 			return Task.CompletedTask;
 		}
 
-		public Task StartAsync()
+		public override async Task StartAsync()
 		{
-			return Task.CompletedTask;
+			try
+			{
+				while (!Cancel)
+				{
+					var watch = Stopwatch.StartNew();
+
+					var db = _dataBase.GetCollection<SpeedrunCacheData>();
+					var data = db.FindOne(d => d.Identifier == GlobalId);
+					if (data == null)
+						throw new Exception("Data cache not found!");
+
+					var cache = data.Notifications;
+					var notifications = await _client.GetNotificationsAsync(100);
+					var sending = new List<SpeedrunNotification>();
+
+					// Will skip for the very first time
+					if (cache.Any())
+					{
+						// Check other cached notification too if the first one wasn't found
+						foreach (var old in cache)
+						{
+							foreach (var notification in notifications)
+							{
+								if (old.Id == notification.Id)
+									goto send;
+								sending.Add(notification);
+							}
+						}
+						throw new Exception("Could not find the last notification entry in new changelog!");
+					}
+send:
+					var subscribers = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+					if (subscribers.Count() > 0)
+					{
+						if (sending.Count <= 10)
+						{
+							sending.Reverse();
+							foreach (var tosend in sending)
+							{
+								var embed = await CreateEmbed(tosend);
+
+								// There might be a problem if we have lots of subscribers (retry then?)
+								foreach (var subscriber in subscribers.FindAll())
+								{
+									using (var vc = new DiscordWebhookClient(subscriber.WebhookId, subscriber.WebhookToken))
+									{
+										await vc.SendMessageAsync("", embeds: new Embed[] { embed });
+									}
+								}
+							}
+						}
+						else
+							throw new Exception("Webhook rate limit exceeded!");
+					}
+
+					// Cache
+					data.Notifications = notifications.Take(11);
+					if (!db.Update(data))
+						throw new Exception("Failed to update cache!");
+
+					// Sleep
+					var delay = (int)(SleepTime - watch.ElapsedMilliseconds);
+					if (delay < 0)
+						throw new Exception($"Task took too long ({delay}ms)");
+					await Task.Delay(delay);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[{nameof(SpeedrunNotificationService)}] Exception:\n" + ex);
+			}
 		}
 
-		public Task StopAsync()
+		public Task<Embed> CreateEmbed(SpeedrunNotification nf)
 		{
-			return Task.CompletedTask;
-		}
+			var author = nf.Text.Split(' ')[0];
+			var title = "Latest Notification";
+			var game = string.Empty;
+			var description = nf.Text;
 
-		public Task<bool> SubscribeAsync(IWebhook hook, bool test)
-		{
-			throw new System.NotImplementedException();
-		}
+			// Old code here, I hope this won't throw an exception :>
+			switch (nf.Item.Rel)
+			{
+				case "post":
+					title = "Thread Response";
+					game = nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length);
+					description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})* ({game.ToRawText()})";
+					break;
+				case "run":
+					title = "Run Submission";
+					game = nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length);
+					description = $"New {(nf.Text.Contains(" beat the WR in ") ? "**World Record**" : "Personal Best")} in [{game.ToRawText()}]({nf.Item.Uri})\nwith a time of {nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
+					break;
+				case "game":
+					// ???
+					break;
+				case "guide":
+					title = "New Guide";
+					// ???
+					break;
+				case "thread":		// Undocumented API
+					title = "New Thread Post";
+					game = nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length);
+					description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})* ({game.ToRawText()})";
+					break;
+				case "moderator":   // Undocumented API
+					title = "New Moderator";
+					game = nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length);
+					description = $"{author.ToRawText()} is now a moderator for {game.ToRawText()}! :heart:";
+					break;
+				case "resource":    // Undocumented API
+					game = nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length);
+					if (nf.Text.EndsWith("updated."))
+					{
+						title = "Updated Resource";
+						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated for {game.ToRawText()}.";
+					}
+					else if (nf.Text.EndsWith("added."))
+					{
+						title = "New Resource";
+						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added for {game.ToRawText()}.";
+					}
+					break;
+			}
 
-		public Task<bool> UnsubscribeAsync(SubscriptionData subscription)
-		{
-			throw new System.NotImplementedException();
-		}
-
-		public Task<SubscriptionData> FindSubscription(ulong channelId)
-		{
-			throw new System.NotImplementedException();
+			var embed = new EmbedBuilder
+			{
+				Author = new EmbedAuthorBuilder
+				{
+					Name = author,
+					Url = $"https://www.speedrun.com/{author}",
+					IconUrl = $"https://www.speedrun.com/themes/user/{author}/image.png"
+				},
+				Title = title,
+				Url = nf.Item.Uri,
+				Description = description,
+				Color = new Color(229, 227, 87),
+				Timestamp = DateTime.UtcNow,
+				Footer = new EmbedFooterBuilder
+				{
+					Text = "speedrun.com",
+					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
+				}
+			};
+			return Task.FromResult(embed.Build());
 		}
 	}
 }

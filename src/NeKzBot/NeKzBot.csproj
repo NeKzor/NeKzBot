@@ -19,6 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tasks\**" />
+    <EmbeddedResource Remove="Tasks\**" />
+    <None Remove="Tasks\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="nekzbot-journal.db" />
     <None Remove="nekzbot.db" />
   </ItemGroup>
@@ -31,13 +37,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Portal2Boards.Net" Version="1.1.0" />
     <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Tasks\" />
   </ItemGroup>
 
   <ItemGroup>
