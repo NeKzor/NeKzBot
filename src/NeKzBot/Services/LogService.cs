@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using NeKzBot.Services.Notifications;
 
 namespace NeKzBot.Services
 {
@@ -11,47 +13,93 @@ namespace NeKzBot.Services
 	{
 		private readonly DiscordSocketClient _client;
 		private readonly CommandService _commands;
+		private readonly InteractiveService _interactive;
+		private readonly Portal2NotificationService _portal2;
+		private readonly SpeedrunNotificationService _speedrun;
+		private readonly SourceDemoService _demo;
 		private readonly ILoggerFactory _loggerFactory;
-		private readonly ILogger _discordLogger;
-		private readonly ILogger _commandsLogger;
 
-		public LogService(DiscordSocketClient client, CommandService commands, ILoggerFactory loggerFactory)
+		private ILogger _discordLogger;
+		private ILogger _commandsLogger;
+		private ILogger _serviceLogger;
+
+		public LogService(
+			DiscordSocketClient client,
+			CommandService commands,
+			InteractiveService interactive,
+			Portal2NotificationService portal2,
+			SpeedrunNotificationService speedrun,
+			SourceDemoService demo,
+			ILoggerFactory loggerFactory)
 		{
 			_client = client;
 			_commands = commands;
+			_interactive = interactive;
+			_portal2 = portal2;
+			_speedrun = speedrun;
+			_demo = demo;
+			_loggerFactory = loggerFactory.AddConsole();
+		}
 
-			_loggerFactory = ConfigureLogging(loggerFactory);
+		public Task Initialize()
+		{
 			_discordLogger = _loggerFactory.CreateLogger("discord");
 			_commandsLogger = _loggerFactory.CreateLogger("commands");
+			_serviceLogger = _loggerFactory.CreateLogger("services");
 
 			_client.Log += LogDiscord;
 			_commands.Log += LogCommand;
-		}
+			_portal2.Log += LogInternal;
+			_speedrun.Log += LogInternal;
+			_demo.Log += LogInternal;
 
-		private ILoggerFactory ConfigureLogging(ILoggerFactory factory)
-		{
-			factory.AddConsole();
-			return factory;
+			return Task.CompletedTask;
 		}
 
 		private Task LogDiscord(LogMessage message)
 		{
-			_discordLogger.Log(
+			_discordLogger.Log
+			(
 				LogLevelFromSeverity(message.Severity),
 				0,
 				message,
 				message.Exception,
-				(_1, _2) => message.ToString(prependTimestamp: false));
+				(_, __) => message.ToString(prependTimestamp: false)
+			);
 			return Task.CompletedTask;
 		}
-
 		private Task LogCommand(LogMessage message)
 		{
-			// Return an error message for async commands
 			if (message.Exception is CommandException command)
-				_ = command.Context.Channel.SendMessageAsync($"Error: {command.Message}");
+			{
+				_ = _interactive.ReplyAndDeleteAsync
+				(
+					command.Context as SocketCommandContext,
+					$"Error: {command.Message}",
+					timeout: TimeSpan.FromSeconds(10)
+				);
+			}
 
-			_commandsLogger.Log(LogLevelFromSeverity(message.Severity), 0, message, message.Exception, (_1, _2) => message.ToString(prependTimestamp: false));
+			_commandsLogger.Log
+			(
+				LogLevelFromSeverity(message.Severity),
+				0,
+				message,
+				message.Exception,
+				(_, __) => message.ToString(prependTimestamp: false)
+			);
+			return Task.CompletedTask;
+		}
+		private Task LogInternal(string message, Exception ex)
+		{
+			_serviceLogger.Log
+			(
+				LogLevel.Error,
+				0,
+				message,
+				ex,
+				(_, __) => message
+			);
 			return Task.CompletedTask;
 		}
 

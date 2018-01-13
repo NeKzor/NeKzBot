@@ -5,10 +5,13 @@ using Discord.Commands;
 
 namespace Discord.Addons.Preconditions
 {
-	/// <summary> Sets how often a user is allowed to use this command
-	/// or any command in this module. </summary>
-	/// <remarks>This is backed by an in-memory collection
-	/// and will not persist with restarts.</remarks>
+	public enum Measure
+	{
+		Days,
+		Hours,
+		Minutes
+	}
+
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
 	public sealed class RatelimitAttribute : PreconditionAttribute
 	{
@@ -18,19 +21,12 @@ namespace Discord.Addons.Preconditions
 		private readonly TimeSpan _invokeLimitPeriod;
 		private readonly Dictionary<ulong, CommandTimeout> _invokeTracker = new Dictionary<ulong, CommandTimeout>();
 
-		/// <summary> Sets how often a user is allowed to use this command. </summary>
-		/// <param name="times">The number of times a user may use the command within a certain period.</param>
-		/// <param name="period">The amount of time since first invoke a user has until the limit is lifted.</param>
-		/// <param name="measure">The scale in which the <paramref name="period"/> parameter should be measured.</param>
-		/// <param name="noLimitInDMs">Set whether or not there is no limit to the command in DMs. Defaults to false.</param>
-		/// <param name="noLimitForAdmins">Set whether or not there is no limit to the command for server admins. Defaults to false.</param>
 		public RatelimitAttribute(uint times, double period, Measure measure, bool noLimitInDMs = false, bool noLimitForAdmins = false)
 		{
 			_invokeLimit = times;
 			_noLimitInDMs = noLimitInDMs;
 			_noLimitForAdmins = noLimitForAdmins;
 
-			//TODO: C# 7 candidate switch expression
 			switch (measure)
 			{
 				case Measure.Days:
@@ -45,11 +41,6 @@ namespace Discord.Addons.Preconditions
 			}
 		}
 
-		/// <summary> Sets how often a user is allowed to use this command. </summary>
-		/// <param name="times">The number of times a user may use the command within a certain period.</param>
-		/// <param name="period">The amount of time since first invoke a user has until the limit is lifted.</param>
-		/// <param name="noLimitInDMs">Set whether or not there is no limit to the command in DMs. Defaults to false.</param>
-		/// <param name="noLimitForAdmins">Set whether or not there is no limit to the command for server admins. Defaults to false.</param>
 		public RatelimitAttribute(uint times, TimeSpan period, bool noLimitInDMs = false, bool noLimitForAdmins = false)
 		{
 			_invokeLimit = times;
@@ -58,7 +49,6 @@ namespace Discord.Addons.Preconditions
 			_invokeLimitPeriod = period;
 		}
 
-		/// <inheritdoc />
 		public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
 		{
 			if (_noLimitInDMs && context.Channel is IPrivateChannel)
@@ -95,18 +85,5 @@ namespace Discord.Addons.Preconditions
 				FirstInvoke = timeStarted;
 			}
 		}
-	}
-
-	/// <summary> Sets the scale of the period parameter. </summary>
-	public enum Measure
-	{
-		/// <summary> Period is measured in days. </summary>
-		Days,
-
-		/// <summary> Period is measured in hours. </summary>
-		Hours,
-
-		/// <summary> Period is measured in minutes. </summary>
-		Minutes
 	}
 }

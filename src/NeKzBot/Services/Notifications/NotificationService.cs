@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
 using LiteDB;
@@ -10,14 +11,16 @@ namespace NeKzBot.Services.Notifications
 {
 	public abstract class NotificationService : INotificationService
 	{
-		public string UserName { get; set; }
-		public string UserAvatar { get; set; }
-		public uint SleepTime { get; set; }
-		public bool Cancel { get; set; }
-		public string GlobalId { get; set; }
+		public virtual event Func<string, Exception, Task> Log;
 
 		protected readonly IConfiguration _config;
 		protected readonly LiteDatabase _dataBase;
+
+		public string _userName;
+		public string _userAvatar;
+		public uint _sleepTime;
+		public string _globalId;
+		protected bool _isRunning;
 
 		protected NotificationService(IConfiguration config, LiteDatabase dataBase)
 		{
@@ -28,22 +31,26 @@ namespace NeKzBot.Services.Notifications
 		public virtual Task Initialize()
 		{
 			// Name of derived class
-			GlobalId = GetType().Name;
+			_globalId = GetType().Name;
 			return Task.CompletedTask;
 		}
+
+		// Notification tasks
 		public virtual Task StartAsync()
 		{
 			return Task.CompletedTask;
 		}
 		public virtual Task StopAsync()
 		{
-			if (!Cancel)
-				Cancel = true;
+			if (!_isRunning)
+				_isRunning = false;
 			return Task.CompletedTask;
 		}
+
+		// Subscription tasks
 		public virtual async Task<bool> SubscribeAsync(IWebhook hook, bool test, string testMessage)
 		{
-			var db = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
 			var data = db.FindOne(d => d.ChannelId == hook.ChannelId);
 
 			if (data == null)
@@ -51,7 +58,7 @@ namespace NeKzBot.Services.Notifications
 				if (test)
 				{
 					using (var wc = new DiscordWebhookClient(hook))
-						await wc.SendMessageAsync(testMessage, username: UserName, avatarUrl: UserAvatar);
+						await wc.SendMessageAsync(testMessage, username: _userName, avatarUrl: _userAvatar);
 				}
 
 				return db.Upsert(new SubscriptionData()
@@ -65,14 +72,25 @@ namespace NeKzBot.Services.Notifications
 		}
 		public virtual Task<bool> UnsubscribeAsync(SubscriptionData subscription)
 		{
-			var db = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
 			return Task.FromResult(db.Delete(d => d.ChannelId == subscription.ChannelId) == 1);
 		}
 		public virtual Task<SubscriptionData> FindSubscription(ulong channelId)
 		{
-			var db = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+			var db = _dataBase.GetCollection<SubscriptionData>(_globalId);
 			var data = db.FindOne(d => d.ChannelId == channelId);
 			return Task.FromResult(data);
+		}
+
+		protected Task LogWarning(string message)
+		{
+			_ = Log.Invoke($"[{_globalId}] {message}", null);
+			return Task.CompletedTask;
+		}
+		protected Task LogException(Exception ex)
+		{
+			_ = Log.Invoke(_globalId, ex);
+			return Task.CompletedTask;
 		}
 	}
 }

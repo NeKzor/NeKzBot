@@ -1,5 +1,4 @@
-﻿#define WIN7
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
@@ -38,24 +37,27 @@ namespace NeKzBot
 			});
 
 			var services = ConfigureServices();
-			services.GetRequiredService<LogService>();
+
+			var log = services.GetRequiredService<LogService>();
 			var chs = services.GetRequiredService<CommandHandlingService>();
 			var p2s = services.GetRequiredService<Portal2NotificationService>();
 			var srs = services.GetRequiredService<SpeedrunNotificationService>();
 			var sds = services.GetRequiredService<SourceDemoService>();
 			var scs = services.GetRequiredService<SourceCvarService>();
 
-			await chs.Initialize(services);
+			await log.Initialize();
+			await chs.Initialize();
 			await p2s.Initialize();
 			await srs.Initialize();
 			await sds.Initialize();
-			//await scs.Initialize();
+			await scs.Initialize();
 
 			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
 			await _client.StartAsync();
 
-			//await Task.WhenAll(
-			//	p2s.StartAsync()
+			//await Task.WhenAll
+			//(
+			//	p2s.StartAsync(),
 			//	srs.StartAsync()
 			//);
 
@@ -69,7 +71,6 @@ namespace NeKzBot
 				.AddJsonFile("credentials.json")
 				.Build();
 		}
-
 		private IServiceProvider ConfigureServices()
 		{
 			return new ServiceCollection()
@@ -81,7 +82,7 @@ namespace NeKzBot
 				.AddSingleton(_client)
 				.AddSingleton(new CommandService(new CommandServiceConfig
 				{
-					SeparatorChar = _config["global_prefix"][0],
+					SeparatorChar = '.',
 #if DEBUG
 					LogLevel = LogSeverity.Debug
 #endif

@@ -26,19 +26,19 @@ namespace NeKzBot.Services.Notifications
 		{
 			base.Initialize();
 
-			UserName = "SpeedrunCom";
-			UserAvatar = "https://github.com/NeKzor/NeKzBot/blob/master/public/resources/avatars/speedruncom_avatar.png";
-			SleepTime = 1 * 60 * 1000;
+			_userName = "SpeedrunCom";
+			_userAvatar = "https://github.com/NeKzor/NeKzBot/blob/master/public/resources/avatars/speedruncom_avatar.png";
+			_sleepTime = 1 * 60 * 1000;
 
 			_client = new SpeedrunComApiClient(_config["user_agent"], _config["speedrun_token"]);
 
 			var data = _dataBase.GetCollection<SpeedrunCacheData>();
-			var cache = data.FindOne(d => d.Identifier == GlobalId);
+			var cache = data.FindOne(d => d.Id == _globalId);
 			if (cache == null)
 			{
 				cache = new SpeedrunCacheData()
 				{
-					Identifier = GlobalId,
+					Id = _globalId,
 					Notifications = new List<SpeedrunNotification>()
 				};
 				data.Insert(cache);
@@ -51,12 +51,12 @@ namespace NeKzBot.Services.Notifications
 		{
 			try
 			{
-				while (!Cancel)
+				while (!_isRunning)
 				{
 					var watch = Stopwatch.StartNew();
 
 					var db = _dataBase.GetCollection<SpeedrunCacheData>();
-					var data = db.FindOne(d => d.Identifier == GlobalId);
+					var data = db.FindOne(d => d.Id == _globalId);
 					if (data == null)
 						throw new Exception("Data cache not found!");
 
@@ -67,7 +67,7 @@ namespace NeKzBot.Services.Notifications
 					// Will skip for the very first time
 					if (cache.Any())
 					{
-						// Check other cached notification too if the first one wasn't found
+						// Check cached notification
 						foreach (var old in cache)
 						{
 							foreach (var notification in notifications)
@@ -77,10 +77,10 @@ namespace NeKzBot.Services.Notifications
 								sending.Add(notification);
 							}
 						}
-						throw new Exception("Could not find the last notification entry in new changelog!");
+						throw new Exception("Could not find the last notification entry!");
 					}
 send:
-					var subscribers = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
 					if (subscribers.Count() > 0)
 					{
 						if (sending.Count <= 10)
@@ -88,7 +88,7 @@ send:
 							sending.Reverse();
 							foreach (var tosend in sending)
 							{
-								var embed = await CreateEmbed(tosend);
+								var embed = await CreateEmbedAsync(tosend);
 
 								// There might be a problem if we have lots of subscribers (retry then?)
 								foreach (var subscriber in subscribers.FindAll())
@@ -110,7 +110,7 @@ send:
 						throw new Exception("Failed to update cache!");
 
 					// Sleep
-					var delay = (int)(SleepTime - watch.ElapsedMilliseconds);
+					var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
 					if (delay < 0)
 						throw new Exception($"Task took too long ({delay}ms)");
 					await Task.Delay(delay);
@@ -118,15 +118,15 @@ send:
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"[{nameof(SpeedrunNotificationService)}] Exception:\n" + ex);
+				await LogException(ex);
 			}
 		}
 
-		public Task<Embed> CreateEmbed(SpeedrunNotification nf)
+		public async Task<Embed> CreateEmbedAsync(SpeedrunNotification nf)
 		{
 			var author = nf.Text.Split(' ')[0];
 			var title = "Latest Notification";
-			var game = string.Empty;
+			var category = string.Empty;
 			var description = nf.Text;
 
 			// Old code here, I hope this won't throw an exception :>
@@ -134,13 +134,13 @@ send:
 			{
 				case "post":
 					title = "Thread Response";
-					game = nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length);
-					description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})* ({game.ToRawText()})";
+					category = nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length);
+					description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})* ({category.ToRawText()})";
 					break;
 				case "run":
 					title = "Run Submission";
-					game = nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length);
-					description = $"New {(nf.Text.Contains(" beat the WR in ") ? "**World Record**" : "Personal Best")} in [{game.ToRawText()}]({nf.Item.Uri})\nwith a time of {nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}";
+					category = nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length);
+					description = $"New {(nf.Text.Contains(" beat the WR in ") ? "**World Record**" : "Personal Best")} in [{category.ToRawText()}]({nf.Item.Uri})\nwith a time of {nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}.";
 					break;
 				case "game":
 					// ???
@@ -151,27 +151,35 @@ send:
 					break;
 				case "thread":		// Undocumented API
 					title = "New Thread Post";
-					game = nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length);
-					description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})* ({game.ToRawText()})";
+					category = nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length);
+					description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})* ({category.ToRawText()})";
 					break;
 				case "moderator":   // Undocumented API
 					title = "New Moderator";
-					game = nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length);
-					description = $"{author.ToRawText()} is now a moderator for {game.ToRawText()}! :heart:";
+					category = nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length);
+					description = $"{author.ToRawText()} is now a moderator for {category.ToRawText()}! :heart:";
 					break;
 				case "resource":    // Undocumented API
-					game = nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length);
+					category = nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length);
 					if (nf.Text.EndsWith("updated."))
 					{
 						title = "Updated Resource";
-						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated for {game.ToRawText()}.";
+						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated for {category.ToRawText()}.";
 					}
 					else if (nf.Text.EndsWith("added."))
 					{
 						title = "New Resource";
-						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added for {game.ToRawText()}.";
+						description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added for {category.ToRawText()}.";
 					}
 					break;
+			}
+
+			var thumbnail = default(string);
+			if (!string.IsNullOrEmpty(category))
+			{
+				var games = await _client.GetGamesAsync(category);
+				var game = games?.FirstOrDefault();
+				thumbnail = game.Assets.CoverMedium.Uri;
 			}
 
 			var embed = new EmbedBuilder
@@ -193,7 +201,11 @@ send:
 					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
 				}
 			};
-			return Task.FromResult(embed.Build());
+
+			if (!string.IsNullOrEmpty(thumbnail))
+				embed.WithThumbnailUrl(thumbnail);
+
+			return embed.Build();
 		}
 	}
 }

@@ -30,26 +30,27 @@ namespace NeKzBot.Services.Notifications
 		{
 			base.Initialize();
 
-			UserName = "Portal2Boards";
-			UserAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/portal2boards_avatar.jpg";
-			SleepTime = 5 * 60 * 1000;
+			_userName = "Portal2Boards";
+			_userAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/portal2boards_avatar.jpg";
+			_sleepTime = 5 * 60 * 1000;
 
 			var http = new HttpClient();
 			http.DefaultRequestHeaders.UserAgent.ParseAdd(_config["user_agent"]);
 			var parameters = new ChangelogParameters
 			{
 				[Parameters.WorldRecord] = 1,
-				[Parameters.MaxDaysAgo] = 31	// Increase this if needed
+				// Worst case I've found was 45
+				[Parameters.MaxDaysAgo] = 52
 			};
 			_client = new Portal2BoardsClient(parameters, http, false);
 
 			var data = _dataBase.GetCollection<Portal2CacheData>();
-			var cache = data.FindOne(d => d.Identifier == GlobalId);
+			var cache = data.FindOne(d => d.Id == _globalId);
 			if (cache == null)
 			{
 				cache = new Portal2CacheData()
 				{
-					Identifier = GlobalId,
+					Id = _globalId,
 					Entries = new List<EntryData>()
 				};
 				data.Insert(cache);
@@ -57,17 +58,16 @@ namespace NeKzBot.Services.Notifications
 			return Task.CompletedTask;
 		}
 
-		// Notification tasks
 		public override async Task StartAsync()
 		{
 			try
 			{
-				while (!Cancel)
+				while (!_isRunning)
 				{
 					var watch = Stopwatch.StartNew();
 
 					var db = _dataBase.GetCollection<Portal2CacheData>();
-					var data = db.FindOne(d => d.Identifier == GlobalId);
+					var data = db.FindOne(d => d.Id == _globalId);
 					if (data == null)
 						throw new Exception("Data cache not found!");
 
@@ -78,7 +78,7 @@ namespace NeKzBot.Services.Notifications
 					// Will skip for the very first time
 					if (cache.Any())
 					{
-						// Check other cached entries too if the first one wasn't found (old score could be deleted/banned etc.)
+						// Check cached entries
 						foreach (var old in cache)
 						{
 							foreach (var entry in entries)
@@ -91,7 +91,7 @@ namespace NeKzBot.Services.Notifications
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
 send:
-					var subscribers = _dataBase.GetCollection<SubscriptionData>(GlobalId);
+					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
 					if (subscribers.Count() > 0)
 					{
 						if (sending.Count <= 10)
@@ -130,7 +130,7 @@ send:
 						throw new Exception("Failed to update cache!");
 
 					// Sleep
-					var delay = (int)(SleepTime - watch.ElapsedMilliseconds);
+					var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
 					if (delay < 0)
 						throw new Exception($"Task took too long ({delay}ms)");
 					await Task.Delay(delay);
@@ -138,7 +138,7 @@ send:
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"[{nameof(Portal2NotificationService)}] Exception:\n" + ex);
+				await LogException(ex);
 			}
 		}
 
@@ -177,7 +177,7 @@ send:
 				embed.AddField("Comment", wr.Comment.ToRawText());
 			return Task.FromResult(embed.Build());
 		}
-		// My head still hurts when I look at this...
+		// My head always hurts when I look at this...
 		private async Task<float?> GetWorldRecordDelta(EntryData wr)
 		{
 			var map = await Portal2.GetMapByName(wr.Map.Name);
@@ -202,15 +202,17 @@ send:
 							if (newwr < oldwr)
 								return oldwr - newwr;
 						}
+						// Tie or partner score
 						else if (oldwr == newwr)
 						{
+							// Cooperative world record without a partner
+							// will be ignored, sadly that's a thing :>
 							foundcoop = true;
 							continue;
 						}
-						else
+						else if (newwr < oldwr)
 						{
-							if (newwr < oldwr)
-								return oldwr - newwr;
+							return oldwr - newwr;
 						}
 					}
 					else if (map.Type == MapType.SinglePlayer)
@@ -227,7 +229,7 @@ send:
 			}
 
 			// Warning
-			Console.WriteLine($"[{nameof(Portal2NotificationService)}] Could not calculate the wr delta!");
+			_ = LogWarning("Could not calculate the world record delta!");
 			return default;
 		}
 	}

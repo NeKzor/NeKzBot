@@ -7,7 +7,7 @@ namespace NeKzBot.Data
 	public class Portal2CacheData
 	{
 		[BsonId]
-		public string Identifier { get; set; }
+		public string Id { get; set; }
 		public IEnumerable<EntryData> Entries { get; set; }
 	}
 }

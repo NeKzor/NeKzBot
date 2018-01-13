@@ -25,6 +25,11 @@ namespace NeKzBot.API
 			var obj = await _client.GetJsonObjectAsync<SpeedrunData<SpeedrunNotification>>(ApiUri + $"/notifications?max={max}");
 			return (obj?.Data != null) ? obj.Data : throw new Exception($"[{nameof(SpeedrunComApiClient)}] Failed to fetch notifications!");
 		}
+		public async Task<IEnumerable<SpeedrunGame>> GetGamesAsync(string name)
+		{
+			var obj = await _client.GetJsonObjectAsync<SpeedrunData<SpeedrunGame>>(ApiUri + $"/games?name={name}");
+			return (obj?.Data != null) ? obj.Data : throw new Exception($"[{nameof(SpeedrunComApiClient)}] Failed to fetch games!");
+		}
 
 		public void Dispose()
 		{

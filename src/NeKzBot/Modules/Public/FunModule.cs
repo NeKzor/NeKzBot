@@ -42,7 +42,7 @@ namespace NeKzBot.Modules.Public
 					message += temp;
 			}
 			if (!string.IsNullOrEmpty(message))
-				await ReplyAndDeleteAsync(message, timeout: TimeSpan.FromSeconds(60));
+				await ReplyAndDeleteAsync(message);
 		}
 	}
 }

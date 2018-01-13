@@ -19,12 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Tasks\**" />
-    <EmbeddedResource Remove="Tasks\**" />
-    <None Remove="Tasks\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="nekzbot-journal.db" />
     <None Remove="nekzbot.db" />
   </ItemGroup>
@@ -51,7 +45,7 @@
 
   <ItemGroup>
     <None Update="credentials.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -11,31 +12,32 @@ namespace NeKzBot.Services
 {
 	public class CommandHandlingService
 	{
-		private IServiceProvider _provider;
 		private readonly DiscordSocketClient _client;
 		private readonly CommandService _commands;
 		private readonly IConfiguration _config;
 		private readonly SourceDemoService _demoService;
+		private readonly InteractiveService _interactiveService;
+		private readonly IServiceProvider _provider;
 
 		public CommandHandlingService(
-			IServiceProvider provider,
 			DiscordSocketClient client,
 			CommandService commands,
+			InteractiveService interactiveService,
+			SourceDemoService demoService,
 			IConfiguration config,
-			SourceDemoService demoService)
+			IServiceProvider provider)
 		{
-			_provider = provider;
 			_client = client;
 			_commands = commands;
-			_config = config;
+			_interactiveService = interactiveService;
 			_demoService = demoService;
-
-			_client.MessageReceived += MessageReceived;
+			_config = config;
+			_provider = provider;
 		}
 
-		public Task Initialize(IServiceProvider provider)
+		public Task Initialize()
 		{
-			_provider = provider;
+			_client.MessageReceived += MessageReceived;
 			return _commands.AddModulesAsync(Assembly.GetEntryAssembly());
 		}
 
@@ -46,13 +48,13 @@ namespace NeKzBot.Services
 
 			int argPos = 0;
 			if ((!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-				&& (!message.HasStringPrefix(_config["global_prefix"], ref argPos)))
+				&& (!message.HasStringPrefix(".", ref argPos)))
 			{
 				if (message.Attachments.Count == 1)
 				{
-					var attachement = message.Attachments.ToList().First();
-					if ((attachement.Filename.EndsWith(".dem")) && (attachement.Size <= 5 * 1000 * 1000))
-						await _demoService.GetNewDemoAsync(message.Author.Id, attachement.Url);
+					var attachment = message.Attachments.ToList().First();
+					if ((attachment.Filename.EndsWith(".dem")) && (attachment.Size <= 5 * 1000 * 1000))
+						await _demoService.DownloadNewDemoAsync(message.Author.Id, attachment.Url);
 				}
 				return;
 			}
@@ -60,10 +62,8 @@ namespace NeKzBot.Services
 			var context = new SocketCommandContext(_client, message);
 			var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-#if DEBUG
 			if ((result.Error.HasValue) && (result.Error.Value != CommandError.UnknownCommand))
-				await context.Channel.SendMessageAsync(result.ToString());
-#endif
+				await _interactiveService.ReplyAndDeleteAsync(context, result.ToString(), timeout: TimeSpan.FromSeconds(10));
 		}
 	}
 }

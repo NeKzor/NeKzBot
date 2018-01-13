@@ -6,11 +6,6 @@ namespace NeKzBot.Services.Notification
 {
 	public interface INotificationService
 	{
-		string UserName { get; set; }
-		string UserAvatar { get; set; }
-		uint SleepTime { get; set; }
-		bool Cancel { get; set; }
-		string GlobalId { get; set; }
 		Task Initialize();
 		Task StartAsync();
 		Task StopAsync();

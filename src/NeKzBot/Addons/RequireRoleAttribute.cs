@@ -24,13 +24,4 @@ namespace Discord.Addons.Preconditions
 				return baseResult;
 		}
 	}
-
-	//class Test
-	//{
-	//	[RequireContext(ContextType.Guild)]
-	//	[RequireRole(12345ul)]
-	//	void M()
-	//	{
-	//	}
-	//}
 }

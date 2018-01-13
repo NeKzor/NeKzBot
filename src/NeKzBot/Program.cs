@@ -1,8 +1,10 @@
-﻿namespace NeKzBot
+﻿using System.Threading.Tasks;
+
+namespace NeKzBot
 {
 	internal static class Program
 	{
-		private static void Main()
-			=> new Bot().RunAsync().GetAwaiter().GetResult();
+		private static async Task Main()
+			=> await new Bot().RunAsync();
 	}
 }
