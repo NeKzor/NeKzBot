@@ -7,9 +7,9 @@
 #define FCVAR_HIDDEN			(1<<4)
 
 struct ConCommandBase {
-	void* unk;
+	void* VFT;
 	ConCommandBase* m_pNext;
-	bool unk2;
+	bool m_bRegistered;
 	const char* m_pszName;
 	const char* m_pszHelpString;
 	int m_nFlags;
@@ -48,7 +48,7 @@ unsigned __stdcall Main(void* args)
 			? 17
 			: 14
 	);
-	auto cvarPtr = Scan
+	auto cvp = Scan
 	(
 		"engine.dll",
 		(exe == "portal2")
@@ -59,14 +59,12 @@ unsigned __stdcall Main(void* args)
 
 	// Get console for logging dev/hidden cvars
 	auto tier0 = GetModuleHandleA("tier0.dll");
-	if (!tier0) { return Error("Failed to find tier0.dll!", "gen"); }
 	auto msgAddr = GetProcAddress(tier0, "Msg");
-	if(!msgAddr) { return Error("Failed to find Msg in tier0.dll!", "gen"); }
 	auto MSG = reinterpret_cast<void(__cdecl*)(const char* pMsgFormat, ...)>(msgAddr);
 
 	// Unlock all
-	auto ptr = **(void***)(cvarPtr.Address);
-	auto m_pConCommandList = (ConCommandBase*)((uintptr_t)ptr + ((exe == "portal2") ? 48 : 100));
+	auto cvarPtr = **(void***)(cvp.Address);
+	auto m_pConCommandList = (ConCommandBase*)((uintptr_t)cvarPtr + ((exe == "portal2") ? 48 : 100));
 	for (auto cmd = m_pConCommandList; cmd; cmd = cmd->m_pNext)
 	{
 		if (cmd->m_nFlags & FCVAR_DEVELOPMENTONLY && cmd->m_nFlags & FCVAR_HIDDEN)

@@ -2,17 +2,17 @@
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using LiteDB;
-using NeKzBot.Services;
 using Discord.Addons.Interactive;
-using NeKzBot.Services.Notifications;
+using Discord.Commands;
 #if WIN7
 using Discord.Net.Providers.WS4Net;
 #endif
+using Discord.WebSocket;
+using LiteDB;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using NeKzBot.Services;
+using NeKzBot.Services.Notifications;
 
 namespace NeKzBot
 {
@@ -52,14 +52,20 @@ namespace NeKzBot
 			await sds.Initialize();
 			await scs.Initialize();
 
-			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
-			await _client.StartAsync();
+#if DB_CLEANUP
+			await p2s.CleanupAsync();
+			await srs.CleanupAsync();
+			await sds.DeleteExpiredDemos();
+#endif
 
-			//await Task.WhenAll
-			//(
-			//	p2s.StartAsync(),
-			//	srs.StartAsync()
-			//);
+			/* await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
+			await _client.StartAsync(); */
+
+			/* await Task.WhenAll
+			(
+				p2s.StartAsync(),
+				srs.StartAsync()
+			); */
 
 			await Task.Delay(-1);
 		}

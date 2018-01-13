@@ -21,37 +21,55 @@ namespace NeKzBot.Modules.Public
 			public async Task HalfLife2(string cvar)
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.HalfLife2);
-				await ReplyAndDeleteAsync((result != null)
-					? $"**{result.Name.ToRawText()}**\n" +
-					  $"Default Value: {result.DefaultValue}\n" +
-					  $"Flags: {string.Join("/",result.Flags)}\n" +
-					  $"Help Text: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}"
-					: "Unknown Half-Life 2 cvar.",
-				timeout: TimeSpan.FromSeconds(60));
+				if (result != null)
+				{
+					await ReplyAndDeleteAsync
+					(
+						$"**{result.Name.ToRawText()}**\n" +
+						$"Default Value: {result.DefaultValue}\n" +
+						$"Flags: {string.Join("/",result.Flags)}\n" +
+						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						timeout: TimeSpan.FromSeconds(60)
+					);
+				}
+				else
+					await ReplyAndDeleteAsync("Unknown Half-Life 2 cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("portal"), Alias("p")]
 			public async Task Portal(string cvar)
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.Portal);
-				await ReplyAndDeleteAsync((result != null)
-					? $"**{result.Name.ToRawText()}**\n" +
-					  $"Default Value: {result.DefaultValue}\n" +
-					  $"Flags: {string.Join("/",result.Flags)}\n" +
-					  $"Help Text: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}"
-					: "Unknown Portal cvar.",
-				timeout: TimeSpan.FromSeconds(60));
+				if (result != null)
+				{
+					await ReplyAndDeleteAsync
+					(
+						$"**{result.Name.ToRawText()}**\n" +
+						$"Default Value: {result.DefaultValue}\n" +
+						$"Flags: {string.Join("/",result.Flags)}\n" +
+						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						timeout: TimeSpan.FromSeconds(60)
+					);
+				}
+				else
+					await ReplyAndDeleteAsync("Unknown Portal cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("portal2"), Alias("p2")]
 			public async Task Portal2(string cvar)
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.Portal2);
-				await ReplyAndDeleteAsync((result != null)
-					? $"**{result.Name.ToRawText()}**\n" +
-					  $"Default Value: {result.DefaultValue}\n" +
-					  $"Flags: {string.Join("/",result.Flags)}\n" +
-					  $"Help Text: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}"
-					: "Unknown Portal 2 cvar.",
-				timeout: TimeSpan.FromSeconds(60));
+				if (result != null)
+				{
+					await ReplyAndDeleteAsync
+					(
+						$"**{result.Name.ToRawText()}**\n" +
+						$"Default Value: {result.DefaultValue}\n" +
+						$"Flags: {string.Join("/",result.Flags)}\n" +
+						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						timeout: TimeSpan.FromSeconds(60)
+					);
+				}
+				else
+					await ReplyAndDeleteAsync("Unknown Portal 2 cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
 		}
 
@@ -69,16 +87,19 @@ namespace NeKzBot.Modules.Public
 			public async Task QuestionMark()
 			{
 				var data = await Service.GetDemoData(Context.User.Id);
-				if (data == null)
-					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without the bot prefix.", timeout: TimeSpan.FromSeconds(60));
-				else
+				if (data != null)
 				{
 					var index = data.DownloadUrl.LastIndexOf('/') + 1;
 					var demoname = data.DownloadUrl.Substring(index, data.DownloadUrl.Length - index);
-					await ReplyAndDeleteAsync(
+					await ReplyAndDeleteAsync
+					(
 						$"Demo file *{demoname}* was uploaded by {data.Id}\n" +
-						$"Link: {data.DownloadUrl}", timeout: TimeSpan.FromSeconds(60));
+						$"Link: {data.DownloadUrl}",
+						timeout: TimeSpan.FromSeconds(60)
+					);
 				}
+				else
+					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without writing the bot prefix.", timeout: TimeSpan.FromSeconds(60));
 			}
 
 			// SourceDemo
@@ -86,61 +107,91 @@ namespace NeKzBot.Modules.Public
 			public async Task FileStamp()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? demo.FileStamp : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync(demo.FileStamp, timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("protocol"), Alias("protoc")]
 			public async Task Protocol()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.Protocol}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.Protocol}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("servername"), Alias("server")]
 			public async Task ServerName()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? demo.ServerName : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync(demo.ServerName, timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("clientname"), Alias("client")]
 			public async Task ClientName()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? demo.FileStamp : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync(demo.ClientName, timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("mapname"), Alias("map")]
 			public async Task MapName()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? demo.MapName : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync(demo.MapName, timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("gamedirectory"), Alias("dir")]
 			public async Task GameDirectory()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? demo.GameDirectory : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync(demo.GameDirectory, timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("playbacktime"), Alias("time")]
 			public async Task PlaybackTime()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.PlaybackTime}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.PlaybackTime}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("playbackticks"), Alias("ticks")]
 			public async Task PlaybackTicks()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.PlaybackTicks}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.PlaybackTicks}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("playbackframes"), Alias("frames")]
 			public async Task PlaybackFrames()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.PlaybackFrames}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.PlaybackFrames}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("signonlength"), Alias("signon")]
 			public async Task SignOnLength()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.SignOnLength}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.SignOnLength}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Ratelimit(6, 1, Measure.Minutes)]
 			[Command("messages"), Alias("msg")]
@@ -148,9 +199,9 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo == null)
-					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 				else if (demo.Messages.Count == 0)
-					await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(10));
 				else
 				{
 					var pages = new List<string>();
@@ -174,7 +225,7 @@ end:
 				}
 			}
 			[Ratelimit(6, 1, Measure.Minutes)]
-			[Command("Messages"), Alias("msg")]
+			[Command("messages"), Alias("msg")]
 			public async Task Messages(int index)
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
@@ -187,23 +238,32 @@ end:
 				else
 				{
 					var result = demo.Messages[index];
-					var message = $"Type: {result.Type}\n" +
+					await ReplyAndDeleteAsync
+					(
+						$"Type: {result.Type}\n" +
 						$"Tick: {result.CurrentTick}\n" +
-						$"Frame: {result.Frame?.ToString() ?? "NULL"}";
-					await ReplyAndDeleteAsync(message, timeout: TimeSpan.FromSeconds(60));
+						$"Frame: {result.Frame?.ToString() ?? "NULL"}",
+						timeout: TimeSpan.FromSeconds(60)
+					);
 				}
 			}
 			[Command("gettickrate"), Alias("tickrate")]
 			public async Task GetTickrate()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.GetTickrate()}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.GetTickrate()}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Command("gettickspersecond"), Alias("tps")]
+			[Command("gettickspersecond"), Alias("tps", "intervalpersecond", "ips")]
 			public async Task GetTicksPerSecond()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
-				await ReplyAndDeleteAsync((demo != null) ? $"{demo.GetTicksPerSecond()}" : "You didn't upload a demo.", timeout: TimeSpan.FromSeconds(60));
+				if (demo != null)
+					await ReplyAndDeleteAsync($"{demo.GetTicksPerSecond()}", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("adjustexact"), Alias("adj")]

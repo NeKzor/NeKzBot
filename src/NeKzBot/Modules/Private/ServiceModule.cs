@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.Addons.Interactive;
 using NeKzBot.Services.Notifications;
 
 namespace NeKzBot.Modules.Private
@@ -56,7 +56,7 @@ namespace NeKzBot.Modules.Private
 					var subscription = await Service.FindSubscription(Context.Channel.Id);
 					if (subscription != null)
 					{
-						var webhook = await (Context.Channel as ITextChannel)?.GetWebhookAsync(subscription.WebhookId);
+						var webhook = await (Context.Channel as ITextChannel)?.GetWebhookAsync(subscription.Webhook.Id);
 						if (webhook != null)
 							await webhook.DeleteAsync();
 
@@ -102,7 +102,7 @@ namespace NeKzBot.Modules.Private
 					var subscription = await Service.FindSubscription(Context.Channel.Id);
 					if (subscription != null)
 					{
-						var webhook = await (Context.Channel as ITextChannel)?.GetWebhookAsync(subscription.WebhookId);
+						var webhook = await (Context.Channel as ITextChannel)?.GetWebhookAsync(subscription.Webhook.Id);
 						if (webhook != null)
 							await webhook.DeleteAsync();
 

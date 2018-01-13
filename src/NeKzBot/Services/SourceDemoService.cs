@@ -53,23 +53,38 @@ namespace NeKzBot.Services
 		public Task SaveDemo(ulong userId, SourceDemo demo, string downloadUrl = default)
 		{
 			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.Id == userId) ?? new SourceDemoData { Id = userId };
-			data.Demo = demo;
-			data.DownloadUrl = downloadUrl;
+			var data = db.FindOne(d => d.UserId == userId);
+			data = new SourceDemoData()
+			{
+				UserId = userId,
+				DownloadUrl = downloadUrl,
+				Demo = demo
+			};
 			db.Upsert(data);
 			return Task.CompletedTask;
 		}
 		public Task<SourceDemo> GetDemo(ulong userId)
 		{
 			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.Id == userId);
+			var data = db.FindOne(d => d.UserId == userId);
 			return Task.FromResult(data?.Demo);
 		}
 		public Task<SourceDemoData> GetDemoData(ulong userId)
 		{
 			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.Id == userId);
+			var data = db.FindOne(d => d.UserId == userId);
 			return Task.FromResult(data);
+		}
+		
+		internal Task DeleteExpiredDemos()
+		{
+			var db = _dataBase.GetCollection<SourceDemoData>();
+			foreach (var demo in db.FindAll())
+			{
+				if ((DateTime.UtcNow - demo.CreatedAt).Days > 21)
+					db.Delete(demo.Id);
+			}
+			return Task.CompletedTask;
 		}
 	}
 }

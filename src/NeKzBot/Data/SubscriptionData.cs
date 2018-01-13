@@ -1,12 +1,13 @@
 ﻿using LiteDB;
+using Discord;
+using Discord.Webhook;
 
 namespace NeKzBot.Data
 {
 	public class SubscriptionData
 	{
-		[BsonId]
-		public ulong ChannelId { get; set; }
-		public ulong WebhookId { get; set; }
-		public string WebhookToken { get; set; }
+		[BsonId(true)]
+		public int Id { get; set; }
+		public IWebhook Webhook { get; set; }
 	}
 }
