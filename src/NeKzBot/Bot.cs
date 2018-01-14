@@ -56,10 +56,9 @@ namespace NeKzBot
 			await p2s.CleanupAsync();
 			await srs.CleanupAsync();
 			await sds.DeleteExpiredDemos();
-#endif
-
-			/* await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
-			await _client.StartAsync(); */
+#else
+			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
+			await _client.StartAsync();
 
 			/* await Task.WhenAll
 			(
@@ -68,6 +67,7 @@ namespace NeKzBot
 			); */
 
 			await Task.Delay(-1);
+#endif
 		}
 
 		private IConfiguration BuildConfig()

@@ -11,7 +11,7 @@ namespace NeKzBot.Services
 {
 	public class SourceDemoService
 	{
-		public virtual event Func<string, Exception, Task> Log;
+		public event Func<string, Exception, Task> Log;
 
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _dataBase;
@@ -45,7 +45,7 @@ namespace NeKzBot.Services
 				}
 				catch (Exception ex)
 				{
-					await Log.Invoke(nameof(SourceDemoData), ex);
+					await LogException(ex);
 				}
 			}
 			return false;
@@ -82,8 +82,22 @@ namespace NeKzBot.Services
 			foreach (var demo in db.FindAll())
 			{
 				if ((DateTime.UtcNow - demo.CreatedAt).Days > 21)
+				{
 					db.Delete(demo.Id);
+					_ = LogWarning($"Deleted expired demo from user {demo.UserId}");
+				}
 			}
+			return Task.CompletedTask;
+		}
+
+		protected Task LogWarning(string message)
+		{
+			_ = Log.Invoke($"[{nameof(SourceDemoData)}] {message}", null);
+			return Task.CompletedTask;
+		}
+		protected Task LogException(Exception ex)
+		{
+			_ = Log.Invoke(nameof(SourceDemoData), ex);
 			return Task.CompletedTask;
 		}
 	}

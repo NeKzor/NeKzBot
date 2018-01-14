@@ -61,7 +61,6 @@ namespace NeKzBot.Services.Notifications
 					using (var wc = new DiscordWebhookClient(hook))
 						await wc.SendMessageAsync(testMessage, username: _userName, avatarUrl: _userAvatar);
 				}
-
 				return db.Upsert(new SubscriptionData(){ Webhook = hook });
 			}
 			return default;
@@ -87,6 +86,7 @@ namespace NeKzBot.Services.Notifications
 				if (hook == null)
 				{
 					db.Delete(sub.Id);
+					await LogWarning($"Deleted {hook.Id} in {hook.Guild.Name}");
 				}
 			}
 		}

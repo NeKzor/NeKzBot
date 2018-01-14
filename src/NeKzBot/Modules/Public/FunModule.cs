@@ -15,6 +15,7 @@ namespace NeKzBot.Modules.Public
 		public async Task RegionalIndicatorSymbol([Remainder] string text)
 		{
 			var message = string.Empty;
+			var lines = 1;
 			var numbers = new string[] { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
 			for (int i = 0; i < text.Length; i++)
 			{
@@ -24,17 +25,20 @@ namespace NeKzBot.Modules.Public
 					temp = "          ";
 				else if (c == '\n')
 					temp = "\n";
-				else if (c.ToString().Validate("^[a-zA-Z]", 1))
-					temp = $":regional_indicator_{c.ToString().ToLower()}:";
-				else if (c.ToString().Validate("^[0-9]", 1))
-					temp = $":{numbers[Convert.ToInt16(c.ToString())]}:";
+				else if ($"{c}".Validate("^[a-zA-Z]", 1))
+					temp = $":regional_indicator_{$"{c}".ToLower()}:";
+				else if ($"{c}".Validate("^[0-9]", 1))
+					temp = $":{(numbers[Convert.ToInt16($"{c}")])}:";
 				else if (c == '!')
 					temp = ":exclamation:";
 				else if (c == '?')
 					temp = ":question:";
 				else
 					continue;
-
+				
+				if ((temp == "\n") && (++lines > 4))
+					continue;
+				
 				// Only append if it doesn't exceed Discord char limit
 				if (message.Length + temp.Length > DiscordConfig.MaxMessageSize)
 					break;

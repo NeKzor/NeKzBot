@@ -15,11 +15,14 @@ namespace NeKzBot.Modules.Private
 			[Command("?"), Alias("info", "help")]
 			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync(
+				return ReplyAndDeleteAsync
+				(
 					"**Webhook Services**\n" +
 					"Creation: .services.<subscription>.subscribe\n" +
 					"Deletion: .services.<subscription>.unsubscribe\n" +
-					"Available Subscriptions: portal2boards, speedruncom", timeout: TimeSpan.FromSeconds(60));
+					"Available Subscriptions: portal2boards, speedruncom",
+					timeout: TimeSpan.FromSeconds(60)
+				);
 			}
 
 			[RequireContext(ContextType.Guild)]
@@ -39,8 +42,7 @@ namespace NeKzBot.Modules.Private
 						var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync(Service._userName);
 						if (webhook != null)
 						{
-							var subscribed = await Service.SubscribeAsync(webhook, true, "Portal2Boards Webhook Test!");
-							if (!subscribed)
+							if (!await Service.SubscribeAsync(webhook, true, "Portal2Boards Webhook Test!"))
 								await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
 						}
 						else
@@ -49,7 +51,6 @@ namespace NeKzBot.Modules.Private
 					else
 						await ReplyAndDeleteAsync("Channel already subscribed to this service.", timeout: TimeSpan.FromSeconds(10));
 				}
-
 				[Command("unsubscribe"), Alias("unsub", "delete", "unhook")]
 				public async Task Unsubscribe()
 				{
@@ -60,8 +61,10 @@ namespace NeKzBot.Modules.Private
 						if (webhook != null)
 							await webhook.DeleteAsync();
 
-						var result = await Service.UnsubscribeAsync(subscription);
-						await ReplyAndDeleteAsync((result) ? "Unsubscribed from Portal2Boards service." : "Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
+						if (await Service.UnsubscribeAsync(subscription))
+							await ReplyAndDeleteAsync("Unsubscribed from Portal2Boards service.", timeout: TimeSpan.FromSeconds(60));
+						else
+							await ReplyAndDeleteAsync("Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
 					}
 					else
 						await ReplyAndDeleteAsync("Could not find a subscription in the database.", timeout: TimeSpan.FromSeconds(10));
@@ -85,8 +88,7 @@ namespace NeKzBot.Modules.Private
 						var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync(Service._userName);
 						if (webhook != null)
 						{
-							var subscribed = await Service.SubscribeAsync(webhook, true, "SpeedrunCom Webhook Test!");
-							if (!subscribed)
+							if (!await Service.SubscribeAsync(webhook, true, "SpeedrunCom Webhook Test!"))
 								await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
 						}
 						else
@@ -95,7 +97,6 @@ namespace NeKzBot.Modules.Private
 					else
 						await ReplyAndDeleteAsync("Channel already subscribed to this service.", timeout: TimeSpan.FromSeconds(10));
 				}
-
 				[Command("unsubscribe"), Alias("unsub", "delete", "unhook")]
 				public async Task Unsubscribe()
 				{
@@ -106,8 +107,10 @@ namespace NeKzBot.Modules.Private
 						if (webhook != null)
 							await webhook.DeleteAsync();
 
-						var result = await Service.UnsubscribeAsync(subscription);
-						await ReplyAndDeleteAsync((result) ? "Unsubscribed from SpeedrunCom service." : "Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
+						if (await Service.UnsubscribeAsync(subscription))
+							await ReplyAndDeleteAsync("Unsubscribed from SpeedrunCom service.", timeout: TimeSpan.FromSeconds(60));
+						else
+							await ReplyAndDeleteAsync("Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
 					}
 					else
 						await ReplyAndDeleteAsync("Could not find a subscription in the database.", timeout: TimeSpan.FromSeconds(10));

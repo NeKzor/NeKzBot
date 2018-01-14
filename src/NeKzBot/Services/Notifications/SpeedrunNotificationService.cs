@@ -93,10 +93,8 @@ send:
 								// There might be a problem if we have lots of subscribers (retry then?)
 								foreach (var subscriber in subscribers.FindAll())
 								{
-									using (var vc = new DiscordWebhookClient(subscriber.Webhook))
-									{
-										await vc.SendMessageAsync("", embeds: new Embed[] { embed });
-									}
+									using (var wc = new DiscordWebhookClient(subscriber.Webhook))
+										await wc.SendMessageAsync(string.Empty, embeds: new Embed[] { embed });
 								}
 							}
 						}

@@ -1,4 +1,7 @@
 ﻿using System;
+#if DOCS
+using System.Collections.Generic;
+#endif
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -39,12 +42,11 @@ namespace NeKzBot.Services
 		{
 			_client.MessageReceived += MessageReceived;
 			_commands.AddModulesAsync(Assembly.GetEntryAssembly());
-
-#if MGEN
+#if DOCS
 			using (var fs = System.IO.File.OpenWrite("Modules.md"))
 			using (var sw = new System.IO.StreamWriter(fs))
 			{
-				sw.WriteLine("| Command | Module | Aliases |");
+				sw.WriteLine("| Command | Alias | Module |");
 				sw.WriteLine("| --- | --- | --- |");
 
 				string GetParameters(CommandInfo command)
@@ -81,17 +83,19 @@ namespace NeKzBot.Services
 					return result;
 				}
 
-				string GetAliases(CommandInfo command)
+				string GetAliases(string name, IEnumerable<string> allAliases)
 				{
-					var aliases = new System.Collections.Generic.List<string>();
-					foreach (var alias in command.Aliases)
+					var aliases = new List<string>();
+					foreach (var alias in allAliases)
 					{
 						if (alias.Contains('.'))
 							aliases.Add(alias.Split('.').Last());
+						else
+							aliases.Add(alias);
 					}
 					
 					aliases = aliases.Distinct().ToList();
-					aliases.Remove(command.Name);
+					aliases.Remove(name);
 					
                     if (aliases.Count == 0)
 						return "-";
@@ -107,19 +111,21 @@ namespace NeKzBot.Services
 				{
 					foreach (var cmd in module.Commands)
 					{
-						sw.WriteLine($"| `.{GetParameters(cmd)}` | {module.Name} | {GetAliases(cmd)} |");
+						sw.WriteLine($"| `.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
 					}
 					foreach (var submodule in module.Submodules)
 					{
+						sw.WriteLine($"| `.{submodule.Name}.` | {GetAliases(submodule.Name, submodule.Aliases)} | {module.Name} |");
 						foreach (var cmd in submodule.Commands)
 						{
-							sw.WriteLine($"| `.{submodule.Name}.{GetParameters(cmd)}` | {module.Name} | {GetAliases(cmd)} |");
+							sw.WriteLine($"| `.{submodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
 						}
 						foreach (var subsubmodule in submodule.Submodules)
 						{
+							sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.` | {GetAliases(subsubmodule.Name, subsubmodule.Aliases)} | {module.Name} |");
 							foreach (var cmd in subsubmodule.Commands)
 							{
-								sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.{GetParameters(cmd)}` | {module.Name} | {GetAliases(cmd)} |");
+								sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
 							}
 						}
 					}
@@ -151,7 +157,7 @@ namespace NeKzBot.Services
 			var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
 			if ((result.Error.HasValue) && (result.Error.Value != CommandError.UnknownCommand))
-				await _interactiveService.ReplyAndDeleteAsync(context, result.ToString(), timeout: TimeSpan.FromSeconds(10));
+				await _interactiveService.ReplyAndDeleteAsync(context, $"{result}", timeout: TimeSpan.FromSeconds(10));
 		}
 	}
 }

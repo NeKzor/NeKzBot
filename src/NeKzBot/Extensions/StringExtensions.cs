@@ -25,7 +25,7 @@ namespace NeKzBot.Extensions
 		{
 			if (points != 0)
 				return points?.ToString("#,###,###.##");
-			return points.ToString();
+			return $"{points}";
 		}
 		public static string FormatAveragePlaceToString(this float? place)
 		{

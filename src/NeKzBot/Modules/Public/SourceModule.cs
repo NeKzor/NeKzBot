@@ -101,8 +101,6 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without writing the bot prefix.", timeout: TimeSpan.FromSeconds(60));
 			}
-
-			// SourceDemo
 			[Command("filestamp"), Alias("magic")]
 			public async Task FileStamp()
 			{

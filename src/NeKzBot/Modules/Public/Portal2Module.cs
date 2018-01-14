@@ -17,16 +17,6 @@ namespace NeKzBot.Modules.Public
 {
 	public class Portal2Module : ModuleBase<SocketCommandContext>
 	{
-		// TODO: test
-		public class EnsureSourceChannelCriterion : ICriterion<SocketReaction>
-		{
-			public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketReaction parameter)
-			{
-				var ok = sourceContext.Channel.Id == parameter.Channel.Id;
-				return Task.FromResult(ok);
-			}
-		}
-
 		[Group("portal2boards"), Alias("p2b", "p2")]
 		public class Portal2Boards : InteractiveBase<SocketCommandContext>
 		{
@@ -46,7 +36,6 @@ namespace NeKzBot.Modules.Public
 			{
 				return ReplyAndDeleteAsync("Powered by Portal2Boards.Net (v1.1)", timeout: TimeSpan.FromSeconds(60));
 			}
-
 			[Command("leaderboard"), Alias("lb")]
 			public async Task Leaderboard([Remainder] string mapName = null)
 			{
@@ -60,18 +49,15 @@ namespace NeKzBot.Modules.Public
 							var board = await _client.GetLeaderboardAsync(map);
 							var page = string.Empty;
 							var pages = new List<string>();
-							var count = 1;
+							var count = 0;
 							foreach (var entry in board.Take(100))
 							{
-								if (count % 6 != 0)
-								{
-									page += $"\n{entry.ScoreRank.FormatRankToString()} {entry.Score.AsTimeToString()} by {entry.Player.Name.ToRawText()}";
-								}
-								else
+								if ((count % 5 == 0) && (count != 0))
 								{
 									pages.Add(page);
 									page = string.Empty;
 								}
+								page += $"\n{entry.ScoreRank.FormatRankToString()} {entry.Score.AsTimeToString()} by {entry.Player.Name.ToRawText()}";
 								count++;
 							}
 
@@ -80,10 +66,13 @@ namespace NeKzBot.Modules.Public
 								Color = Color.Blue,
 								Pages = pages,
 								Title = $"[Top 100 - {map.Alias}]",
-								Options = new PaginatedAppearanceOptions { DisplayInformationIcon = false }
+								Options = new PaginatedAppearanceOptions
+								{
+									DisplayInformationIcon = false,
+									Timeout = TimeSpan.FromSeconds(60)
+								}
 							},
-							new Criteria<SocketReaction>()
-								.AddCriterion(new EnsureSourceChannelCriterion()));
+							false);
 						}
 						else
 							await ReplyAndDeleteAsync("This map does not have a leaderboard.", timeout: TimeSpan.FromSeconds(10));
@@ -94,7 +83,6 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
 			}
-
 			[Command("changelog"), Alias("cl", "clog")]
 			public async Task Changelog([Remainder] string mapName = null)
 			{
@@ -122,12 +110,15 @@ namespace NeKzBot.Modules.Public
 
 				var page = string.Empty;
 				var pages = new List<string>();
-				var count = 1;
+				var count = 0;
 				foreach (var entry in changelog.Take(20))
 				{
-					if (count % 5 != 0)
+					if ((count % 5 == 0) && (count != 0))
 					{
-						page += $"\n{entry.Rank.Current.FormatRankToString("WR")}" +
+						pages.Add(page);
+						page = string.Empty;
+					}
+					page += $"\n{entry.Rank.Current.FormatRankToString("WR")}" +
 							$" {((entry.Rank.Improvement != default) ? $" (-{entry.Rank.Improvement})" : string.Empty)}" +
 							$" {entry.Score.Current.AsTimeToString()}" +
 							$" {((entry.Score.Improvement != default) ? $" (-{entry.Score.Improvement})" : string.Empty)}" +
@@ -136,12 +127,6 @@ namespace NeKzBot.Modules.Public
 							page += $" [dem]({entry.DemoLink})";
 						if (entry.VideoExists)
 							page += $" [yt]({entry.VideoLink})";
-					}
-					else
-					{
-						pages.Add(page);
-						page = string.Empty;
-					}
 					count++;
 				}
 
@@ -150,12 +135,14 @@ namespace NeKzBot.Modules.Public
 					Color = Color.Blue,
 					Pages = pages,
 					Title = $"[Latest 20{((map != null) ? $" - {map.Alias}" : string.Empty)}]",
-					Options = new PaginatedAppearanceOptions { DisplayInformationIcon = false }
+					Options = new PaginatedAppearanceOptions
+					{
+						DisplayInformationIcon = false,
+						Timeout = TimeSpan.FromSeconds(60)
+					}
 				},
-				new Criteria<SocketReaction>()
-					.AddCriterion(new EnsureSourceChannelCriterion()));
+				false);
 			}
-
 			[Command("profile"), Alias("pro", "user")]
 			public async Task Profile([Remainder] string userNameOrSteamId64 = null)
 			{
@@ -202,7 +189,7 @@ namespace NeKzBot.Modules.Public
 							$"\nMP Newest Score | {user.Times.Cooperative.Chapters.NewestScore.Score.AsTimeToString()} on {user.Times.Cooperative.Chapters.NewestScore.ParsedMap?.Alias ?? user.Times.Cooperative.Chapters.NewestScore.MapId}"
 					};
 
-					var count = 1;
+					var count = 0;
 					foreach (var chapter in user.Times.SinglePlayer.Chapters.Chambers.Select(c => c.Value.Data))
 					{
 						foreach (var chamber in chapter)
@@ -211,15 +198,12 @@ namespace NeKzBot.Modules.Public
 							if (map == null)
 								continue;
 
-							if (count % 6 != 0)
-							{
-								page += $"\n[{map.Alias}]({map.Link}) | {chamber.Value.ScoreRank.FormatRankToString("WR")} | {chamber.Value.Score.AsTimeToString()}";
-							}
-							else
+							if ((count % 5 == 0) && (count != 0))
 							{
 								pages.Add(page);
 								page = string.Empty;
 							}
+							page += $"\n[{map.Alias}]({map.Link}) | {chamber.Value.ScoreRank.FormatRankToString("WR")} | {chamber.Value.Score.AsTimeToString()}";
 							count++;
 						}
 					}
@@ -241,19 +225,46 @@ namespace NeKzBot.Modules.Public
 							IconUrl = user.SteamAvatarLink,
 							Url = user.Link
 						},
-						Options = new PaginatedAppearanceOptions { DisplayInformationIcon = false }
+						Options = new PaginatedAppearanceOptions
+						{
+							DisplayInformationIcon = false,
+							Timeout = TimeSpan.FromSeconds(60)
+						}
 					},
-					new Criteria<SocketReaction>()
-						.AddCriterion(new EnsureSourceChannelCriterion()));
+					false);
 				}
 				else
 					await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
 			}
-
 			[Command("aggregated")]
-			public Task Aggregated()
+			public async Task Aggregated()
 			{
-				return ReplyAndDeleteAsync("Todo", timeout: TimeSpan.FromSeconds(60));
+				var agg = await _client.GetAggregatedAsync();
+				var page = string.Empty;
+				var pages = new List<string>();
+				var count = 0;
+				foreach (var entry in agg.DataTimes.Select(dt => dt.Value).Take(20))
+				{
+					if ((count % 5 == 0) && (count != 0))
+					{
+						pages.Add(page);
+						page = string.Empty;
+					}
+					page += $"\n{entry.ScoreData.Score}" +
+							$" by {entry.UserData.BoardName}";
+					count++;
+				}
+				await PagedReplyAsync(new PaginatedMessage
+				{
+					Color = Color.Blue,
+					Pages = pages,
+					Options = new PaginatedAppearanceOptions
+					{
+						DisplayInformationIcon = false,
+						Timeout = TimeSpan.FromSeconds(60)
+					}
+				},
+				false);
 			}
 		}
 	}
