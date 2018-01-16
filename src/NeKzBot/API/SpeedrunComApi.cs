@@ -126,7 +126,7 @@ namespace NeKzBot.API
 	{
 		[JsonProperty("logo")]
 		public SpeedrunAssetsItem Logo { get; set; }
-		[JsonProperty("logo")]
+		[JsonProperty("cover-tiny")]
 		public SpeedrunAssetsItem CoverTiny { get; set; }
 		[JsonProperty("cover-small")]
 		public SpeedrunAssetsItem CoverSmall { get; set; }

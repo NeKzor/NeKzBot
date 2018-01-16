@@ -159,7 +159,8 @@ namespace NeKzBot.Modules.Public
 				var profile = default(Profile);
 				if (string.IsNullOrEmpty(userNameOrSteamId64))
 				{
-					// TODO: Get user's linked SteamId64 when the DAPI supports this
+					// Get user's linked SteamId64 when the DAPI supports this
+					// This will never happen right :(?
 					var nick = (Context.User as SocketGuildUser)?.Nickname;
 					var name = Context.User.Username;
 					if (nick != null)
@@ -246,7 +247,7 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Command("aggregated")]
+			[Command("aggregated"), Alias("agg")]
 			public async Task Aggregated()
 			{
 				var agg = await _client.GetAggregatedAsync();

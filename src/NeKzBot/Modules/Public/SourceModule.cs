@@ -150,26 +150,64 @@ namespace NeKzBot.Modules.Public
 						Color = Color.Green,
 						Description =
 							"**Source Engine Demo Parser**\n" +
-							"Attach the file and use: .demo.parse\n" +
+							"Attach the file and use **.demo.parse**\n" +
 							"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://github.com/NeKzor/SourceDemoParser.Net)",
 					}
 					.Build(),
 					timeout: TimeSpan.FromSeconds(60)
 				);
 			}
-			[Command("parse")]
+			// Downloading + parsing + adjusting might take a while
+			// Run this async or the gateway gets blocked
+			[Command("parse", RunMode = RunMode.Async)]
 			public async Task Parse()
 			{
-				var demos = Context.Message.Attachments
+				var demo = Context.Message.Attachments
 					.Where(a => a.Filename.EndsWith(".dem"))
-					.ToList();
+					.FirstOrDefault() as IAttachment;
 				
-				if (demos.Count == 1)
+				if (demo == null)
 				{
-					var file = demos.First();
-					if (file.Size <= 5 * 1000 * 1000)
+					await ReplyAndDeleteAsync
+					(
+						"You didn't attach a demo file!\n" +
+						"Should I search for your last uploaded demo here?",
+						timeout: TimeSpan.FromSeconds(20)
+					);
+
+					// Waiting for message here
+					// RunMode is async anyway
+					var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
+
+					if (response != null)
 					{
-						if (await Service.DownloadNewDemoAsync(Context.Message.Author.Id, file.Url))
+						switch (response.Content.Trim().ToLower())
+						{
+							case "y":
+							case "ya":
+							case "ye":
+							case "yes":
+							case "yea":
+							case "yeah":
+							case "yep":
+								demo = (await Context.Channel
+									.GetMessagesAsync()
+									.Flatten())
+									.Where(m => m.Author.Id == Context.User.Id)
+									.Where(m => m.Attachments.Count == 1)
+									.Where(m => m.Attachments.First().Filename.EndsWith(".dem"))
+									.Select(m => m.Attachments.First())
+									.FirstOrDefault();
+								break;
+						}
+					}
+				}
+
+				if (demo != null)
+				{
+					if (demo.Size <= 5 * 1000 * 1000)
+					{
+						if (await Service.DownloadNewDemoAsync(Context.Message.Author.Id, demo.Url))
 							await Get();
 						else
 							await ReplyAndDeleteAsync("Download or parsing failed!", timeout: TimeSpan.FromSeconds(10));
@@ -177,10 +215,8 @@ namespace NeKzBot.Modules.Public
 					else
 						await ReplyAndDeleteAsync("File is too big! Max size should be less than 5Mb.", timeout: TimeSpan.FromSeconds(10));
 				}
-				else if (demos.Count == 0)
-					await ReplyAndDeleteAsync("You didn't attach a demo file!", timeout: TimeSpan.FromSeconds(10));
 				else
-					await ReplyAndDeleteAsync("Too many demo files!", timeout: TimeSpan.FromSeconds(10));
+					await ReplyAndDeleteAsync("Could not find a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("get")]
 			public async Task Get()
@@ -202,7 +238,8 @@ namespace NeKzBot.Modules.Public
 								$"**Seconds** {demo.PlaybackTime.ToString("n3")}\n" +
 								$"**Tickrate** {demo.GetTickrate()}"
 						}
-						.Build()
+						.Build(),
+						timeout: TimeSpan.FromSeconds(60)
 					);
 				}
 				else
@@ -361,7 +398,7 @@ end:
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Command("gettickspersecond"), Alias("tps", "intervalpersecond", "ips")]
+			[Command("gettickspersecond"), Alias("tickspersecond", "tps", "intervalpertick", "ipt")]
 			public async Task GetTicksPerSecond()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
@@ -375,33 +412,46 @@ end:
 			public async Task AdjustExact()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
+
 				var before = demo.PlaybackTicks;
 				await demo.AdjustExact();
 				var after = demo.PlaybackTicks;
-				await Service.SaveDemo(Context.User.Id, demo);
-				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+				
+				if (await Service.SaveDemo(Context.User.Id, demo))
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("adjustflag"), Alias("adjf")]
 			public async Task AdjustFlag()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
+				
 				var before = demo.PlaybackTicks;
 				await demo.AdjustFlagAsync();
 				var after = demo.PlaybackTicks;
-				await Service.SaveDemo(Context.User.Id, demo);
-				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+
+				if (await Service.SaveDemo(Context.User.Id, demo))
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}
+			// TODO: Check if this needs RunMode.Async
 			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("adjust"), Alias("adj2")]
 			public async Task Adjust()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
+
 				var before = demo.PlaybackTicks;
 				await demo.AdjustAsync();
 				var after = demo.PlaybackTicks;
-				await Service.SaveDemo(Context.User.Id, demo);
-				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+
+				if (await Service.SaveDemo(Context.User.Id, demo))
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+				else
+					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 		}
 	}

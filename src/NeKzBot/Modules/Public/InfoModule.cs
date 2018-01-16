@@ -51,7 +51,7 @@ namespace NeKzBot.Modules.Public
 			.AddField(field =>
 			{
 				field.IsInline = true;
-				field.Name = "Local Time";
+				field.Name = "Local Time (UTC)";
 				field.Value = DateTime.UtcNow.ToString("HH:mm:ss");
 			})
 			.AddField(field =>

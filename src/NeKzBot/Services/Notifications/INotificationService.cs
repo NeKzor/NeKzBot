@@ -10,8 +10,8 @@ namespace NeKzBot.Services.Notification
 		Task Initialize();
 		Task StartAsync();
 		Task StopAsync();
-		Task<bool> SubscribeAsync(IWebhook hook, string helloWorld);
+		Task<bool> SubscribeAsync(IWebhook hook, string helloWorldMessage);
 		Task<bool> UnsubscribeAsync(SubscriptionData subscription);
-		Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> hooks);
+		Task<(IWebhook Webhook, SubscriptionData Data)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks);
 	}
 }

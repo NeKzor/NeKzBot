@@ -11,6 +11,6 @@ namespace NeKzBot.Data
 		public ulong UserId { get; set; }
 		public string DownloadUrl { get; set; }
 		public SourceDemo Demo { get; set; }
-		public DateTime CreatedAt { get; } = DateTime.UtcNow;
+		public DateTime CreatedAt { get; set; }
 	}
 }

@@ -63,7 +63,7 @@ namespace NeKzBot.Services.Notifications
 		}
 
 		// Subscription tasks
-		public virtual async Task<bool> SubscribeAsync(IWebhook hook, string helloWorld = null)
+		public virtual async Task<bool> SubscribeAsync(IWebhook hook, string helloWorldMessage = null)
 		{
 			var db = await GetSubscribers();
 			var data = db.FindOne(d => d.WebhookId == hook.ChannelId);
@@ -72,13 +72,13 @@ namespace NeKzBot.Services.Notifications
 			if ((data == null) && (hook.GuildId != null))
 			{
 				// Test message
-				if (!string.IsNullOrEmpty(helloWorld))
+				if (!string.IsNullOrEmpty(helloWorldMessage))
 				{
 					using (var wc = new DiscordWebhookClient(hook))
 					{
 						await wc.SendMessageAsync
 						(
-							helloWorld,
+							helloWorldMessage,
 							username: _userName,
 							avatarUrl: _userAvatar
 						);
@@ -102,10 +102,11 @@ namespace NeKzBot.Services.Notifications
 			var db = await GetSubscribers();
 			return (db.Delete(d => d.WebhookId == subscription.WebhookId) == 1);
 		}
-		public virtual async Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> hooks)
+		public virtual async Task<(IWebhook Webhook, SubscriptionData Data)> FindSubscriptionAsync(
+			IEnumerable<IWebhook> webhooks)
 		{
 			var db = await GetSubscribers();
-			foreach (var hook in hooks) 
+			foreach (var hook in webhooks) 
 			{
 				var sub = db.FindOne(d => d.WebhookId == hook.Id);
 				if (sub == null) continue;

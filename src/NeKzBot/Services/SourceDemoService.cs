@@ -40,8 +40,7 @@ namespace NeKzBot.Services
 				try
 				{
 					var demo = await _parser.ParseContentAsync(result);
-					await SaveDemo(userId, demo, demoLink);
-					return true;
+					return await SaveDemo(userId, demo, demoLink);
 				}
 				catch (Exception ex)
 				{
@@ -50,20 +49,19 @@ namespace NeKzBot.Services
 			}
 			return false;
 		}
-		public Task SaveDemo(ulong userId, SourceDemo demo, string downloadUrl = default)
+		public Task<bool> SaveDemo(ulong userId, SourceDemo demo, string downloadUrl = default)
 		{
 			var db = _dataBase
 				.GetCollection<SourceDemoData>(nameof(SourceDemoService));
 			var data = db
-				.FindOne(d => d.UserId == userId);
+				.FindOne(d => d.UserId == userId) ?? new SourceDemoData();
 			
-			db.Upsert(data = new SourceDemoData()
-			{
-				UserId = userId,
-				DownloadUrl = downloadUrl,
-				Demo = demo
-			});
-			return Task.CompletedTask;
+			data.UserId = userId;
+			data.DownloadUrl = downloadUrl;
+			data.Demo = demo;
+			data.CreatedAt = DateTime.UtcNow;
+
+			return Task.FromResult(db.Upsert(data));
 		}
 		public Task<SourceDemo> GetDemo(ulong userId)
 		{
@@ -71,13 +69,6 @@ namespace NeKzBot.Services
 				.GetCollection<SourceDemoData>(nameof(SourceDemoService))
 				.FindOne(d => d.UserId == userId);
 			return Task.FromResult(data?.Demo);
-		}
-		public Task<SourceDemoData> GetDemoData(ulong userId)
-		{
-			var data = _dataBase
-				.GetCollection<SourceDemoData>(nameof(SourceDemoService))
-				.FindOne(d => d.UserId == userId);
-			return Task.FromResult(data);
 		}
 		
 		internal Task DeleteExpiredDemos()
@@ -89,8 +80,9 @@ namespace NeKzBot.Services
 			{
 				if ((DateTime.UtcNow - demo.CreatedAt).Days > 21)
 				{
-					db.Delete(demo.Id);
-					_ = LogWarning($"Deleted expired demo from user {demo.UserId}");
+					_ = LogWarning($"Deleting expired demo from user {demo.UserId}");
+					if (!db.Delete(demo.Id))
+						_ = LogWarning("Database failed to delete data");
 				}
 			}
 			return Task.CompletedTask;

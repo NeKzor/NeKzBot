@@ -33,7 +33,7 @@ namespace NeKzBot.Services.Notifications
 
 			_userName = "Portal2Boards";
 			_userAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/portal2boards_avatar.jpg";
-			_sleepTime = 1 * 60 * 1000;
+			_sleepTime = 5 * 60 * 1000;
 
 			// API client to board.iverb.me
 			var http = new HttpClient();
@@ -108,10 +108,10 @@ namespace NeKzBot.Services.Notifications
 						}
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
+				send:
 #else
 					sending.Add(entries.First());
 #endif
-				send:
 					await LogInfo($"Found {sending.Count} new entries");
 					await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
 

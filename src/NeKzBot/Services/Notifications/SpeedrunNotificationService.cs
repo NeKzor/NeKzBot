@@ -28,7 +28,7 @@ namespace NeKzBot.Services.Notifications
 			_ = base.Initialize();
 
 			_userName = "SpeedrunCom";
-			_userAvatar = "https://github.com/NeKzor/NeKzBot/blob/master/public/resources/avatars/speedruncom_avatar.png";
+			_userAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/speedruncom_avatar.png";
 			_sleepTime = 1 * 60 * 1000;
 
 			_client = new SpeedrunComApiClient
@@ -93,10 +93,10 @@ namespace NeKzBot.Services.Notifications
 						}
 						throw new Exception("Could not find the last notification entry!");
 					}
+				send:
 #else
 					sending.Add(notifications.First());
 #endif
-				send:
 					await LogInfo($"Found {sending.Count} new notifications");
 					await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
 
@@ -237,7 +237,16 @@ namespace NeKzBot.Services.Notifications
 			{
 				var games = await _client.GetGamesAsync(category);
 				var game = games?.FirstOrDefault();
-				thumbnail = game.Assets.CoverMedium.Uri;
+				thumbnail = game.Assets.CoverTiny.Uri;
+			}
+
+			// API doesn't support user avatar nice...
+			// Let's try to download it
+			var avatar = false;
+			using (var wc = new WebClient(_config["user_agent"]))
+			{
+				var (success, _) = await wc.TryGetBytesAsync($"https://www.speedrun.com/themes/user/{author}/image.png");
+				avatar = success;
 			}
 
 			var embed = new EmbedBuilder
@@ -246,7 +255,6 @@ namespace NeKzBot.Services.Notifications
 				{
 					Name = author,
 					Url = $"https://www.speedrun.com/{author}",
-					IconUrl = $"https://www.speedrun.com/themes/user/{author}/image.png"
 				},
 				Title = title,
 				Url = nf.Item.Uri,
@@ -255,13 +263,16 @@ namespace NeKzBot.Services.Notifications
 				Timestamp = DateTime.UtcNow,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "speedrun.com",
-					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
+					Text = "speedrun.com"
+					// TODO: Fix icon size
+					//IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
 				}
 			};
 
 			if (!string.IsNullOrEmpty(thumbnail))
 				embed.WithThumbnailUrl(thumbnail);
+			if (avatar)
+				embed.Author.WithIconUrl($"https://www.speedrun.com/themes/user/{author}/image.png");
 
 			return embed.Build();
 		}
