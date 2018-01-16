@@ -34,7 +34,17 @@ namespace NeKzBot.Modules.Public
 			[Command("?"), Alias("info", "help")]
 			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync("Powered by Portal2Boards.Net (v1.1)", timeout: TimeSpan.FromSeconds(60));
+				return ReplyAndDeleteAsync
+				(
+					string.Empty,
+					embed: new EmbedBuilder()
+					{
+						Color = Color.Blue,
+						Description = "[Powered by Portal2Boards.Net (v1.1)](https://github.com/NeKzor/Portal2Boards.Net)",
+					}
+					.Build(),
+					timeout: TimeSpan.FromSeconds(60)
+				);
 			}
 			[Command("leaderboard"), Alias("lb")]
 			public async Task Leaderboard([Remainder] string mapName = null)

@@ -27,7 +27,7 @@ namespace NeKzBot.Services
 		public Task Initialize(string demoPath = null)
 		{
 			_client = new WebClient(_config["user_agent"]);
-			_parser = new SourceParser(fastParsing: false, autoAdjustment: false);
+			_parser = new SourceParser();
 			SourceExtensions.DiscoverAsync();
 			return Task.CompletedTask;
 		}
@@ -52,33 +52,39 @@ namespace NeKzBot.Services
 		}
 		public Task SaveDemo(ulong userId, SourceDemo demo, string downloadUrl = default)
 		{
-			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.UserId == userId);
-			data = new SourceDemoData()
+			var db = _dataBase
+				.GetCollection<SourceDemoData>(nameof(SourceDemoService));
+			var data = db
+				.FindOne(d => d.UserId == userId);
+			
+			db.Upsert(data = new SourceDemoData()
 			{
 				UserId = userId,
 				DownloadUrl = downloadUrl,
 				Demo = demo
-			};
-			db.Upsert(data);
+			});
 			return Task.CompletedTask;
 		}
 		public Task<SourceDemo> GetDemo(ulong userId)
 		{
-			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.UserId == userId);
+			var data = _dataBase
+				.GetCollection<SourceDemoData>(nameof(SourceDemoService))
+				.FindOne(d => d.UserId == userId);
 			return Task.FromResult(data?.Demo);
 		}
 		public Task<SourceDemoData> GetDemoData(ulong userId)
 		{
-			var db = _dataBase.GetCollection<SourceDemoData>();
-			var data = db.FindOne(d => d.UserId == userId);
+			var data = _dataBase
+				.GetCollection<SourceDemoData>(nameof(SourceDemoService))
+				.FindOne(d => d.UserId == userId);
 			return Task.FromResult(data);
 		}
 		
 		internal Task DeleteExpiredDemos()
 		{
-			var db = _dataBase.GetCollection<SourceDemoData>();
+			var db = _dataBase
+				.GetCollection<SourceDemoData>(nameof(SourceDemoService));
+			
 			foreach (var demo in db.FindAll())
 			{
 				if ((DateTime.UtcNow - demo.CreatedAt).Days > 21)
@@ -92,7 +98,7 @@ namespace NeKzBot.Services
 
 		protected Task LogWarning(string message)
 		{
-			_ = Log.Invoke($"[{nameof(SourceDemoData)}] {message}", null);
+			_ = Log.Invoke($"{nameof(SourceDemoData)}\t{message}!", null);
 			return Task.CompletedTask;
 		}
 		protected Task LogException(Exception ex)

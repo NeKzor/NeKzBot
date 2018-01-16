@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
@@ -24,26 +25,33 @@ namespace NeKzBot.Services.Notifications
 
 		public override Task Initialize()
 		{
-			base.Initialize();
+			_ = base.Initialize();
 
 			_userName = "SpeedrunCom";
 			_userAvatar = "https://github.com/NeKzor/NeKzBot/blob/master/public/resources/avatars/speedruncom_avatar.png";
 			_sleepTime = 1 * 60 * 1000;
 
-			_client = new SpeedrunComApiClient(_config["user_agent"], _config["speedrun_token"]);
+			_client = new SpeedrunComApiClient
+			(
+				_config["user_agent"],
+				_config["speedrun_token"]
+			);
 
-			var data = _dataBase.GetCollection<SpeedrunCacheData>();
-			var cache = data.FindOne(d => d.Id == _globalId);
+			//_dataBase.DropCollection($"{_globalId}_cache");
+			var data = GetTaskCache<SpeedrunCacheData>()
+				.GetAwaiter()
+				.GetResult();
+			
+			var cache = data
+				.FindAll()
+				.FirstOrDefault();
+			
 			if (cache == null)
 			{
-				cache = new SpeedrunCacheData()
-				{
-					Id = _globalId,
-					Notifications = new List<SpeedrunNotification>()
-				};
+				_ = LogWarning("Creating new cache");
+				cache = new SpeedrunCacheData();
 				data.Insert(cache);
 			}
-
 			return Task.CompletedTask;
 		}
 
@@ -51,24 +59,30 @@ namespace NeKzBot.Services.Notifications
 		{
 			try
 			{
-				while (!_isRunning)
+				await base.StartAsync();
+
+				while (_isRunning)
 				{
+					await LogInfo("Checking...");
+
 					var watch = Stopwatch.StartNew();
 
-					var db = _dataBase.GetCollection<SpeedrunCacheData>();
-					var data = db.FindOne(d => d.Id == _globalId);
-					if (data == null)
-						throw new Exception("Data cache not found!");
-
-					var cache = data.Notifications;
-					var notifications = await _client.GetNotificationsAsync(100);
+					var db = await GetTaskCache<SpeedrunCacheData>();
+					var cache = db
+						.FindAll()
+						.FirstOrDefault();
+					
+					if (cache == null)
+						throw new Exception("Task cache not found!");
+					
+					var notifications = await _client.GetNotificationsAsync(21);
 					var sending = new List<SpeedrunNotification>();
-
+#if !DEBUG
 					// Will skip for the very first time
-					if (cache.Any())
+					if (cache.Notifications.Any())
 					{
 						// Check cached notification
-						foreach (var old in cache)
+						foreach (var old in cache.Notifications)
 						{
 							foreach (var notification in notifications)
 							{
@@ -79,23 +93,67 @@ namespace NeKzBot.Services.Notifications
 						}
 						throw new Exception("Could not find the last notification entry!");
 					}
-send:
-					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
-					if (subscribers.Count() > 0)
-					{
-						if (sending.Count <= 10)
-						{
-							sending.Reverse();
-							foreach (var tosend in sending)
-							{
-								var embed = await CreateEmbedAsync(tosend);
+#else
+					sending.Add(notifications.First());
+#endif
+				send:
+					await LogInfo($"Found {sending.Count} new notifications");
+					await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
 
-								// There might be a problem if we have lots of subscribers (retry then?)
-								foreach (var subscriber in subscribers.FindAll())
+					if (sending.Count > 0)
+					{
+						if (sending.Count < 11)
+						{
+							var subscribers = (await GetSubscribers())
+								.FindAll()
+								.ToList();
+
+							await LogInfo($"{subscribers.Count} subs found");
+
+							if (subscribers.Count > 0)
+							{
+								await LogInfo("Sending hooks");
+
+								sending.Reverse();
+								var deletion = new List<SubscriptionData>();
+
+								foreach (var notification in sending)
 								{
-									using (var wc = new DiscordWebhookClient(subscriber.Webhook))
-										await wc.SendMessageAsync(string.Empty, embeds: new Embed[] { embed });
+									var embed = await CreateEmbedAsync(notification);
+									
+									foreach (var sub in subscribers)
+									{
+										if (deletion.Contains(sub)) continue;
+										
+										try
+										{
+											using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
+											{
+												await wc.SendMessageAsync
+												(
+													string.Empty,
+													embeds: new Embed[] { embed },
+													username: _userName,
+													avatarUrl: _userAvatar
+													/* ,options: new RequestOptions()
+													{
+														RetryMode = RetryMode.RetryRatelimit
+													} */
+												);
+											
+											}
+										}
+										// Make sure to catch only on this special exception
+										// which tells us that this webhook doesn't exist
+										catch (InvalidOperationException ex)
+											when (ex.Message == "Could not find a webhook for the supplied credentials.")
+										{
+											deletion.Add(sub);
+											await LogWarning($"Sub ID = {sub.Id} not found");
+										}
+									}
 								}
+								await AutoDeleteAsync(deletion);
 							}
 						}
 						else
@@ -103,21 +161,23 @@ send:
 					}
 
 					// Cache
-					data.Notifications = notifications.Take(11);
-					if (!db.Update(data))
+					cache.Notifications = notifications.Take(11);
+					if (!db.Update(cache))
 						throw new Exception("Failed to update cache!");
 
 					// Sleep
 					var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
 					if (delay < 0)
 						throw new Exception($"Task took too long ({delay}ms)");
-					await Task.Delay(delay);
+					await Task.Delay(delay, _cancellation.Token);
 				}
 			}
 			catch (Exception ex)
 			{
 				await LogException(ex);
 			}
+
+			await LogWarning("Task ended");
 		}
 
 		public async Task<Embed> CreateEmbedAsync(SpeedrunNotification nf)

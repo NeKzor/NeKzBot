@@ -13,6 +13,7 @@ namespace NeKzBot.Modules.Public
 {
 	public class StatsModule : InteractiveBase<SocketCommandContext>
 	{
+		[RequireContext(ContextType.Guild)]
 		[Command("guild"), Alias("server")]
 		public async Task Guild()
 		{
@@ -107,6 +108,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("hierarchy")]
 		public async Task Hierarchy()
 		{
@@ -135,6 +137,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("channel")]
 		public async Task Channel()
 		{
@@ -189,6 +192,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("id")]
 		public async Task Id(bool ascending = true)
 		{
@@ -229,6 +233,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("disc"), Alias("discriminator")]
 		public async Task Disc(bool ascending = true)
 		{
@@ -269,6 +274,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("joined")]
 		public async Task Joined(bool ascending = true)
 		{
@@ -309,6 +315,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("created")]
 		public async Task Created(bool ascending = true)
 		{
@@ -349,6 +356,7 @@ namespace NeKzBot.Modules.Public
 			.Build(),
 			timeout: TimeSpan.FromSeconds(60));
 		}
+		[RequireContext(ContextType.Guild)]
 		[Command("score")]
 		public async Task Score(bool ascending = true)
 		{

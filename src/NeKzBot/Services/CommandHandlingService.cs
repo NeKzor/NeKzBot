@@ -141,18 +141,9 @@ namespace NeKzBot.Services
 			if (message.Source != MessageSource.User) return;
 
 			int argPos = 0;
-			if ((!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-				&& (!message.HasStringPrefix(".", ref argPos)))
-			{
-				if (message.Attachments.Count == 1)
-				{
-					var attachment = message.Attachments.ToList().First();
-					if ((attachment.Filename.EndsWith(".dem")) && (attachment.Size <= 5 * 1000 * 1000))
-						await _demoService.DownloadNewDemoAsync(message.Author.Id, attachment.Url);
-				}
-				return;
-			}
-
+			if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+				if (!message.HasStringPrefix(".", ref argPos)) return;
+			
 			var context = new SocketCommandContext(_client, message);
 			var result = await _commands.ExecuteAsync(context, argPos, _provider);
 

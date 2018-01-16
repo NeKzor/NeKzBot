@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Rest;
 using Discord.Webhook;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
@@ -28,32 +29,41 @@ namespace NeKzBot.Services.Notifications
 
 		public override Task Initialize()
 		{
-			base.Initialize();
+			_ = base.Initialize();
 
 			_userName = "Portal2Boards";
 			_userAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/portal2boards_avatar.jpg";
-			_sleepTime = 5 * 60 * 1000;
+			_sleepTime = 1 * 60 * 1000;
 
+			// API client to board.iverb.me
 			var http = new HttpClient();
 			http.DefaultRequestHeaders.UserAgent.ParseAdd(_config["user_agent"]);
-			var parameters = new ChangelogParameters
-			{
-				[Parameters.WorldRecord] = 1,
-				// Worst case I've found was 45
-				[Parameters.MaxDaysAgo] = 52
-			};
-			_client = new Portal2BoardsClient(parameters, http, false);
+			_client = new Portal2BoardsClient
+			(
+				new ChangelogParameters
+				{
+					[Parameters.WorldRecord] = 1,
+					// Worst case I've found was 45
+					[Parameters.MaxDaysAgo] = 52
+				},
+				http,	// Set user agent
+				false	// Disable auto caching
+			);
 
-			var data = _dataBase.GetCollection<Portal2CacheData>();
-			var cache = data.FindOne(d => d.Id == _globalId);
+			// Insert new cache if it doesn't exist yet
+			var db = GetTaskCache<Portal2CacheData>()
+				.GetAwaiter()
+				.GetResult();
+			
+			var cache = db
+				.FindAll()
+				.FirstOrDefault();
+			
 			if (cache == null)
 			{
-				cache = new Portal2CacheData()
-				{
-					Id = _globalId,
-					Entries = new List<EntryData>()
-				};
-				data.Insert(cache);
+				_ = LogWarning("Creating new cache");
+				cache = new Portal2CacheData();
+				db.Insert(cache);
 			}
 			return Task.CompletedTask;
 		}
@@ -62,60 +72,107 @@ namespace NeKzBot.Services.Notifications
 		{
 			try
 			{
-				while (!_isRunning)
+				await base.StartAsync();
+
+				while (_isRunning)
 				{
+					await LogInfo("Checking...");
+
 					var watch = Stopwatch.StartNew();
 
-					var db = _dataBase.GetCollection<Portal2CacheData>();
-					var data = db.FindOne(d => d.Id == _globalId);
-					if (data == null)
-						throw new Exception("Data cache not found!");
-
-					var cache = data.Entries;
-					var entries = (await _client.GetChangelogAsync()).Where(x => !x.IsBanned);
+					var db = await GetTaskCache<Portal2CacheData>();
+					var cache = db
+						.FindAll()
+						.FirstOrDefault();
+					
+					if (cache == null)
+						throw new Exception("Task cache not found!");
+					
+					var clog = await _client.GetChangelogAsync();
+					var entries = clog.Where(x => !x.IsBanned);
 					var sending = new List<EntryData>();
 
+#if !DEBUG
 					// Will skip for the very first time
-					if (cache.Any())
+					if (cache.EntryIds.Any())
 					{
 						// Check cached entries
-						foreach (var old in cache)
+						foreach (var id in cache.EntryIds)
 						{
 							foreach (var entry in entries)
 							{
-								if (old.Id >= entry.Id)
+								if (id >= entry.Id)
 									goto send;
 								sending.Add(entry);
 							}
 						}
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
-send:
-					var subscribers = _dataBase.GetCollection<SubscriptionData>(_globalId);
-					if (subscribers.Count() > 0)
-					{
-						if (sending.Count <= 10)
-						{
-							sending.Reverse();
-							foreach (var tosend in sending)
-							{
-#if DEBUG
-								var watch2 = Stopwatch.StartNew();
+#else
+					sending.Add(entries.First());
 #endif
-								var feature = await GetWorldRecordDelta(tosend) ?? -1;
-#if DEBUG
-								watch2.Stop();
-								Console.WriteLine($"{nameof(GetWorldRecordDelta)} took: {watch2.ElapsedMilliseconds}ms");
-#endif
-								var payload = (feature != default) ? $" (-{feature.ToString("N2")})" : string.Empty;
-								var embed = await CreateEmbed(tosend, payload);
+				send:
+					await LogInfo($"Found {sending.Count} new entries");
+					await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
 
-								// There might be a problem if we have lots of subscribers (retry then?)
-								foreach (var subscriber in subscribers.FindAll())
+					if (sending.Count > 0)
+					{
+						if (sending.Count < 11)
+						{
+							var subscribers = (await GetSubscribers())
+								.FindAll()
+								.ToList();
+
+							await LogInfo($"{subscribers.Count} subs found");
+
+							if (subscribers.Count > 0)
+							{
+								await LogInfo("Sending hooks");
+
+								sending.Reverse();
+								var deletion = new List<SubscriptionData>();
+
+								foreach (var entry in sending)
 								{
-									using (var wc = new DiscordWebhookClient(subscriber.Webhook))
-										await wc.SendMessageAsync(string.Empty, embeds: new Embed[] { embed });
+									var delta = await GetWorldRecordDelta(entry) ?? -1;
+									var feature = (delta != default)
+										? $" (-{delta.ToString("N2")})"
+										: string.Empty;
+									
+									var embed = await CreateEmbed(entry, feature);
+
+									foreach (var sub in subscribers)
+									{
+										if (deletion.Contains(sub)) continue;
+
+										try
+										{
+											using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
+											{
+												await wc.SendMessageAsync
+												(
+													string.Empty,
+													embeds: new Embed[] { embed },
+													username: _userName,
+													avatarUrl: _userAvatar
+													/* ,options: new RequestOptions()
+													{
+														RetryMode = RetryMode.RetryRatelimit
+													} */
+												);
+											}
+										}
+										// Make sure to catch only on this special exception
+										// which tells us that this webhook doesn't exist
+										catch (InvalidOperationException ex)
+											when (ex.Message == "Could not find a webhook for the supplied credentials.")
+										{
+											deletion.Add(sub);
+											await LogWarning($"Sub ID = {sub.Id} not found");
+										}
+									}
 								}
+								await AutoDeleteAsync(deletion);
 							}
 						}
 						else
@@ -123,24 +180,30 @@ send:
 					}
 
 					// Cache
-					data.Entries = entries.Take(11);
-					if (!db.Update(data))
+					cache.EntryIds = entries
+						.Select(e => e.Id)
+						.Take(11);
+					
+					if (!db.Update(cache))
 						throw new Exception("Failed to update cache!");
 
 					// Sleep
 					var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
 					if (delay < 0)
 						throw new Exception($"Task took too long ({delay}ms)");
-					await Task.Delay(delay);
+					
+					await Task.Delay(delay, _cancellation.Token);
 				}
 			}
 			catch (Exception ex)
 			{
 				await LogException(ex);
 			}
+
+			await LogWarning("Task ended");
 		}
 
-		private Task<Embed> CreateEmbed(EntryData wr, string payload)
+		private Task<Embed> CreateEmbed(EntryData wr, string feature)
 		{
 			var embed = new EmbedBuilder
 			{
@@ -162,8 +225,8 @@ send:
 				}
 			};
 			embed.AddField("Map", wr.Map.Name, true);
-			// "Inject" a nice feature which the leaderboard doesn't have :v
-			embed.AddField("Time", wr.Score.Current.AsTimeToString() + payload, true);
+			// WR delta time, a feature which the leaderboard doesn't have :>
+			embed.AddField("Time", wr.Score.Current.AsTimeToString() + feature, true);
 			embed.AddField("Player", wr.Player.Name.ToRawText(), true);
 			embed.AddField("Date", wr.Date?.DateTimeToString(), true);
 			if ((wr.DemoExists) || (wr.VideoExists))
@@ -227,7 +290,7 @@ send:
 			}
 
 			// Warning
-			_ = LogWarning("Could not calculate the world record delta!");
+			_ = LogWarning("Could not calculate the world record delta");
 			return default;
 		}
 	}

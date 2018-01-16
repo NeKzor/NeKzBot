@@ -94,7 +94,12 @@ namespace NeKzBot.Services
 		{
 			_serviceLogger.Log
 			(
-				LogLevel.Error,
+				// :^)
+				(ex != null)
+					? LogLevel.Error
+					: (message.EndsWith("!"))
+						? LogLevel.Warning
+						: LogLevel.Information,
 				0,
 				message,
 				ex,

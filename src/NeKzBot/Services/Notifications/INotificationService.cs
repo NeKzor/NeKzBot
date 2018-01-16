@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Data;
 
@@ -9,8 +10,8 @@ namespace NeKzBot.Services.Notification
 		Task Initialize();
 		Task StartAsync();
 		Task StopAsync();
-		Task<bool> SubscribeAsync(IWebhook hook, bool test, string testMessage);
+		Task<bool> SubscribeAsync(IWebhook hook, string helloWorld);
 		Task<bool> UnsubscribeAsync(SubscriptionData subscription);
-		Task<SubscriptionData> FindSubscription(ulong channelId);
+		Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> hooks);
 	}
 }

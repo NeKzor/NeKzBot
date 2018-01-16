@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using LiteDB;
-using Portal2Boards.Net.Entities;
 
 namespace NeKzBot.Data
 {
 	public class Portal2CacheData
 	{
-		[BsonId]
-		public string Id { get; set; }
-		public IEnumerable<EntryData> Entries { get; set; }
+		[BsonId(true)]
+		public int Id { get; set; }
+		public IEnumerable<uint> EntryIds { get; set; }
+
+		public Portal2CacheData()
+			=> EntryIds = new List<uint>();
 	}
 }

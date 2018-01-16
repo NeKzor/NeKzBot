@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
@@ -17,6 +19,26 @@ namespace NeKzBot.Modules.Public
 		{
 			public SourceCvarService Service { get; set; }
 
+			[Command("?"), Alias("info", "help")]
+			public Task QuestionMark()
+			{
+				return ReplyAndDeleteAsync
+				(
+					string.Empty,
+					embed: new EmbedBuilder()
+					{
+						Color = Color.Orange,
+						Description =
+							"**Cvar Database**\n" +
+							"Usage: .cvars.<game> <name>\n" +
+							"Available Games: halflife2, portal, portal2\n" +
+							"Generated with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen)",
+					}
+					.Build(),
+					timeout: TimeSpan.FromSeconds(60)
+				);
+			}
+
 			[Command("halflife2"), Alias("hl2")]
 			public async Task HalfLife2(string cvar)
 			{
@@ -25,17 +47,30 @@ namespace NeKzBot.Modules.Public
 				{
 					await ReplyAndDeleteAsync
 					(
-						$"**{result.Name.ToRawText()}**\n" +
-						$"Default Value: {result.DefaultValue}\n" +
-						$"Flags: {string.Join("/",result.Flags)}\n" +
-						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						string.Empty,
+						embed: new EmbedBuilder()
+						{
+							Color = Color.Orange,
+							Description =
+								$"**{result.Name.ToRawText()}**" +
+								$"\nDefault Value: {result.DefaultValue}" +
+								$"\nFlags: " +
+								((result.Flags.ToList().Count > 0)
+									? string.Join("/",result.Flags)
+									: "-") +
+								$"\nDescription: " +
+								(!string.IsNullOrEmpty(result.HelpText)
+									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
+									: "-"),
+						}
+						.Build(),
 						timeout: TimeSpan.FromSeconds(60)
 					);
 				}
 				else
 					await ReplyAndDeleteAsync("Unknown Half-Life 2 cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Command("portal"), Alias("p")]
+			[Command("portal"), Alias("p", "p1")]
 			public async Task Portal(string cvar)
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.Portal);
@@ -43,10 +78,23 @@ namespace NeKzBot.Modules.Public
 				{
 					await ReplyAndDeleteAsync
 					(
-						$"**{result.Name.ToRawText()}**\n" +
-						$"Default Value: {result.DefaultValue}\n" +
-						$"Flags: {string.Join("/",result.Flags)}\n" +
-						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						string.Empty,
+						embed: new EmbedBuilder()
+						{
+							Color = Color.Orange,
+							Description =
+								$"**{result.Name.ToRawText()}**" +
+								$"\nDefault Value: {result.DefaultValue}" +
+								$"\nFlags: " +
+								((result.Flags.ToList().Count > 0)
+									? string.Join("/",result.Flags)
+									: "-") +
+								$"\nDescription: " +
+								(!string.IsNullOrEmpty(result.HelpText)
+									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
+									: "-"),
+						}
+						.Build(),
 						timeout: TimeSpan.FromSeconds(60)
 					);
 				}
@@ -61,10 +109,23 @@ namespace NeKzBot.Modules.Public
 				{
 					await ReplyAndDeleteAsync
 					(
-						$"**{result.Name.ToRawText()}**\n" +
-						$"Default Value: {result.DefaultValue}\n" +
-						$"Flags: {string.Join("/",result.Flags)}\n" +
-						$"Description: {result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()}",
+						string.Empty,
+						embed: new EmbedBuilder()
+						{
+							Color = Color.Orange,
+							Description =
+								$"**{result.Name.ToRawText()}**" +
+								$"\nDefault Value: {result.DefaultValue}" +
+								$"\nFlags: " +
+								((result.Flags.ToList().Count > 0)
+									? string.Join("/",result.Flags)
+									: "-") +
+								$"\nDescription: " +
+								(!string.IsNullOrEmpty(result.HelpText)
+									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
+									: "-"),
+						}
+						.Build(),
 						timeout: TimeSpan.FromSeconds(60)
 					);
 				}
@@ -78,28 +139,74 @@ namespace NeKzBot.Modules.Public
 		{
 			public SourceDemoService Service { get; set; }
 
-			[Command("parser"), Alias("info")]
-			public Task ParserAsync()
+			[Command("?"), Alias("info", "help")]
+			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync("Powered by SourceDemoParser.Net (v1.0-alpha)", timeout: TimeSpan.FromSeconds(60));
+				return ReplyAndDeleteAsync
+				(
+					string.Empty,
+					embed: new EmbedBuilder()
+					{
+						Color = Color.Green,
+						Description =
+							"**Source Engine Demo Parser**\n" +
+							"Attach the file and use: .demo.parse\n" +
+							"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://github.com/NeKzor/SourceDemoParser.Net)",
+					}
+					.Build(),
+					timeout: TimeSpan.FromSeconds(60)
+				);
 			}
-			[Command("?"), Alias("o", "help")]
-			public async Task QuestionMark()
+			[Command("parse")]
+			public async Task Parse()
 			{
-				var data = await Service.GetDemoData(Context.User.Id);
-				if (data != null)
+				var demos = Context.Message.Attachments
+					.Where(a => a.Filename.EndsWith(".dem"))
+					.ToList();
+				
+				if (demos.Count == 1)
 				{
-					var index = data.DownloadUrl.LastIndexOf('/') + 1;
-					var demoname = data.DownloadUrl.Substring(index, data.DownloadUrl.Length - index);
+					var file = demos.First();
+					if (file.Size <= 5 * 1000 * 1000)
+					{
+						if (await Service.DownloadNewDemoAsync(Context.Message.Author.Id, file.Url))
+							await Get();
+						else
+							await ReplyAndDeleteAsync("Download or parsing failed!", timeout: TimeSpan.FromSeconds(10));
+					}
+					else
+						await ReplyAndDeleteAsync("File is too big! Max size should be less than 5Mb.", timeout: TimeSpan.FromSeconds(10));
+				}
+				else if (demos.Count == 0)
+					await ReplyAndDeleteAsync("You didn't attach a demo file!", timeout: TimeSpan.FromSeconds(10));
+				else
+					await ReplyAndDeleteAsync("Too many demo files!", timeout: TimeSpan.FromSeconds(10));
+			}
+			[Command("get")]
+			public async Task Get()
+			{
+				var demo = await Service.GetDemo(Context.User.Id);
+				if (demo != null)
+				{
+					await demo.AdjustExact();
 					await ReplyAndDeleteAsync
 					(
-						$"Demo file *{demoname}* was uploaded by {data.Id}\n" +
-						$"Link: {data.DownloadUrl}",
-						timeout: TimeSpan.FromSeconds(60)
+						string.Empty,
+						embed: new EmbedBuilder()
+						{
+							Color = Color.Green,
+							Description =
+								$"**Player** {demo.ClientName.ToRawText()}\n" +
+								$"**Map** {demo.MapName.ToRawText()}\n" +
+								$"**Ticks** {demo.PlaybackTicks}\n" +
+								$"**Seconds** {demo.PlaybackTime.ToString("n3")}\n" +
+								$"**Tickrate** {demo.GetTickrate()}"
+						}
+						.Build()
 					);
 				}
 				else
-					await ReplyAndDeleteAsync("Try to attach a Source Engine demo to a message, without writing the bot prefix.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync("Demo not found!", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("filestamp"), Alias("magic")]
 			public async Task FileStamp()
@@ -217,7 +324,7 @@ namespace NeKzBot.Modules.Public
 end:
 					await PagedReplyAsync(new PaginatedMessage
 					{
-						Color = Discord.Color.Blue,
+						Color = Discord.Color.Green,
 						Pages = pages
 					});
 				}
