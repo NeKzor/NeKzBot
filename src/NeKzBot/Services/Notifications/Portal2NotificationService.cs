@@ -89,7 +89,7 @@ namespace NeKzBot.Services.Notifications
 						throw new Exception("Task cache not found!");
 					
 					var clog = await _client.GetChangelogAsync();
-					var entries = clog.Where(x => !x.IsBanned);
+					var entries = clog.Where(e => !e.IsBanned);
 					var sending = new List<EntryData>();
 
 #if !DEBUG

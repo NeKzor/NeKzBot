@@ -15,21 +15,16 @@ namespace NeKzBot.Modules.Private
 			[Command("?"), Alias("info", "help")]
 			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync
-				(
-					string.Empty,
-					embed: new EmbedBuilder()
-					{
-						Color = Color.Purple,
-						Description =
-							"**Webhook Services**\n" +
-							"Creation: .services.<subscription>.subscribe\n" +
-							"Deletion: .services.<subscription>.unsubscribe\n" +
-							"Available Subscriptions: [portal2boards](https://board.iverb.me), [speedruncom](https://www.speedrun.com/)"
-					}
-					.Build(),
-					timeout: TimeSpan.FromSeconds(60)
-				);
+				var embed = new EmbedBuilder()
+					.WithColor(Color.Purple)
+					.WithDescription("**Webhook Services**\n" +
+						"Creation: .services.<subscription>.subscribe\n" +
+						"Deletion: .services.<subscription>.unsubscribe\n" +
+						"Available Subscriptions: " +
+						"[portal2boards](https://board.iverb.me), " +
+						"[speedruncom](https://www.speedrun.com)");
+				
+				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
 
 			[RequireContext(ContextType.Guild)]
@@ -68,7 +63,7 @@ namespace NeKzBot.Modules.Private
 					{
 						await hook.DeleteAsync();
 						if (await Service.UnsubscribeAsync(sub))
-							await ReplyAndDeleteAsync("Unsubscribed from Portal2Boards service.", timeout: TimeSpan.FromSeconds(60));
+							await ReplyAndDeleteAsync("Unsubscribed from Portal2Boards service.");
 						else
 							await ReplyAndDeleteAsync("Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
 					}
@@ -113,7 +108,7 @@ namespace NeKzBot.Modules.Private
 					{
 						await hook.DeleteAsync();
 						if (await Service.UnsubscribeAsync(sub))
-							await ReplyAndDeleteAsync("Unsubscribed from SpeedrunCom service.", timeout: TimeSpan.FromSeconds(60));
+							await ReplyAndDeleteAsync("Unsubscribed from SpeedrunCom service.");
 						else
 							await ReplyAndDeleteAsync("Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
 					}

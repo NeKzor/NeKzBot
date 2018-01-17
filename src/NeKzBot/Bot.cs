@@ -94,7 +94,7 @@ namespace NeKzBot
 #endif
 				}))
 				.AddSingleton<CommandHandlingService>()
-				.AddSingleton<InteractiveService>()
+				.AddSingleton(new InteractiveService(_client, TimeSpan.FromSeconds(5 * 60)))
 				// Others
 				.AddSingleton<Portal2NotificationService>()
 				.AddSingleton<SpeedrunNotificationService>()

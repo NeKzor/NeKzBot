@@ -1,4 +1,4 @@
-[![Build Version](https://img.shields.io/badge/version-v2.0-yellow.svg)](https://github.com/NeKzor/NeKzBot/projects/2)
+[![Build Version](https://img.shields.io/badge/version-v2.0-brightgreen.svg)](https://github.com/NeKzor/NeKzBot/projects/2)
 
 **NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on unique services.
 
@@ -58,7 +58,7 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.portal2boards.leaderboard (mapName:String...)` | `lb` | Portal2Module |
 | `.portal2boards.changelog (mapName:String...)` | `cl`, `clog` | Portal2Module |
 | `.portal2boards.profile (userNameOrSteamId64:String...)` | `pro`, `user` | Portal2Module |
-| `.portal2boards.aggregated` | - | Portal2Module |
+| `.portal2boards.aggregated` | `agg` | Portal2Module |
 | `.cvars.` | `cvar` | SourceModule |
 | `.cvars.?` | `info`, `help` | SourceModule |
 | `.cvars.halflife2 <cvar:String>` | `hl2` | SourceModule |

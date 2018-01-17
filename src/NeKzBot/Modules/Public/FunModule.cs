@@ -17,10 +17,12 @@ namespace NeKzBot.Modules.Public
 			var message = string.Empty;
 			var lines = 1;
 			var numbers = new string[] { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+			
 			for (int i = 0; i < text.Length; i++)
 			{
 				var c = text[i];
 				var temp = string.Empty;
+
 				if (c == ' ')
 					temp = "          ";
 				else if (c == '\n')

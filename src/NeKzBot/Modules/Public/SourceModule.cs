@@ -6,6 +6,7 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
+using NeKzBot.Data;
 using NeKzBot.Extensions;
 using NeKzBot.Services;
 using SourceDemoParser.Extensions;
@@ -22,21 +23,14 @@ namespace NeKzBot.Modules.Public
 			[Command("?"), Alias("info", "help")]
 			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync
-				(
-					string.Empty,
-					embed: new EmbedBuilder()
-					{
-						Color = Color.Orange,
-						Description =
-							"**Cvar Database**\n" +
-							"Usage: .cvars.<game> <name>\n" +
-							"Available Games: halflife2, portal, portal2\n" +
-							"Generated with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen)",
-					}
-					.Build(),
-					timeout: TimeSpan.FromSeconds(60)
-				);
+				var embed = new EmbedBuilder()
+					.WithColor(Color.Orange)
+					.WithDescription("**Cvar Database**\n" +
+						"Usage: .cvars.<game> <name>\n" +
+						"Available Games: halflife2, portal, portal2\n" +
+						"Generated with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen)");
+				
+				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
 
 			[Command("halflife2"), Alias("hl2")]
@@ -44,29 +38,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.HalfLife2);
 				if (result != null)
-				{
-					await ReplyAndDeleteAsync
-					(
-						string.Empty,
-						embed: new EmbedBuilder()
-						{
-							Color = Color.Orange,
-							Description =
-								$"**{result.Name.ToRawText()}**" +
-								$"\nDefault Value: {result.DefaultValue}" +
-								$"\nFlags: " +
-								((result.Flags.ToList().Count > 0)
-									? string.Join("/",result.Flags)
-									: "-") +
-								$"\nDescription: " +
-								(!string.IsNullOrEmpty(result.HelpText)
-									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
-									: "-"),
-						}
-						.Build(),
-						timeout: TimeSpan.FromSeconds(60)
-					);
-				}
+					await PrintResult(result);
 				else
 					await ReplyAndDeleteAsync("Unknown Half-Life 2 cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -75,29 +47,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.Portal);
 				if (result != null)
-				{
-					await ReplyAndDeleteAsync
-					(
-						string.Empty,
-						embed: new EmbedBuilder()
-						{
-							Color = Color.Orange,
-							Description =
-								$"**{result.Name.ToRawText()}**" +
-								$"\nDefault Value: {result.DefaultValue}" +
-								$"\nFlags: " +
-								((result.Flags.ToList().Count > 0)
-									? string.Join("/",result.Flags)
-									: "-") +
-								$"\nDescription: " +
-								(!string.IsNullOrEmpty(result.HelpText)
-									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
-									: "-"),
-						}
-						.Build(),
-						timeout: TimeSpan.FromSeconds(60)
-					);
-				}
+					await PrintResult(result);
 				else
 					await ReplyAndDeleteAsync("Unknown Portal cvar.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -106,31 +56,28 @@ namespace NeKzBot.Modules.Public
 			{
 				var result = await Service.LookUpCvar(cvar, CvarGameType.Portal2);
 				if (result != null)
-				{
-					await ReplyAndDeleteAsync
-					(
-						string.Empty,
-						embed: new EmbedBuilder()
-						{
-							Color = Color.Orange,
-							Description =
-								$"**{result.Name.ToRawText()}**" +
-								$"\nDefault Value: {result.DefaultValue}" +
-								$"\nFlags: " +
-								((result.Flags.ToList().Count > 0)
-									? string.Join("/",result.Flags)
-									: "-") +
-								$"\nDescription: " +
-								(!string.IsNullOrEmpty(result.HelpText)
-									? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
-									: "-"),
-						}
-						.Build(),
-						timeout: TimeSpan.FromSeconds(60)
-					);
-				}
+					await PrintResult(result);
 				else
 					await ReplyAndDeleteAsync("Unknown Portal 2 cvar.", timeout: TimeSpan.FromSeconds(10));
+			}
+
+			private async Task PrintResult(SourceCvarData result)
+			{
+				var flags = (result.Flags.ToList().Count > 0)
+					? string.Join("/",result.Flags)
+					: "-";
+				var description = (!string.IsNullOrEmpty(result.HelpText))
+					? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
+					: "-";
+				
+				var embed = new EmbedBuilder()
+					.WithColor(Color.Orange)
+					.WithDescription($"**{result.Name.ToRawText()}**" +
+						$"\nDefault Value: {result.DefaultValue}" +
+						$"\nFlags: {flags}" +
+						$"\nDescription: {description}");
+				
+				await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
 		}
 
@@ -142,20 +89,13 @@ namespace NeKzBot.Modules.Public
 			[Command("?"), Alias("info", "help")]
 			public Task QuestionMark()
 			{
-				return ReplyAndDeleteAsync
-				(
-					string.Empty,
-					embed: new EmbedBuilder()
-					{
-						Color = Color.Green,
-						Description =
-							"**Source Engine Demo Parser**\n" +
-							"Attach the file and use **.demo.parse**\n" +
-							"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://github.com/NeKzor/SourceDemoParser.Net)",
-					}
-					.Build(),
-					timeout: TimeSpan.FromSeconds(60)
-				);
+				var embed = new EmbedBuilder()
+					.WithColor(Color.Green)
+					.WithDescription("**Source Engine Demo Parser**\n" +
+						"Attach the file and use **.demo.parse**\n" +
+						"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://github.com/NeKzor/SourceDemoParser.Net)");
+				
+				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
 			// Downloading + parsing + adjusting might take a while
 			// Run this async or the gateway gets blocked
@@ -171,7 +111,7 @@ namespace NeKzBot.Modules.Public
 					await ReplyAndDeleteAsync
 					(
 						"You didn't attach a demo file!\n" +
-						"Should I search for your last uploaded demo here?",
+						"Do you want me to look for your last uploaded demo here?",
 						timeout: TimeSpan.FromSeconds(20)
 					);
 
@@ -224,23 +164,19 @@ namespace NeKzBot.Modules.Public
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
 				{
+					// Automatically adjust but don't
+					// save it in the database
 					await demo.AdjustExact();
-					await ReplyAndDeleteAsync
-					(
-						string.Empty,
-						embed: new EmbedBuilder()
-						{
-							Color = Color.Green,
-							Description =
-								$"**Player** {demo.ClientName.ToRawText()}\n" +
-								$"**Map** {demo.MapName.ToRawText()}\n" +
-								$"**Ticks** {demo.PlaybackTicks}\n" +
-								$"**Seconds** {demo.PlaybackTime.ToString("n3")}\n" +
-								$"**Tickrate** {demo.GetTickrate()}"
-						}
-						.Build(),
-						timeout: TimeSpan.FromSeconds(60)
-					);
+
+					var embed = new EmbedBuilder()
+						.WithColor(Color.Green)
+						.WithDescription($"**Player** {demo.ClientName.ToRawText()}\n" +
+							$"**Map** {demo.MapName.ToRawText()}\n" +
+							$"**Ticks** {demo.PlaybackTicks}\n" +
+							$"**Seconds** {demo.PlaybackTime.ToString("n3")}\n" +
+							$"**Tickrate** {demo.GetTickrate()}");
+					
+					await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 				}
 				else
 					await ReplyAndDeleteAsync("Demo not found!", timeout: TimeSpan.FromSeconds(10));
@@ -250,7 +186,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync(demo.FileStamp, timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync(demo.FileStamp);
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -259,7 +195,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.Protocol}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.Protocol}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -268,7 +204,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync(demo.ServerName, timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync(demo.ServerName);
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -277,7 +213,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync(demo.ClientName, timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync(demo.ClientName);
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -286,7 +222,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync(demo.MapName, timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync(demo.MapName);
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -295,7 +231,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync(demo.GameDirectory, timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync(demo.GameDirectory);
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -304,7 +240,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.PlaybackTime}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.PlaybackTime}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -313,7 +249,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.PlaybackTicks}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.PlaybackTicks}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -322,7 +258,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.PlaybackFrames}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.PlaybackFrames}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -331,7 +267,7 @@ namespace NeKzBot.Modules.Public
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.SignOnLength}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.SignOnLength}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -354,16 +290,23 @@ namespace NeKzBot.Modules.Public
 						{
 							if ((i + j) >= demo.Messages.Count)
 								goto end;
-							line += $"[{i + j}] {demo.Messages[i + j].Type} at {demo.Messages[i + j].CurrentTick} -> {demo.Messages[i + j].Frame?.ToString() ?? "NULL"}\n";
+							
+							line += $"[{i + j}] {demo.Messages[i + j].Type} " +
+								$"at {demo.Messages[i + j].CurrentTick} " +
+								$"-> {demo.Messages[i + j].Frame?.ToString() ?? "NULL"}\n";
 						}
 						pages.Add(line);
 					}
-end:
-					await PagedReplyAsync(new PaginatedMessage
-					{
-						Color = Discord.Color.Green,
-						Pages = pages
-					});
+				end:
+					await PagedReplyAsync
+					(
+						new PaginatedMessage
+						{
+							Color = Discord.Color.Green,
+							Pages = pages
+						},
+						false // Allow other users to control the pages too
+					);
 				}
 			}
 			[Ratelimit(6, 1, Measure.Minutes)]
@@ -384,8 +327,7 @@ end:
 					(
 						$"Type: {result.Type}\n" +
 						$"Tick: {result.CurrentTick}\n" +
-						$"Frame: {result.Frame?.ToString() ?? "NULL"}",
-						timeout: TimeSpan.FromSeconds(60)
+						$"Frame: {result.Frame?.ToString() ?? "NULL"}"
 					);
 				}
 			}
@@ -394,7 +336,7 @@ end:
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.GetTickrate()}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.GetTickrate()}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -403,7 +345,7 @@ end:
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				if (demo != null)
-					await ReplyAndDeleteAsync($"{demo.GetTicksPerSecond()}", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"{demo.GetTicksPerSecond()}");
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -418,7 +360,7 @@ end:
 				var after = demo.PlaybackTicks;
 				
 				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 				else
 					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -433,7 +375,7 @@ end:
 				var after = demo.PlaybackTicks;
 
 				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 				else
 					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}
@@ -449,7 +391,7 @@ end:
 				var after = demo.PlaybackTicks;
 
 				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.", timeout: TimeSpan.FromSeconds(60));
+					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 				else
 					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
 			}

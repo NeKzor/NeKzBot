@@ -18,111 +18,65 @@ namespace NeKzBot.Modules.Public
 		[Command("info"), Alias("?")]
 		public async Task Info()
 		{
-			await ReplyAndDeleteAsync(string.Empty, embed: new EmbedBuilder
-			{
-				Color = await Context.User.GetRoleColor(Context.Guild),
-				Title = "NeKzBot Info",
-				Url = "https://github.com/NeKzor/NeKzBot"
-			}
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Latency";
-				field.Value = $"{Context.Client.Latency} ms";
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Heap Size";
-				field.Value = $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB";
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Threads";
-				field.Value = $"{Process.GetCurrentProcess().Threads.Count}";
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Uptime";
-				field.Value = (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"hh\:mm\:ss");
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Local Time (UTC)";
-				field.Value = DateTime.UtcNow.ToString("HH:mm:ss");
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Location";
-				field.Value = "Graz, Austria";
-			})
-			.AddField(field =>
-			{
-				field.Name = "Library";
-				field.Value = $"Discord.Net {DiscordConfig.Version}";
-			})
-			.AddField(field =>
-			{
-				field.Name = "Runtime";
-				field.Value = RuntimeInformation.FrameworkDescription;
-			})
-			.AddField(field =>
-			{
-				field.Name = "Operating System";
-				field.Value = RuntimeInformation.OSDescription;
-			})
-			.Build(),
-			timeout: TimeSpan.FromSeconds(60));
+			var embed = new EmbedBuilder()
+				.WithColor(await Context.User.GetRoleColor(Context.Guild))
+				.WithTitle("NeKzBot Info")
+				.WithUrl("https://github.com/NeKzor/NeKzBot")
+				// Fields
+				.AddField("Latency", $"{Context.Client.Latency} ms", true)
+				.AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
+				.AddField("Threads", $"{Process.GetCurrentProcess().Threads.Count}", true)
+				.AddField("Uptime", (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"hh\:mm\:ss"), true)
+				.AddField("Local Time (UTC)", DateTime.UtcNow.ToString("HH:mm:ss"), true)
+				.AddField("Location", "Graz, Austria", true)
+				.AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
+				.AddField("Runtime", RuntimeInformation.FrameworkDescription, true)
+				.AddField("Operating System", RuntimeInformation.OSDescription, true);
+
+			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
 		[Command("stats")]
 		public async Task Stats()
 		{
-			await ReplyAndDeleteAsync(string.Empty, embed: new EmbedBuilder
-			{
-				Color = await Context.User.GetRoleColor(Context.Guild),
-				Title = "NeKzBot Stats",
-				Url = "https://github.com/NeKzor/NeKzBot"
-			}
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Guilds";
-				var guilds = Context.Client.Guilds.Count;
-				var ownguilds = Context.Client.Guilds.Count(guild => guild.OwnerId == Context.User.Id);
-				field.Value =
-					$"Watching • {guilds - ownguilds}\n" +
-					$"Hosting • {ownguilds}\n" +
-					$"Total • {guilds}";
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Channels";
-				var channels = Context.Client.Guilds.Sum(guild => guild.Channels.Count);
-				var textchannels = Context.Client.Guilds.Sum(guild => guild.TextChannels.Count);
-				var voicechannels = Context.Client.Guilds.Sum(guild => guild.VoiceChannels.Count);
-				field.Value =
-					$"Text • {textchannels}\n" +
-					$"Voice • {voicechannels}\n" +
-					$"Total • {channels}";
-			})
-			.AddField(field =>
-			{
-				field.IsInline = true;
-				field.Name = "Users";
-				var users = Context.Client.Guilds.Sum(guild => guild.Users.Count);
-				var bots = Context.Client.Guilds.SelectMany(guild => guild.Users).Count(user => user.IsBot);
-				field.Value =
+			var watching = Context.Client.Guilds.Count;
+			var hosting = Context.Client.Guilds
+				.Count(g => g.OwnerId == Context.User.Id);
+			
+			var channels = Context.Client.Guilds
+				.Sum(g => g.Channels.Count);
+			var text = Context.Client.Guilds
+				.Sum(g => g.TextChannels.Count);
+			var voice = Context.Client.Guilds
+				.Sum(g => g.VoiceChannels.Count);
+			
+			var users = Context.Client.Guilds
+				.Sum(g => g.Users.Count);
+			var bots = Context.Client.Guilds
+				.SelectMany(g => g.Users)
+				.Count(u => u.IsBot);
+			
+			var embed = new EmbedBuilder()
+				.WithColor(await Context.User.GetRoleColor(Context.Guild))
+				.WithTitle("NeKzBot Stats")
+				.WithUrl("https://github.com/NeKzor/NeKzBot")
+				// Fields
+				.AddField("Guilds",
+					$"Watching • {watching - hosting}\n" +
+					$"Hosting • {hosting}\n" +
+					$"Total • {watching}",
+					true)
+				.AddField("Channels",
+					$"Text • {text}\n" +
+					$"Voice • {voice}\n" +
+					$"Total • {channels}",
+					true)
+				.AddField("Users",
 					$"People • {(users - bots).ToString("#,###,###.##")}\n" +
 					$"Bots • {bots.ToString("#,###,###.##")}\n" +
-					$"Total • {users.ToString("#,###,###.##")}";
-			})
-			.Build(),
-			timeout: TimeSpan.FromSeconds(60));
+					$"Total • {users.ToString("#,###,###.##")}",
+					true);
+
+			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
 		[Command("invite")]
 		public async Task Invite()
@@ -130,37 +84,40 @@ namespace NeKzBot.Modules.Public
 			var invite = "https://discordapp.com/oauth2/authorize?scope=bot" +
 				$"&client_id={Context.Client.CurrentUser.Id}" +
 				"&permissions=536873984";
-			await ReplyAndDeleteAsync(string.Empty, embed: new EmbedBuilder()
-			{
-				Color = await Context.User.GetRoleColor(Context.Guild),
-				Description = $"[Click here to add NeKzBot to your server!]({invite})"
-			}
-			.Build(),
-			timeout: TimeSpan.FromSeconds(60));
+			
+			var embed = new EmbedBuilder()
+				.WithColor(await Context.User.GetRoleColor(Context.Guild))
+				.WithDescription($"[Click here to add NeKzBot to your server!]({invite})");
+
+			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
 		[Command("modules"), Alias("help")]
 		public async Task Modules()
 		{
-			var modules = string.Empty;
-			foreach (var module in Commands.Modules.Where(m => !m.IsSubmodule).OrderBy(m => m.Name))
-			{
-				modules +=
-					$"\n**{module.Name}**" +
-					$" with {module.Commands.Count + module.Submodules.Sum(sm => sm.Commands.Count + sm.Submodules.Sum(smm => smm.Commands.Count))}" +
-					$" command{((module.Commands.Count == 1) ? string.Empty : "s")}";
-			}
+			var modules = Commands.Modules
+				.Where(m => !m.IsSubmodule)
+				.OrderBy(m => m.Name);
 			
-			await ReplyAndDeleteAsync(string.Empty, embed: new EmbedBuilder()
+			var list = string.Empty;
+			foreach (var module in modules)
 			{
-				Color = await Context.User.GetRoleColor(Context.Guild),
-				Title = "NeKzBot Modules",
-				Url = "https://github.com/NeKzor/NeKzBot#modules",
-				Description = (modules != string.Empty)
-					? modules
-					: "Modules are not loaded."
+				var commands = module.Commands.Count
+					+ module.Submodules
+						.Sum(m => m.Commands.Count + m.Submodules
+						.Sum(mm => mm.Commands.Count));
+				list +=
+					$"\n**{module.Name}**" +
+					$" with {commands}" +
+					$" command{((commands == 1) ? string.Empty : "s")}";
 			}
-			.Build(),
-			timeout: TimeSpan.FromSeconds(60));
+
+			var embed = new EmbedBuilder()
+				.WithColor(await Context.User.GetRoleColor(Context.Guild))
+				.WithTitle("NeKzBot Modules")
+				.WithUrl("https://github.com/NeKzor/NeKzBot#modules")
+				.WithDescription((list != string.Empty) ? list : "Modules are not loaded.");
+			
+			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
 	}
 }

@@ -33,7 +33,7 @@ namespace NeKzBot.API
 			response.EnsureSuccessStatusCode();
 			return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 		}
-		public async Task<(bool Success, T Result)> TryGetJsonObjectAsync<T>(string url)
+		public async Task<(bool, T)> TryGetJsonObjectAsync<T>(string url)
 		{
 			try
 			{
@@ -52,7 +52,7 @@ namespace NeKzBot.API
 			response.EnsureSuccessStatusCode();
 			return await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 		}
-		public async Task<(bool Sucess, byte[] Result)> TryGetBytesAsync(string url)
+		public async Task<(bool, byte[])> TryGetBytesAsync(string url)
 		{
 			try
 			{

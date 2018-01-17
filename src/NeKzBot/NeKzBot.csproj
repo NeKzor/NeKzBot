@@ -6,7 +6,7 @@
     <Authors>NeKz</Authors>
     <Company>NeKz</Company>
     <Description>yo</Description>
-    <CodeAnalysisRuleSet>$(SolutionDir)\NeKzBot.ruleset</CodeAnalysisRuleSet>
+    <!--<CodeAnalysisRuleSet>$(SolutionDir)\NeKzBot.ruleset</CodeAnalysisRuleSet>-->
     <Version>2.0.0</Version>
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>

@@ -102,8 +102,7 @@ namespace NeKzBot.Services.Notifications
 			var db = await GetSubscribers();
 			return (db.Delete(d => d.WebhookId == subscription.WebhookId) == 1);
 		}
-		public virtual async Task<(IWebhook Webhook, SubscriptionData Data)> FindSubscriptionAsync(
-			IEnumerable<IWebhook> webhooks)
+		public virtual async Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks)
 		{
 			var db = await GetSubscribers();
 			foreach (var hook in webhooks) 
