@@ -27,7 +27,7 @@ namespace NeKzBot.Services
 			_config = config;
 			_dataBase = dataBase;
 		}
-
+		
 		public Task Initialize()
 		{
 #if GEN

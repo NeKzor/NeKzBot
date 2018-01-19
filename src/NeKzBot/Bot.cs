@@ -60,11 +60,13 @@ namespace NeKzBot
 			await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
 			await _client.StartAsync();
 
+#if RELEASE
 			await Task.WhenAll
 			(
 				p2s.StartAsync(),
 				srs.StartAsync()
 			);
+#endif
 
 			await Task.Delay(-1);
 #endif

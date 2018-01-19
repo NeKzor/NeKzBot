@@ -92,7 +92,6 @@ namespace NeKzBot.Services.Notifications
 					var entries = clog.Where(e => !e.IsBanned);
 					var sending = new List<EntryData>();
 
-#if !DEBUG
 					// Will skip for the very first time
 					if (cache.EntryIds.Any())
 					{
@@ -109,9 +108,7 @@ namespace NeKzBot.Services.Notifications
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
 				send:
-#else
-					sending.Add(entries.First());
-#endif
+					
 					await LogInfo($"Found {sending.Count} new entries");
 					await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
 

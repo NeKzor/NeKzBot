@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 
@@ -14,6 +15,7 @@ namespace NeKzBot.Modules.Public
 	// Really old code here...
 	public class StatsModule : InteractiveBase<SocketCommandContext>
 	{
+		[Ratelimit(1, 1, Measure.Minutes)]
 		[RequireContext(ContextType.Guild)]
 		[Command("guild"), Alias("server")]
 		public async Task Guild()
@@ -68,6 +70,7 @@ namespace NeKzBot.Modules.Public
 				
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
+		[Ratelimit(1, 1, Measure.Minutes)]
 		[RequireContext(ContextType.Guild)]
 		[Command("hierarchy")]
 		public async Task Hierarchy()
@@ -100,6 +103,7 @@ namespace NeKzBot.Modules.Public
 
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
+		[Ratelimit(1, 1, Measure.Minutes)]
 		[RequireContext(ContextType.Guild)]
 		[Command("channel")]
 		public async Task Channel()
@@ -124,6 +128,7 @@ namespace NeKzBot.Modules.Public
 			
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
+		[Ratelimit(1, 1, Measure.Minutes)]
 		[RequireContext(ContextType.Guild)]
 		[Command("id")]
 		public async Task Id(bool ascending = true)
@@ -166,6 +171,7 @@ namespace NeKzBot.Modules.Public
 
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
+		[Ratelimit(1, 1, Measure.Minutes)]
 		[RequireContext(ContextType.Guild)]
 		[Command("disc"), Alias("discriminator")]
 		public async Task Disc(bool ascending = true)

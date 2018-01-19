@@ -37,7 +37,6 @@ namespace NeKzBot.Services.Notifications
 				_config["speedrun_token"]
 			);
 
-			//_dataBase.DropCollection($"{_globalId}_cache");
 			var data = GetTaskCache<SpeedrunCacheData>()
 				.GetAwaiter()
 				.GetResult();
@@ -77,11 +76,9 @@ namespace NeKzBot.Services.Notifications
 					
 					var notifications = await _client.GetNotificationsAsync(21);
 					var sending = new List<SpeedrunNotification>();
-#if !DEBUG
-					// Will skip for the very first time
+
 					if (cache.Notifications.Any())
 					{
-						// Check cached notification
 						foreach (var old in cache.Notifications)
 						{
 							foreach (var notification in notifications)
@@ -94,9 +91,7 @@ namespace NeKzBot.Services.Notifications
 						throw new Exception("Could not find the last notification entry!");
 					}
 				send:
-#else
-					sending.Add(notifications.First());
-#endif
+
 					await LogInfo($"Found {sending.Count} new notifications");
 					await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
 
@@ -143,8 +138,6 @@ namespace NeKzBot.Services.Notifications
 											
 											}
 										}
-										// Make sure to catch only on this special exception
-										// which tells us that this webhook doesn't exist
 										catch (InvalidOperationException ex)
 											when (ex.Message == "Could not find a webhook for the supplied credentials.")
 										{
@@ -160,12 +153,10 @@ namespace NeKzBot.Services.Notifications
 							throw new Exception("Webhook rate limit exceeded!");
 					}
 
-					// Cache
 					cache.Notifications = notifications.Take(11);
 					if (!db.Update(cache))
 						throw new Exception("Failed to update cache!");
-
-					// Sleep
+					
 					var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
 					if (delay < 0)
 						throw new Exception($"Task took too long ({delay}ms)");

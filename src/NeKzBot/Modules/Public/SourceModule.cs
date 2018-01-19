@@ -97,22 +97,21 @@ namespace NeKzBot.Modules.Public
 				
 				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
-			// Downloading + parsing + adjusting might take a while
-			// Run this async or the gateway gets blocked
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("parse", RunMode = RunMode.Async)]
-			public async Task Parse()
+			public async Task<RuntimeResult> Parse()
 			{
-				var demo = Context.Message.Attachments
+				var file = Context.Message.Attachments
 					.Where(a => a.Filename.EndsWith(".dem"))
 					.FirstOrDefault() as IAttachment;
 				
-				if (demo == null)
+				if (file == null)
 				{
-					await ReplyAndDeleteAsync
+					var reply = await ReplyAndDeleteAsync
 					(
 						"You didn't attach a demo file!\n" +
 						"Do you want me to look for your last uploaded demo here?",
-						timeout: TimeSpan.FromSeconds(20)
+						timeout: TimeSpan.FromSeconds(30)
 					);
 
 					// Waiting for message here
@@ -130,24 +129,32 @@ namespace NeKzBot.Modules.Public
 							case "yea":
 							case "yeah":
 							case "yep":
-								demo = (await Context.Channel
-									.GetMessagesAsync()
-									.Flatten())
+								var messages = await Context.Channel.GetMessagesAsync().Flatten();
+								file = messages
 									.Where(m => m.Author.Id == Context.User.Id)
 									.Where(m => m.Attachments.Count == 1)
 									.Where(m => m.Attachments.First().Filename.EndsWith(".dem"))
 									.Select(m => m.Attachments.First())
 									.FirstOrDefault();
 								break;
+							default:
+								await reply.ModifyAsync(r => r.Content = "Interpreted answer as **NO**");
+								return Ok();
 						}
 					}
 				}
 
-				if (demo != null)
+				if (file != null)
 				{
-					if (demo.Size <= 5 * 1000 * 1000)
+					if (file.Size <= 5 * 1000 * 1000)
 					{
-						if (await Service.DownloadNewDemoAsync(Context.Message.Author.Id, demo.Url))
+						// Downloading the same file is unnecessary
+						// Check if we haven't already downloaded this
+						var data = await Service.Get(Context.User.Id);
+
+						if (file.Url == data.DownloadUrl)
+							await Get();
+						else if (await Service.DownloadDemoAsync(Context.Message.Author.Id, file.Url))
 							await Get();
 						else
 							await ReplyAndDeleteAsync("Download or parsing failed!", timeout: TimeSpan.FromSeconds(10));
@@ -157,7 +164,10 @@ namespace NeKzBot.Modules.Public
 				}
 				else
 					await ReplyAndDeleteAsync("Could not find a demo.", timeout: TimeSpan.FromSeconds(10));
+				
+				return Ok();
 			}
+			[Ratelimit(2, 1, Measure.Minutes)]
 			[Command("get")]
 			public async Task Get()
 			{
@@ -179,7 +189,7 @@ namespace NeKzBot.Modules.Public
 					await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 				}
 				else
-					await ReplyAndDeleteAsync("Demo not found!", timeout: TimeSpan.FromSeconds(10));
+					await ReplyAndDeleteAsync("Demo not found!\nTry **.demo.parse**", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Command("filestamp"), Alias("magic")]
 			public async Task FileStamp()
@@ -271,8 +281,8 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Ratelimit(6, 1, Measure.Minutes)]
-			[Command("messages"), Alias("msg")]
+			[Ratelimit(1, 1, Measure.Minutes)]
+			[Command("messages", RunMode = RunMode.Async), Alias("msg")]
 			public async Task Messages()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
@@ -310,7 +320,7 @@ namespace NeKzBot.Modules.Public
 				}
 			}
 			[Ratelimit(6, 1, Measure.Minutes)]
-			[Command("messages"), Alias("msg")]
+			[Command("messages", RunMode = RunMode.Async), Alias("msg")]
 			public async Task Messages(int index)
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
@@ -340,7 +350,8 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Command("gettickspersecond"), Alias("tickspersecond", "tps", "intervalpertick", "ipt")]
+			[Command("gettickspersecond")]
+			[Alias("tickspersecond", "tps", "intervalpertick", "ipt")]
 			public async Task GetTicksPerSecond()
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
@@ -349,24 +360,26 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Ratelimit(3, 1, Measure.Minutes)]
-			[Command("adjustexact"), Alias("adj")]
-			public async Task AdjustExact()
+			[Ratelimit(1, 1, Measure.Minutes)]
+			[Command("adjustexact", RunMode = RunMode.Async), Alias("adj")]
+			public async Task AdjustExact(bool overwrite = false)
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 
 				var before = demo.PlaybackTicks;
 				await demo.AdjustExact();
 				var after = demo.PlaybackTicks;
-				
-				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
-				else
-					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
+
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+				{
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
+					return;
+				}
+				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 			}
-			[Ratelimit(3, 1, Measure.Minutes)]
-			[Command("adjustflag"), Alias("adjf")]
-			public async Task AdjustFlag()
+			[Ratelimit(1, 1, Measure.Minutes)]
+			[Command("adjustflag", RunMode = RunMode.Async), Alias("adjf")]
+			public async Task AdjustFlag(bool overwrite = false)
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 				
@@ -374,15 +387,16 @@ namespace NeKzBot.Modules.Public
 				await demo.AdjustFlagAsync();
 				var after = demo.PlaybackTicks;
 
-				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
-				else
-					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+				{
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
+					return;
+				}
+				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 			}
-			// TODO: Check if this needs RunMode.Async
-			[Ratelimit(3, 1, Measure.Minutes)]
-			[Command("adjust"), Alias("adj2")]
-			public async Task Adjust()
+			[Ratelimit(1, 1, Measure.Minutes)]
+			[Command("adjust", RunMode = RunMode.Async), Alias("adj2")]
+			public async Task Adjust(bool overwrite = false)
 			{
 				var demo = await Service.GetDemo(Context.User.Id);
 
@@ -390,10 +404,12 @@ namespace NeKzBot.Modules.Public
 				await demo.AdjustAsync();
 				var after = demo.PlaybackTicks;
 
-				if (await Service.SaveDemo(Context.User.Id, demo))
-					await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
-				else
-					await ReplyAndDeleteAsync("Failed to adjust demo.", timeout: TimeSpan.FromSeconds(10));
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+				{
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
+					return;
+				}
+				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
 			}
 		}
 	}

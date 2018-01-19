@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 
@@ -15,6 +16,7 @@ namespace NeKzBot.Modules.Public
 	{
 		public CommandService Commands { get; set; }
 
+		[Ratelimit(2, 1, Measure.Minutes)]
 		[Command("info"), Alias("?")]
 		public async Task Info()
 		{
@@ -35,6 +37,7 @@ namespace NeKzBot.Modules.Public
 
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
+		[Ratelimit(2, 1, Measure.Minutes)]
 		[Command("stats")]
 		public async Task Stats()
 		{

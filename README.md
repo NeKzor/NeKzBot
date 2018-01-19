@@ -82,17 +82,17 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.demo.messages <index:Int32>` | `msg` | SourceModule |
 | `.demo.gettickrate` | `tickrate` | SourceModule |
 | `.demo.gettickspersecond` | `tickspersecond`, `tps`, `intervalpertick`, `ipt` | SourceModule |
-| `.demo.adjustexact` | `adj` | SourceModule |
-| `.demo.adjustflag` | `adjf` | SourceModule |
-| `.demo.adjust` | `adj2` | SourceModule |
+| `.demo.adjustexact (overwrite:Boolean=False)` | `adj` | SourceModule |
+| `.demo.adjustflag (overwrite:Boolean=False)` | `adjf` | SourceModule |
+| `.demo.adjust (overwrite:Boolean=False)` | `adj2` | SourceModule |
 | `.guild` | `server` | StatsModule |
 | `.hierarchy` | - | StatsModule |
 | `.channel` | - | StatsModule |
-| `.id (ascending:Boolean)` | - | StatsModule |
-| `.disc (ascending:Boolean)` | `discriminator` | StatsModule |
-| `.joined (ascending:Boolean)` | - | StatsModule |
-| `.created (ascending:Boolean)` | - | StatsModule |
-| `.score (ascending:Boolean)` | - | StatsModule |
+| `.id (ascending:Boolean=True)` | - | StatsModule |
+| `.disc (ascending:Boolean=True)` | `discriminator` | StatsModule |
+| `.joined (ascending:Boolean=True)` | - | StatsModule |
+| `.created (ascending:Boolean=True)` | - | StatsModule |
+| `.score (ascending:Boolean=True)` | - | StatsModule |
 
 ### Credits
 * [Discord](https://discordapp.com/developers)

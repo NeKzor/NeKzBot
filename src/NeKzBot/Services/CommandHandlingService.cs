@@ -41,8 +41,35 @@ namespace NeKzBot.Services
 		public Task Initialize()
 		{
 			_client.MessageReceived += MessageReceived;
+
 			_commands.AddModulesAsync(Assembly.GetEntryAssembly());
 #if DOCS
+			GenerateDocs()
+				.GetAwaiter()
+				.GetResult();
+#endif
+			return Task.CompletedTask;
+		}
+
+		private async Task MessageReceived(SocketMessage rawMessage)
+		{
+			if (!(rawMessage is SocketUserMessage message)) return;
+			if (message.Source != MessageSource.User) return;
+
+			int argPos = 0;
+			if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+				if (!message.HasStringPrefix(".", ref argPos)) return;
+			
+			var context = new SocketCommandContext(_client, message);
+			var result = await _commands.ExecuteAsync(context, argPos, _provider);
+
+			if ((result.Error.HasValue) && (result.Error.Value != CommandError.UnknownCommand))
+				await _interactiveService.ReplyAndDeleteAsync(context, $"{result}", timeout: TimeSpan.FromSeconds(10));
+		}
+#if DOCS
+		private Task GenerateDocs()
+		{
+			System.IO.File.WriteAllText("Modules.md", String.Empty);
 			using (var fs = System.IO.File.OpenWrite("Modules.md"))
 			using (var sw = new System.IO.StreamWriter(fs))
 			{
@@ -59,16 +86,22 @@ namespace NeKzBot.Services
 
 						var type = parameter.Type.Name;
 						
-						if (parameter.IsRemainder)
-							after += "...";
 						if (parameter.IsOptional)
 						{
 							before += "(";
-							after += ")";
+							
+							if (type != "String")
+								after += $"={parameter.DefaultValue}";
+							if (parameter.IsRemainder)
+								after += "...)";
+							else
+								after += ")";
 						}
 						else
 						{
 							before += "<";
+							if (parameter.IsRemainder)
+								after += "...";
 							after += ">";
 						}
 						if (parameter.IsMultiple)
@@ -131,24 +164,8 @@ namespace NeKzBot.Services
 					}
 				}
 			}
-#endif
 			return Task.CompletedTask;
 		}
-
-		private async Task MessageReceived(SocketMessage rawMessage)
-		{
-			if (!(rawMessage is SocketUserMessage message)) return;
-			if (message.Source != MessageSource.User) return;
-
-			int argPos = 0;
-			if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-				if (!message.HasStringPrefix(".", ref argPos)) return;
-			
-			var context = new SocketCommandContext(_client, message);
-			var result = await _commands.ExecuteAsync(context, argPos, _provider);
-
-			if ((result.Error.HasValue) && (result.Error.Value != CommandError.UnknownCommand))
-				await _interactiveService.ReplyAndDeleteAsync(context, $"{result}", timeout: TimeSpan.FromSeconds(10));
-		}
+#endif
 	}
 }

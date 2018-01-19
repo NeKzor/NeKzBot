@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
+using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,7 @@ namespace NeKzBot.Modules.Public
 				
 				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
+			[Ratelimit(2, 1, Measure.Minutes)]
 			[Command("leaderboard"), Alias("lb")]
 			public async Task Leaderboard([Remainder] string mapName = null)
 			{
@@ -96,6 +98,7 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
 			}
+			[Ratelimit(2, 1, Measure.Minutes)]
 			[Command("changelog"), Alias("cl", "clog")]
 			public async Task Changelog([Remainder] string mapName = null)
 			{
@@ -165,6 +168,7 @@ namespace NeKzBot.Modules.Public
 					false // Allow other users to control the pages too
 				);
 			}
+			[Ratelimit(2, 1, Measure.Minutes)]
 			[Command("profile"), Alias("pro", "user")]
 			public async Task Profile([Remainder] string userNameOrSteamId64 = null)
 			{
@@ -267,6 +271,7 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
 			}
+			[Ratelimit(2, 1, Measure.Minutes)]
 			[Command("aggregated"), Alias("agg")]
 			public async Task Aggregated()
 			{
