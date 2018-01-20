@@ -254,9 +254,8 @@ namespace NeKzBot.Services.Notifications
 				Timestamp = DateTime.UtcNow,
 				Footer = new EmbedFooterBuilder
 				{
-					Text = "speedrun.com"
-					// TODO: Fix icon size
-					//IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
+					Text = "speedrun.com",
+					IconUrl = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/icons/speedruncom_icon.png"
 				}
 			};
 
