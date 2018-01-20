@@ -65,7 +65,7 @@ namespace NeKzBot.Services.Notifications
 		public virtual async Task SendAsync(IEnumerable<object> notifications)
 		{
 			var count = notifications.Count();
-			await LogInfo($"Found {count} new entries");
+			await LogInfo($"Found {count} new notifications to send");
 
 			if (count == 0) return;
 
@@ -219,7 +219,7 @@ namespace NeKzBot.Services.Notifications
 		// Logging tasks
 		protected Task LogInfo(string message)
 		{
-#if DEBUG
+#if DEBUG || TEST
 			_ = Log.Invoke($"{_globalId}\t{message}", null);
 #endif
 			return Task.CompletedTask;

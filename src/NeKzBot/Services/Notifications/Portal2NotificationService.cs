@@ -111,6 +111,9 @@ namespace NeKzBot.Services.Notifications
 					}
 
 				send:
+#if TEST
+					sending.Add(entries.First());
+#endif
 					await SendAsync(sending);
 
 					// Cache

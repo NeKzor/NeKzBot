@@ -94,6 +94,9 @@ namespace NeKzBot.Services.Notifications
 					}
 
 				send:
+#if TEST
+					sending.Add(notifications.First());
+#endif
 					await SendAsync(sending);
 
 					cache.Notifications = notifications
@@ -129,7 +132,7 @@ namespace NeKzBot.Services.Notifications
 				case "post":
 					title = "Thread Response";
 					category = nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length);
-					description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})* ({category.ToRawText()})";
+					description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})*";
 					break;
 				case "run":
 					title = "Run Submission";
@@ -146,7 +149,7 @@ namespace NeKzBot.Services.Notifications
 				case "thread":		// Undocumented API
 					title = "New Thread Post";
 					category = nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length);
-					description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})* ({category.ToRawText()})";
+					description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})*";
 					break;
 				case "moderator":   // Undocumented API
 					title = "New Moderator";
