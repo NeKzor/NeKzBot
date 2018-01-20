@@ -39,6 +39,7 @@ Demo files usually have a life time of 21+ days. Webhook data will be deleted au
 exist anymore e.g.: somebody with valid permissions deleted it, channel or guild got deleted.
 
 ### Modules
+
 | Command | Alias | Module |
 | --- | --- | --- |
 | `.services.` | `service` | ServiceModule |
