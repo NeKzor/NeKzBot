@@ -23,6 +23,7 @@ namespace NeKzBot.Services.Notifications
 		protected string _globalId { get; set; }
 		protected bool _isRunning { get; set; }
 		protected CancellationTokenSource _cancellation { get; set; }
+		protected Func<object, Task<Embed>> _embedBuilder { get; set; }
 
 		protected readonly IConfiguration _config;
 		protected readonly LiteDatabase _dataBase;
@@ -60,6 +61,75 @@ namespace NeKzBot.Services.Notifications
 				_isRunning = false;
 			}
 			return Task.CompletedTask;
+		}
+		public virtual async Task SendAsync(IEnumerable<object> notifications)
+		{
+			var count = notifications.Count();
+			await LogInfo($"Found {count} new entries");
+
+			if (count == 0) return;
+
+			if (count >= 11)
+				throw new Exception("Webhook rate limit exceeded!");
+			
+			var db = await GetSubscribers();
+			var subscribers = db
+				.FindAll()
+				.ToList();
+
+			await LogInfo($"{subscribers.Count} subs found");
+			if (subscribers.Count == 0) return;
+
+			await LogInfo("Sending hooks");
+
+			// Send oldest first
+			notifications.Reverse();
+
+			var failed = new List<SubscriptionData>();
+			foreach (var nf in notifications)
+			{
+				var embed = await _embedBuilder(nf);
+				foreach (var sub in subscribers)
+				{
+					if (failed.Contains(sub)) continue;
+
+					try
+					{
+						using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
+						{
+							await wc.SendMessageAsync
+							(
+								string.Empty,
+								embeds: new Embed[] { embed },
+								username: _userName,
+								avatarUrl: _userAvatar
+								// Un-comment this if it ever becomes a problem
+								/* options: new RequestOptions()
+								{
+									RetryMode = RetryMode.RetryRatelimit
+								} */
+							);
+						}
+					}
+					// Make sure to catch only on this special exception
+					// which tells us that this webhook doesn't exist
+					catch (InvalidOperationException ex)
+						when (ex.Message == "Could not find a webhook for the supplied credentials.")
+					{
+						failed.Add(sub);
+						await LogWarning($"Sub ID = {sub.Id} not found");
+					}
+				}
+			}
+
+			// Delete failed subscribers
+			foreach (var sub in failed)
+			{
+				if (db.Delete(d => d.WebhookId == sub.WebhookId) != 1)
+					await LogWarning($"Database failed to delete sub ID = {sub.Id}");
+				else
+					await LogWarning($"Deleted sub ID = {sub.Id}");
+			}
 		}
 
 		// Subscription tasks
@@ -123,17 +193,6 @@ namespace NeKzBot.Services.Notifications
 		{
 			return Task.FromResult(_dataBase.GetCollection<SubscriptionData>(_globalId));
 		}
-		protected async Task AutoDeleteAsync(IEnumerable<SubscriptionData> subscribers)
-		{
-			var db = await GetSubscribers();
-			foreach (var sub in subscribers)
-			{
-				if (db.Delete(d => d.WebhookId == sub.WebhookId) != 1)
-					await LogWarning($"Database failed to delete sub ID = {sub.Id}");
-				else
-					await LogWarning($"Deleted sub ID = {sub.Id}");
-			}
-		}
 		internal async Task CleanupAsync()
 		{
 			var db = await GetSubscribers();
@@ -160,7 +219,9 @@ namespace NeKzBot.Services.Notifications
 		// Logging tasks
 		protected Task LogInfo(string message)
 		{
+#if DEBUG
 			_ = Log.Invoke($"{_globalId}\t{message}", null);
+#endif
 			return Task.CompletedTask;
 		}
 		protected Task LogWarning(string message)

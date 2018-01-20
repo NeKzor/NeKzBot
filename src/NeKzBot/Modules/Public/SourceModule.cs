@@ -129,7 +129,10 @@ namespace NeKzBot.Modules.Public
 							case "yea":
 							case "yeah":
 							case "yep":
-								var messages = await Context.Channel.GetMessagesAsync().Flatten();
+								var messages = await Context.Channel
+									.GetMessagesAsync()
+									.FlattenAsync();
+								
 								file = messages
 									.Where(m => m.Author.Id == Context.User.Id)
 									.Where(m => m.Attachments.Count == 1)

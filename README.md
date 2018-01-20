@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/NeKzor/NeKzBot.svg?branch=master)](https://travis-ci.org/NeKzor/NeKzBot)
 [![Build Version](https://img.shields.io/badge/version-v2.0-brightgreen.svg)](https://github.com/NeKzor/NeKzBot/projects/2)
 
 **NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on unique services.

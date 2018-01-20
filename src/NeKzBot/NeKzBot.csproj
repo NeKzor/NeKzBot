@@ -18,16 +18,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="nekzbot-journal.db" />
-    <None Remove="nekzbot.db" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00858" />
-    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta-00858" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta-00880" />
+    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta-00880" />
     <PackageReference Include="LiteDB" Version="4.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
@@ -42,11 +37,5 @@
     <Reference Include="SourceDemoParser.Net">
       <HintPath>..\..\libs\SourceDemoParser.Net.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="credentials.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

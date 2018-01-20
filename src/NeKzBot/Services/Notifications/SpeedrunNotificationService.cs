@@ -21,6 +21,7 @@ namespace NeKzBot.Services.Notifications
 		public SpeedrunNotificationService(IConfiguration config, LiteDatabase dataBase)
 			: base (config, dataBase)
 		{
+			_embedBuilder = x => BuildEmbedAsync(x as SpeedrunNotification);
 		}
 
 		public override Task Initialize()
@@ -73,7 +74,8 @@ namespace NeKzBot.Services.Notifications
 					
 					if (cache == null)
 						throw new Exception("Task cache not found!");
-					
+					await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
+
 					var notifications = await _client.GetNotificationsAsync(21);
 					var sending = new List<SpeedrunNotification>();
 
@@ -90,70 +92,13 @@ namespace NeKzBot.Services.Notifications
 						}
 						throw new Exception("Could not find the last notification entry!");
 					}
+
 				send:
+					await SendAsync(sending);
 
-					await LogInfo($"Found {sending.Count} new notifications");
-					await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
-
-					if (sending.Count > 0)
-					{
-						if (sending.Count < 11)
-						{
-							var subscribers = (await GetSubscribers())
-								.FindAll()
-								.ToList();
-
-							await LogInfo($"{subscribers.Count} subs found");
-
-							if (subscribers.Count > 0)
-							{
-								await LogInfo("Sending hooks");
-
-								sending.Reverse();
-								var deletion = new List<SubscriptionData>();
-
-								foreach (var notification in sending)
-								{
-									var embed = await CreateEmbedAsync(notification);
-									
-									foreach (var sub in subscribers)
-									{
-										if (deletion.Contains(sub)) continue;
-										
-										try
-										{
-											using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
-											{
-												await wc.SendMessageAsync
-												(
-													string.Empty,
-													embeds: new Embed[] { embed },
-													username: _userName,
-													avatarUrl: _userAvatar
-													/* ,options: new RequestOptions()
-													{
-														RetryMode = RetryMode.RetryRatelimit
-													} */
-												);
-											
-											}
-										}
-										catch (InvalidOperationException ex)
-											when (ex.Message == "Could not find a webhook for the supplied credentials.")
-										{
-											deletion.Add(sub);
-											await LogWarning($"Sub ID = {sub.Id} not found");
-										}
-									}
-								}
-								await AutoDeleteAsync(deletion);
-							}
-						}
-						else
-							throw new Exception("Webhook rate limit exceeded!");
-					}
-
-					cache.Notifications = notifications.Take(11);
+					cache.Notifications = notifications
+						.Take(11);
+					
 					if (!db.Update(cache))
 						throw new Exception("Failed to update cache!");
 					
@@ -171,7 +116,7 @@ namespace NeKzBot.Services.Notifications
 			await LogWarning("Task ended");
 		}
 
-		public async Task<Embed> CreateEmbedAsync(SpeedrunNotification nf)
+		private async Task<Embed> BuildEmbedAsync(SpeedrunNotification nf)
 		{
 			var author = nf.Text.Split(' ')[0];
 			var title = "Latest Notification";

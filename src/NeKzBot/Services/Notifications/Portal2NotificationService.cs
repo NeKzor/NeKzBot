@@ -25,6 +25,7 @@ namespace NeKzBot.Services.Notifications
 		public Portal2NotificationService(IConfiguration config, LiteDatabase dataBase)
 			: base(config, dataBase)
 		{
+			_embedBuilder = x => BuildEmbedAsync(x as EntryData);
 		}
 
 		public override Task Initialize()
@@ -87,10 +88,11 @@ namespace NeKzBot.Services.Notifications
 					
 					if (cache == null)
 						throw new Exception("Task cache not found!");
-					
+					await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
+
 					var clog = await _client.GetChangelogAsync();
 					var entries = clog.Where(e => !e.IsBanned);
-					var sending = new List<EntryData>();
+					var sending = new List<object>();
 
 					// Will skip for the very first time
 					if (cache.EntryIds.Any())
@@ -107,74 +109,9 @@ namespace NeKzBot.Services.Notifications
 						}
 						throw new Exception("Could not find the cached entry in new changelog!");
 					}
+
 				send:
-					
-					await LogInfo($"Found {sending.Count} new entries");
-					await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
-
-					if (sending.Count > 0)
-					{
-						if (sending.Count < 11)
-						{
-							var subscribers = (await GetSubscribers())
-								.FindAll()
-								.ToList();
-
-							await LogInfo($"{subscribers.Count} subs found");
-
-							if (subscribers.Count > 0)
-							{
-								await LogInfo("Sending hooks");
-
-								sending.Reverse();
-								var deletion = new List<SubscriptionData>();
-
-								foreach (var entry in sending)
-								{
-									var delta = await GetWorldRecordDelta(entry) ?? -1;
-									var feature = (delta != default)
-										? $" (-{delta.ToString("N2")})"
-										: string.Empty;
-									
-									var embed = await CreateEmbed(entry, feature);
-
-									foreach (var sub in subscribers)
-									{
-										if (deletion.Contains(sub)) continue;
-
-										try
-										{
-											using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
-											{
-												await wc.SendMessageAsync
-												(
-													string.Empty,
-													embeds: new Embed[] { embed },
-													username: _userName,
-													avatarUrl: _userAvatar
-													/* ,options: new RequestOptions()
-													{
-														RetryMode = RetryMode.RetryRatelimit
-													} */
-												);
-											}
-										}
-										// Make sure to catch only on this special exception
-										// which tells us that this webhook doesn't exist
-										catch (InvalidOperationException ex)
-											when (ex.Message == "Could not find a webhook for the supplied credentials.")
-										{
-											deletion.Add(sub);
-											await LogWarning($"Sub ID = {sub.Id} not found");
-										}
-									}
-								}
-								await AutoDeleteAsync(deletion);
-							}
-						}
-						else
-							throw new Exception("Webhook rate limit exceeded!");
-					}
+					await SendAsync(sending);
 
 					// Cache
 					cache.EntryIds = entries
@@ -200,8 +137,13 @@ namespace NeKzBot.Services.Notifications
 			await LogWarning("Task ended");
 		}
 
-		private Task<Embed> CreateEmbed(EntryData wr, string feature)
+		private async Task<Embed> BuildEmbedAsync(EntryData wr)
 		{
+			var delta = await GetWorldRecordDelta(wr) ?? -1;
+			var feature = (delta != default)
+				? $" (-{delta.ToString("N2")})"
+				: string.Empty;
+
 			var embed = new EmbedBuilder
 			{
 				Author = new EmbedAuthorBuilder
@@ -233,7 +175,7 @@ namespace NeKzBot.Services.Notifications
 			}
 			if (wr.CommentExists)
 				embed.AddField("Comment", wr.Comment.ToRawText());
-			return Task.FromResult(embed.Build());
+			return embed.Build();
 		}
 		// My head always hurts when I look at this...
 		private async Task<float?> GetWorldRecordDelta(EntryData wr)
