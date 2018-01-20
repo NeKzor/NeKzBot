@@ -23,7 +23,7 @@ namespace NeKzBot.Modules.Public
 			var embed = new EmbedBuilder()
 				.WithColor(await Context.User.GetRoleColor(Context.Guild))
 				.WithTitle("NeKzBot Info")
-				.WithUrl("https://github.com/NeKzor/NeKzBot")
+				.WithUrl("https://nekzor.github.io/NeKzBot")
 				// Fields
 				.AddField("Latency", $"{Context.Client.Latency} ms", true)
 				.AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
@@ -61,7 +61,7 @@ namespace NeKzBot.Modules.Public
 			var embed = new EmbedBuilder()
 				.WithColor(await Context.User.GetRoleColor(Context.Guild))
 				.WithTitle("NeKzBot Stats")
-				.WithUrl("https://github.com/NeKzor/NeKzBot")
+				.WithUrl("https://nekzor.github.io/NeKzBot")
 				// Fields
 				.AddField("Guilds",
 					$"Watching • {watching - hosting}\n" +
@@ -117,7 +117,7 @@ namespace NeKzBot.Modules.Public
 			var embed = new EmbedBuilder()
 				.WithColor(await Context.User.GetRoleColor(Context.Guild))
 				.WithTitle("NeKzBot Modules")
-				.WithUrl("https://github.com/NeKzor/NeKzBot#modules")
+				.WithUrl("https://nekzor.github.io/NeKzBot#modules")
 				.WithDescription((list != string.Empty) ? list : "Modules are not loaded.");
 			
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());

@@ -93,7 +93,7 @@ namespace NeKzBot.Modules.Public
 					.WithColor(Color.Green)
 					.WithDescription("**Source Engine Demo Parser**\n" +
 						"Attach the file and use **.demo.parse**\n" +
-						"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://github.com/NeKzor/SourceDemoParser.Net)");
+						"[Powered by SourceDemoParser.Net (v1.0-alpha)](https://nekzor.github.io/SourceDemoParser.Net)");
 				
 				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
