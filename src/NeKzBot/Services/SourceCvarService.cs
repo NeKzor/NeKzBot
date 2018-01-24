@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 #endif
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB;
@@ -19,6 +20,11 @@ namespace NeKzBot.Services
 
 	public class SourceCvarService
 	{
+		// Cache data to make things faster
+		private ConcurrentDictionary<string, SourceCvarData> _hl2Cache;
+		private ConcurrentDictionary<string, SourceCvarData> _p1Cache;
+		private ConcurrentDictionary<string, SourceCvarData> _p2Cache;
+
 		private readonly IConfiguration _config;
 		private readonly LiteDatabase _dataBase;
 
@@ -36,14 +42,39 @@ namespace NeKzBot.Services
 			_ = Gen("p1-cvars.txt", CvarGameType.Portal);
 			_ = Gen("p2-cvars.txt", CvarGameType.Portal2);
 #endif
+			_hl2Cache = new ConcurrentDictionary<string, SourceCvarData>();
+			_p1Cache = new ConcurrentDictionary<string, SourceCvarData>();
+			_p2Cache = new ConcurrentDictionary<string, SourceCvarData>();
+
+			var db = _dataBase
+				.GetCollection<SourceCvarData>(nameof(SourceCvarService));
+
+			foreach (var data in db.Find(d => d.Type == CvarGameType.HalfLife2))
+				_hl2Cache.TryAdd(data.Name, data);
+			foreach (var data in db.Find(d => d.Type == CvarGameType.Portal))
+				_p1Cache.TryAdd(data.Name, data);
+			foreach (var data in db.Find(d => d.Type == CvarGameType.Portal2))
+				_p2Cache.TryAdd(data.Name, data);
+
 			return Task.CompletedTask;
 		}
 
 		public Task<SourceCvarData> LookUpCvar(string cvar, CvarGameType type)
 		{
-			var db = _dataBase.GetCollection<SourceCvarData>(nameof(SourceCvarService));
-			var data = db.Find(d => d.Type == type);
-			return Task.FromResult(data.FirstOrDefault(c => c.Name == cvar));
+			var result = default(SourceCvarData);
+			switch (type)
+			{
+				case CvarGameType.HalfLife2:
+					_hl2Cache.TryGetValue(cvar, out result);
+					break;
+				case CvarGameType.Portal:
+					_p1Cache.TryGetValue(cvar, out result);
+					break;
+				case CvarGameType.Portal2:
+					_p2Cache.TryGetValue(cvar, out result);
+					break;
+			}
+			return Task.FromResult(result);
 		}
 #if GEN
 		private Task Gen(string file, CvarGameType type)

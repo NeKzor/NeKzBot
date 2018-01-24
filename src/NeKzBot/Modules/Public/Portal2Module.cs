@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using NeKzBot.Extensions;
 using Portal2Boards.Net;
 using Portal2Boards.Net.API.Models;
+using Portal2Boards.Net.Entities;
 using Portal2Boards.Net.Extensions;
 
 namespace NeKzBot.Modules.Public
@@ -41,7 +42,7 @@ namespace NeKzBot.Modules.Public
 				
 				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
-			[Ratelimit(2, 1, Measure.Minutes)]
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("leaderboard"), Alias("lb")]
 			public async Task Leaderboard([Remainder] string mapName = null)
 			{
@@ -50,7 +51,7 @@ namespace NeKzBot.Modules.Public
 					var map = await Portal2.GetMapByName(mapName);
 					if (map != null)
 					{
-						if (map.IsOfficial)
+						if (map.BestTimeId != null)
 						{
 							var board = await _client.GetLeaderboardAsync(map);
 
@@ -68,10 +69,11 @@ namespace NeKzBot.Modules.Public
 
 								page += $"\n{entry.ScoreRank.FormatRankToString()} "+
 									$"{entry.Score.AsTimeToString()} " +
-									$"by {entry.Player.Name.ToRawText()}";
+									$"by [{entry.Player.Name.ToRawText()}]({entry.Player.Link})";
 								
 								count++;
 							}
+							pages.Add(page);
 
 							await PagedReplyAsync
 							(
@@ -79,7 +81,7 @@ namespace NeKzBot.Modules.Public
 								{
 									Color = Color.Blue,
 									Pages = pages,
-									Title = $"[Top 100 - {map.Alias}]",
+									Title = $"Top 100 - {map.Alias}",
 									Options = new PaginatedAppearanceOptions
 									{
 										DisplayInformationIcon = false,
@@ -98,34 +100,23 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Ratelimit(2, 1, Measure.Minutes)]
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("changelog"), Alias("cl", "clog")]
-			public async Task Changelog([Remainder] string mapName = null)
+			public async Task Changelog([Remainder] string mapName)
 			{
-				var changelog = default(Changelog);
-				var map = default(Map);
-
-				if (string.IsNullOrEmpty(mapName))
+				var map = await Portal2.GetMapByName(mapName);
+				if (map == null)
 				{
-					changelog = await _client.GetChangelogAsync();
+					await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
+					return;
 				}
-				else
+				if (map.BestTimeId == null)
 				{
-					map = await Portal2.GetMapByName(mapName);
-
-					if (map == null)
-					{
-						await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
-						return;
-					}
-					if (!map.IsOfficial)
-					{
-						await ReplyAndDeleteAsync("This map does not have a leaderboard.", timeout: TimeSpan.FromSeconds(10));
-						return;
-					}
-
-					changelog = await _client.GetChangelogAsync($"?chamber={map.BestTimeId}");
+					await ReplyAndDeleteAsync("This map does not have a leaderboard.", timeout: TimeSpan.FromSeconds(10));
+					return;
 				}
+
+				var changelog = await _client.GetChangelogAsync($"?chamber={map.BestTimeId}");
 
 				var page = string.Empty;
 				var pages = new List<string>();
@@ -138,19 +129,17 @@ namespace NeKzBot.Modules.Public
 						pages.Add(page);
 						page = string.Empty;
 					}
-
+					
 					page += $"\n{entry.Rank.Current.FormatRankToString("WR")}" +
-							$" {((entry.Rank.Improvement != default) ? $" (-{entry.Rank.Improvement})" : string.Empty)}" +
-							$" {entry.Score.Current.AsTimeToString()}" +
-							$" {((entry.Score.Improvement != default) ? $" (-{entry.Score.Improvement})" : string.Empty)}" +
-							$" by [{entry.Player.Name.ToRawText()}]({entry.Player.Link})";
-						if (entry.DemoExists)
-							page += $" [dem]({entry.DemoLink})";
-						if (entry.VideoExists)
-							page += $" [yt]({entry.VideoLink})";
+						$" {entry.Score.Current.AsTimeToString()}" +
+						((entry.Score.Improvement != default)
+							? $" (-{entry.Score.Improvement.AsTimeToString()})"
+							: string.Empty) +
+						$" by [{entry.Player.Name.ToRawText()}]({entry.Player.Link})";
 					
 					count++;
 				}
+				pages.Add(page);
 
 				await PagedReplyAsync
 				(
@@ -158,7 +147,7 @@ namespace NeKzBot.Modules.Public
 					{
 						Color = Color.Blue,
 						Pages = pages,
-						Title = $"[Latest 20{((map != null) ? $" - {map.Alias}" : string.Empty)}]",
+						Title = $"Latest 20 - {map.Alias}",
 						Options = new PaginatedAppearanceOptions
 						{
 							DisplayInformationIcon = false,
@@ -168,7 +157,7 @@ namespace NeKzBot.Modules.Public
 					false // Allow other users to control the pages too
 				);
 			}
-			[Ratelimit(2, 1, Measure.Minutes)]
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("profile"), Alias("pro", "user")]
 			public async Task Profile([Remainder] string userNameOrSteamId64 = null)
 			{
@@ -218,27 +207,24 @@ namespace NeKzBot.Modules.Public
 					var page = string.Empty;
 					var count = 0;
 
-					foreach (var chapter in user.Times.SinglePlayer.Chapters.Chambers.Select(c => c.Value.Data))
+					foreach (var map in Portal2.CampaignMaps)
 					{
-						foreach (var chamber in chapter)
+						var chamber = await Portal2.GetMapData(user.Times, map);
+						if (chamber == null) continue;
+
+						if ((count % 5 == 0) && (count != 0))
 						{
-							var map = await Portal2.GetMapById(chamber.Key);
-							if (map == null)
-								continue;
-
-							if ((count % 5 == 0) && (count != 0))
-							{
-								pages.Add(page);
-								page = string.Empty;
-							}
-
-							page += $"\n[{map.Alias}]({map.Link}) | " +
-								$"{chamber.Value.ScoreRank.FormatRankToString("WR")} | " +
-								$"{chamber.Value.Score.AsTimeToString()}";
-
-							count++;
+							pages.Add(page);
+							page = string.Empty;
 						}
+
+						page += $"\n[{map.Alias}]({map.Link}) | " +
+							$"{chamber.ScoreRank.FormatRankToString("WR")} | " +
+							$"{chamber.Score.AsTimeToString()}";
+
+						count++;
 					}
+					pages.Add(page);
 
 					var lastpage = $"{user.Title}\n[Steam]({user.SteamLink})";
 					if (!string.IsNullOrEmpty(user.YouTubeLink))
@@ -271,7 +257,7 @@ namespace NeKzBot.Modules.Public
 				else
 					await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
 			}
-			[Ratelimit(2, 1, Measure.Minutes)]
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("aggregated"), Alias("agg")]
 			public async Task Aggregated()
 			{
@@ -281,7 +267,7 @@ namespace NeKzBot.Modules.Public
 				var pages = new List<string>();
 				var count = 0;
 
-				foreach (var entry in agg.DataTimes.Select(e => e.Value).Take(20))
+				foreach (var entry in agg.DataPoints.Select(e => e.Value).Take(20))
 				{
 					if ((count % 5 == 0) && (count != 0))
 					{
@@ -290,10 +276,11 @@ namespace NeKzBot.Modules.Public
 					}
 
 					page += $"\n{entry.ScoreData.Score}" +
-						$" by {entry.UserData.BoardName}";
+						$"\t[{entry.UserData.BoardName}](https://board.iverb.me/profile/{entry.UserData.BoardName})";
 					
 					count++;
 				}
+				pages.Add(page);
 
 				await PagedReplyAsync
 				(

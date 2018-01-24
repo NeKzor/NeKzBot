@@ -64,7 +64,7 @@ namespace NeKzBot.Services
 				0,
 				message,
 				message.Exception,
-				(_, __) => message.ToString(prependTimestamp: false)
+				(_, __) => $"{message}"
 			);
 			return Task.CompletedTask;
 		}
@@ -86,7 +86,7 @@ namespace NeKzBot.Services
 				0,
 				message,
 				message.Exception,
-				(_, __) => message.ToString(prependTimestamp: false)
+				(_, __) => $"{message}"
 			);
 			return Task.CompletedTask;
 		}
@@ -103,7 +103,7 @@ namespace NeKzBot.Services
 				0,
 				message,
 				ex,
-				(_, __) => message
+				(_, __) => $"{DateTime.UtcNow.ToString("HH:mm:ss")} {message}"
 			);
 			return Task.CompletedTask;
 		}

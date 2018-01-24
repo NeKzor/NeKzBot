@@ -28,7 +28,7 @@ namespace NeKzBot.Modules.Public
 					.WithDescription("**Cvar Database**\n" +
 						"Usage: .cvars.<game> <name>\n" +
 						"Available Games: halflife2, portal, portal2\n" +
-						"Generated with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen)");
+						"Made with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen)");
 				
 				return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 			}
@@ -170,7 +170,7 @@ namespace NeKzBot.Modules.Public
 				
 				return Ok();
 			}
-			[Ratelimit(2, 1, Measure.Minutes)]
+			[Ratelimit(3, 1, Measure.Minutes)]
 			[Command("get")]
 			public async Task Get()
 			{
@@ -373,12 +373,10 @@ namespace NeKzBot.Modules.Public
 				await demo.AdjustExact();
 				var after = demo.PlaybackTicks;
 
-				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
-				{
-					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
-					return;
-				}
 				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
+
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Ratelimit(1, 1, Measure.Minutes)]
 			[Command("adjustflag", RunMode = RunMode.Async), Alias("adjf")]
@@ -390,12 +388,10 @@ namespace NeKzBot.Modules.Public
 				await demo.AdjustFlagAsync();
 				var after = demo.PlaybackTicks;
 
-				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
-				{
-					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
-					return;
-				}
 				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
+
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 			[Ratelimit(1, 1, Measure.Minutes)]
 			[Command("adjust", RunMode = RunMode.Async), Alias("adj2")]
@@ -407,12 +403,10 @@ namespace NeKzBot.Modules.Public
 				await demo.AdjustAsync();
 				var after = demo.PlaybackTicks;
 
-				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
-				{
-					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
-					return;
-				}
 				await ReplyAndDeleteAsync($"Adjusted demo by {after - before} ticks.");
+
+				if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
+					await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
 			}
 		}
 	}

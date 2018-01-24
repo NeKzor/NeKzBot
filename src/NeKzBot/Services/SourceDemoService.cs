@@ -72,8 +72,7 @@ namespace NeKzBot.Services
 				.GetCollection<SourceDemoData>(nameof(SourceDemoService));
 			
 			var data = await Get(userId);
-
-			var saved = false;
+			
 			if (data == null)
 			{
 				data = new SourceDemoData()
@@ -83,7 +82,6 @@ namespace NeKzBot.Services
 					Demo = demo,
 					CreatedAt = DateTime.UtcNow
 				};
-				saved = db.Insert(data);
 			}
 			else
 			{
@@ -94,10 +92,9 @@ namespace NeKzBot.Services
 					data.DownloadUrl = downloadUrl;
 				
 				data.Demo = demo;
-				saved = db.Update(data);
 			}
 			
-			return saved
+			return db.Upsert(data)
 				&& _cache.TryRemove(userId, out _)
 				&& _cache.TryAdd(userId, data);
 		}

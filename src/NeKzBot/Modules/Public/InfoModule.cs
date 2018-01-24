@@ -16,7 +16,7 @@ namespace NeKzBot.Modules.Public
 	{
 		public CommandService Commands { get; set; }
 
-		[Ratelimit(2, 1, Measure.Minutes)]
+		[Ratelimit(3, 1, Measure.Minutes)]
 		[Command("info"), Alias("?")]
 		public async Task Info()
 		{
@@ -32,12 +32,12 @@ namespace NeKzBot.Modules.Public
 				.AddField("Local Time (UTC)", DateTime.UtcNow.ToString("HH:mm:ss"), true)
 				.AddField("Location", "Graz, Austria", true)
 				.AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
-				.AddField("Runtime", RuntimeInformation.FrameworkDescription, true)
+				.AddField("Runtime", RuntimeInformation.FrameworkDescription, false)
 				.AddField("Operating System", RuntimeInformation.OSDescription, true);
 
 			await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
 		}
-		[Ratelimit(2, 1, Measure.Minutes)]
+		[Ratelimit(3, 1, Measure.Minutes)]
 		[Command("stats")]
 		public async Task Stats()
 		{

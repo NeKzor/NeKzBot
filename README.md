@@ -32,7 +32,7 @@ NeKzBot does not log any potential sensitive user data. However, these informati
 
 | Data | Module | Why |
 | --- | --- | --- |
-| .dem files of users | [SourceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/NeKzBot/Services/SourceDemoService.cs#L86) | Allows users to analyze their latest uploaded Source Engine recording |
+| .dem files of users | [SourceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/NeKzBot/Services/SourceDemoService.cs#L97) | Allows users to analyze their latest uploaded Source Engine recording |
 | Webhook data of channels | [ServiceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/NeKzBot/Services/Notifications/NotificationService.cs#L158) | Allows to send notification updates |
 
 Demo files usually have a life time of 21+ days. Webhook data will be deleted automatically if it doesn't
@@ -58,7 +58,7 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.portal2boards.` | `p2b`, `p2` | Portal2Module |
 | `.portal2boards.?` | `info`, `help` | Portal2Module |
 | `.portal2boards.leaderboard (mapName:String...)` | `lb` | Portal2Module |
-| `.portal2boards.changelog (mapName:String...)` | `cl`, `clog` | Portal2Module |
+| `.portal2boards.changelog <mapName:String...>` | `cl`, `clog` | Portal2Module |
 | `.portal2boards.profile (userNameOrSteamId64:String...)` | `pro`, `user` | Portal2Module |
 | `.portal2boards.aggregated` | `agg` | Portal2Module |
 | `.cvars.` | `cvar` | SourceModule |

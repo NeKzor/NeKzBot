@@ -170,7 +170,7 @@ namespace NeKzBot.Services.Notifications
 			// WR delta time, a feature which the leaderboard doesn't have :>
 			embed.AddField("Time", wr.Score.Current.AsTimeToString() + feature, true);
 			embed.AddField("Player", wr.Player.Name.ToRawText(), true);
-			embed.AddField("Date", wr.Date?.DateTimeToString(), true);
+			embed.AddField("Date", $"{wr.Date?.DateTimeToString()} (CST)", true);
 			if ((wr.DemoExists) || (wr.VideoExists))
 			{
 				embed.AddField("Demo File", (wr.DemoExists) ? $"[Download]({wr.DemoLink})" : "_Not available._", true);
