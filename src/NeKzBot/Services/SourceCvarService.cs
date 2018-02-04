@@ -178,7 +178,7 @@ namespace NeKzBot.Services
 			using (var sw = new System.IO.StreamWriter(fs))
 			{
 				sw.WriteLine("# " + type.ToString("G"));
-				sw.WriteLine("Made with gen, a [NeKzBot project](https://github.com/NeKzor/NeKzBot/tree/master/src/gen).");
+				sw.WriteLine("Made with [gen](https://github.com/NeKzor/NeKzBot/tree/master/src/gen).");
 				sw.WriteLine(string.Empty);
 				sw.WriteLine("| Name | Default | Flags | Help Text |");
 				sw.WriteLine("| --- | --- | --- | --- |");
@@ -188,7 +188,11 @@ namespace NeKzBot.Services
 						? string.Join("/",cvar.Flags)
 						: "-";
 					var description = (!string.IsNullOrEmpty(cvar.HelpText))
-						? cvar.HelpText.Replace('\n', ' ').Replace('\t', ' ').Replace('\r', ' ')
+						? cvar.HelpText
+							.Replace('\n', ' ')
+							.Replace('\t', ' ')
+							.Replace('\r', ' ')
+							.Replace("|", "`|")
 						: "-";
 					
 					sw.WriteLine
