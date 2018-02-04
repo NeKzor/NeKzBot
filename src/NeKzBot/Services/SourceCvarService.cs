@@ -38,9 +38,9 @@ namespace NeKzBot.Services
 		{
 #if GEN
 			_dataBase.DropCollection(nameof(SourceCvarService));
-			_ = Gen("hl2-cvars", CvarGameType.HalfLife2);
-			_ = Gen("p1-cvars", CvarGameType.Portal);
-			_ = Gen("p2-cvars", CvarGameType.Portal2);
+			_ = Gen("private/resources/hl2-cvars", CvarGameType.HalfLife2);
+			_ = Gen("private/resources/p1-cvars", CvarGameType.Portal);
+			_ = Gen("private/resources/p2-cvars", CvarGameType.Portal2);
 #endif
 			_hl2Cache = new ConcurrentDictionary<string, SourceCvarData>();
 			_p1Cache = new ConcurrentDictionary<string, SourceCvarData>();
@@ -57,9 +57,9 @@ namespace NeKzBot.Services
 				_p2Cache.TryAdd(data.Name, data);
 
 #if GEN_MD
-			_ = GenMarkdown("hl2-cvars", CvarGameType.HalfLife2);
-			_ = GenMarkdown("p1-cvars", CvarGameType.Portal);
-			_ = GenMarkdown("p2-cvars", CvarGameType.Portal2);
+			_ = GenMarkdown("hl2", CvarGameType.HalfLife2);
+			_ = GenMarkdown("p1", CvarGameType.Portal);
+			_ = GenMarkdown("p2", CvarGameType.Portal2);
 #endif
 
 			return Task.CompletedTask;
@@ -178,6 +178,7 @@ namespace NeKzBot.Services
 			using (var sw = new System.IO.StreamWriter(fs))
 			{
 				sw.WriteLine("# " + type.ToString("G"));
+				sw.WriteLine("Made with gen, a [NeKzBot project](https://github.com/NeKzor/NeKzBot/tree/master/src/gen).");
 				sw.WriteLine(string.Empty);
 				sw.WriteLine("| Name | Default | Flags | Help Text |");
 				sw.WriteLine("| --- | --- | --- | --- |");

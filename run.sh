@@ -1,1 +1,1 @@
-dotnet run -p src/NeKzBot -c Release
+dotnet run -p src/NeKzBot -c Release --no-build

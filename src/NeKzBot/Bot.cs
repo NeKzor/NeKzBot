@@ -74,7 +74,7 @@ namespace NeKzBot
 		{
 			return new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("credentials.json")
+				.AddJsonFile("private/credentials.json")
 				.Build();
 		}
 		private IServiceProvider ConfigureServices()
@@ -83,7 +83,7 @@ namespace NeKzBot
 				.AddLogging()
 				.AddSingleton<LogService>()
 				.AddSingleton(_config)
-				.AddSingleton(new LiteDatabase(_config["database"]))
+				.AddSingleton(new LiteDatabase(_config["database_path"]))
 				// Discord
 				.AddSingleton(_client)
 				.AddSingleton(new CommandService(new CommandServiceConfig
