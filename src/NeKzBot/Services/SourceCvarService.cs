@@ -1,4 +1,4 @@
-﻿#if GEN
+﻿#if GEN || GEN_MD
 using System;
 using System.Collections.Generic;
 #endif
@@ -38,9 +38,9 @@ namespace NeKzBot.Services
 		{
 #if GEN
 			_dataBase.DropCollection(nameof(SourceCvarService));
-			_ = Gen("hl2-cvars.txt", CvarGameType.HalfLife2);
-			_ = Gen("p1-cvars.txt", CvarGameType.Portal);
-			_ = Gen("p2-cvars.txt", CvarGameType.Portal2);
+			_ = Gen("hl2-cvars", CvarGameType.HalfLife2);
+			_ = Gen("p1-cvars", CvarGameType.Portal);
+			_ = Gen("p2-cvars", CvarGameType.Portal2);
 #endif
 			_hl2Cache = new ConcurrentDictionary<string, SourceCvarData>();
 			_p1Cache = new ConcurrentDictionary<string, SourceCvarData>();
@@ -55,6 +55,12 @@ namespace NeKzBot.Services
 				_p1Cache.TryAdd(data.Name, data);
 			foreach (var data in db.Find(d => d.Type == CvarGameType.Portal2))
 				_p2Cache.TryAdd(data.Name, data);
+
+#if GEN_MD
+			_ = GenMarkdown("hl2-cvars", CvarGameType.HalfLife2);
+			_ = GenMarkdown("p1-cvars", CvarGameType.Portal);
+			_ = GenMarkdown("p2-cvars", CvarGameType.Portal2);
+#endif
 
 			return Task.CompletedTask;
 		}
@@ -85,7 +91,7 @@ namespace NeKzBot.Services
 			var dev = new List<string>();
 			var hidden = new List<string>();
 
-			using (var fs = System.IO.File.OpenRead(file))
+			using (var fs = System.IO.File.OpenRead(file +  ".txt"))
 			using (var sr = new System.IO.StreamReader(fs))
 			{
 				while (!sr.EndOfStream)
@@ -142,7 +148,7 @@ namespace NeKzBot.Services
 					Console.WriteLine($"Description: {description}");
 					Console.WriteLine("---------------------------------------------------");
 
-					data.Add(new SourceCvarData
+					data.Add(new SourceCvarData()
 					{
 						Type = type,
 						Name = name,
@@ -154,6 +160,45 @@ namespace NeKzBot.Services
 			}
 
 			db.Upsert(data);
+			return Task.CompletedTask;
+		}
+#endif
+#if GEN_MD
+		internal Task GenMarkdown(string file, CvarGameType type)
+		{
+			var cache = default(IEnumerable<SourceCvarData>);
+			if (type == CvarGameType.HalfLife2)
+				cache = _hl2Cache.Values.OrderBy(v => v.Name);
+			else if (type == CvarGameType.Portal)
+				cache = _p1Cache.Values.OrderBy(v => v.Name);
+			else if (type == CvarGameType.Portal2)
+				cache = _p2Cache.Values.OrderBy(v => v.Name);
+
+			using (var fs = System.IO.File.OpenWrite(file +  ".md"))
+			using (var sw = new System.IO.StreamWriter(fs))
+			{
+				sw.WriteLine("# " + type.ToString("G"));
+				sw.WriteLine(string.Empty);
+				sw.WriteLine("| Name | Default | Flags | Help Text |");
+				sw.WriteLine("| --- | --- | --- | --- |");
+				foreach (var cvar in cache)
+				{
+					var flags = (cvar.Flags.Any())
+						? string.Join("/",cvar.Flags)
+						: "-";
+					var description = (!string.IsNullOrEmpty(cvar.HelpText))
+						? cvar.HelpText.Replace('\n', ' ').Replace('\t', ' ').Replace('\r', ' ')
+						: "-";
+					
+					sw.WriteLine
+					(
+						$"| {cvar.Name} " +
+						$"| {cvar.DefaultValue} " +
+						$"| {flags} " +
+						$"| {description} |"
+					);
+				}
+			}
 			return Task.CompletedTask;
 		}
 #endif

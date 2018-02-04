@@ -63,7 +63,7 @@ namespace NeKzBot.Modules.Public
 
 			private async Task PrintResult(SourceCvarData result)
 			{
-				var flags = (result.Flags.ToList().Count > 0)
+				var flags = (result.Flags.Any())
 					? string.Join("/",result.Flags)
 					: "-";
 				var description = (!string.IsNullOrEmpty(result.HelpText))

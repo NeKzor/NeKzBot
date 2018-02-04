@@ -25,7 +25,7 @@ namespace NeKzBot
 		{
 			_config = BuildConfig();
 
-			_client = new DiscordSocketClient(new DiscordSocketConfig
+			_client = new DiscordSocketClient(new DiscordSocketConfig()
 			{
 				MessageCacheSize = 100,
 #if WIN7
