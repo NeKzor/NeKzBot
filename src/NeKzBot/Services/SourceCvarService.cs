@@ -192,7 +192,7 @@ namespace NeKzBot.Services
 							.Replace('\n', ' ')
 							.Replace('\t', ' ')
 							.Replace('\r', ' ')
-							.Replace("|", "`|")
+							.Replace("|", "\\|")
 						: "-";
 					
 					sw.WriteLine
