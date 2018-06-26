@@ -4,6 +4,5 @@ dotnet: 2.0.0
 dist: trusty
 solution: NeKzBot.sln
 script:
-  - dotnet add src/NeKzBot package Discord.Net -s https://www.myget.org/F/discord-net/api/v3/index.json -v 2.0.0-beta-00880
   - dotnet restore
   - dotnet build src/NeKzBot -c Release

@@ -42,7 +42,7 @@ namespace NeKzBot.Services
 		{
 			_client.MessageReceived += MessageReceived;
 
-			_commands.AddModulesAsync(Assembly.GetEntryAssembly());
+			_commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 #if DOCS
 			GenerateDocs()
 				.GetAwaiter()
