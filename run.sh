@@ -1,1 +1,0 @@
-dotnet run -p src/NeKzBot -c Release --no-build

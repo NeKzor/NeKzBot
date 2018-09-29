@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <Authors>NeKz</Authors>
+    <Company>NeKz</Company>
+    <Description>yo</Description>
+    <!--<CodeAnalysisRuleSet>$(SolutionDir)\NeKzBot.ruleset</CodeAnalysisRuleSet>-->
+    <Version>2.0.0</Version>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  
+  <ItemGroup>
+  	<PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
+    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00970" />
+    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00970" />
+    <PackageReference Include="LiteDB" Version="4.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Portal2Boards.Net" Version="2.1.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SourceDemoParser.Net">
+      <HintPath>..\libs\SourceDemoParser.Net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

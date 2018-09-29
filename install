@@ -1,0 +1,3 @@
+#!/bin/bash
+dotnet add src package Discord.Net -s https://www.myget.org/F/discord-net/api/v3/index.json
+dotnet restore
