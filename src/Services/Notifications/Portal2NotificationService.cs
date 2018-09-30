@@ -43,7 +43,7 @@ namespace NeKzBot.Services.Notifications
                 .Build();
 
             // Insert new cache if it doesn't exist yet
-            var db = GetTaskCache<Portal2CacheData>()
+            var db = GetTaskCache<Portal2BoardsData>()
                 .GetAwaiter()
                 .GetResult();
 
@@ -54,7 +54,7 @@ namespace NeKzBot.Services.Notifications
             if (cache == null)
             {
                 _ = LogWarning("Creating new cache");
-                cache = new Portal2CacheData();
+                cache = new Portal2BoardsData();
                 db.Insert(cache);
             }
             return Task.CompletedTask;
@@ -72,7 +72,7 @@ namespace NeKzBot.Services.Notifications
 
                     var watch = Stopwatch.StartNew();
 
-                    var db = await GetTaskCache<Portal2CacheData>();
+                    var db = await GetTaskCache<Portal2BoardsData>();
                     var cache = db
                         .FindAll()
                         .FirstOrDefault();

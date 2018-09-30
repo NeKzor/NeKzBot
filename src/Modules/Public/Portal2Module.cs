@@ -10,6 +10,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.Extensions;
+using NeKzBot.Services;
 using Portal2Boards;
 using Portal2Boards.Extensions;
 
@@ -22,13 +23,34 @@ namespace NeKzBot.Modules.Public
         {
             private readonly IConfiguration _config;
             private readonly Portal2BoardsClient _client;
+            private readonly Portal2CampaignService _portal2;
 
-            public Portal2Boards(IConfiguration config)
+            public Portal2Boards(IConfiguration config, Portal2CampaignService portal2)
             {
                 _config = config;
+                _portal2 = portal2;
                 _client = new Portal2BoardsClient(_config["user_agent"]);
             }
 
+            [Ratelimit(6, 1, Measure.Minutes)]
+            [Command("map")]
+            public async Task Map([Remainder]string mapName)
+            {
+                var map = _portal2.GetMap(mapName);
+                if (map != null)
+                {
+                    await Context.Channel.SendFileAsync
+                    (
+                        $"private/resources/images/maps/{map.BestTimeId}.jpg",
+                        $"**{map.ChallengeModeName}**\n" +
+                        $"File Name: {map.Name}.bsp\n" +
+                        $"Abbreviation: {map.ThreeLetterCode}\n" +
+                        $"Elevator Timing: *{map.ElevatorTiming}*"
+                    );
+                }
+                else
+                    await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
+            }
             [Command("?"), Alias("info", "help")]
             public Task QuestionMark()
             {

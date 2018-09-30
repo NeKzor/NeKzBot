@@ -45,6 +45,7 @@ namespace NeKzBot
             var sds = services.GetRequiredService<SourceDemoService>();
             var scs = services.GetRequiredService<SourceCvarService>();
             var ims = services.GetRequiredService<ImageService>();
+            var pcs = services.GetRequiredService<Portal2CampaignService>();
 
             await log.Initialize();
             await chs.Initialize();
@@ -53,6 +54,7 @@ namespace NeKzBot
             await sds.Initialize();
             await scs.Initialize();
             await ims.Initialize();
+            await pcs.Initialize();
 
 #if DB_CLEANUP
 			await p2s.CleanupAsync();
@@ -103,6 +105,7 @@ namespace NeKzBot
                 .AddSingleton<SourceDemoService>()
                 .AddSingleton<SourceCvarService>()
                 .AddSingleton<ImageService>()
+                .AddSingleton<Portal2CampaignService>()
                 .BuildServiceProvider();
         }
     }
