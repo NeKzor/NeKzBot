@@ -11,6 +11,14 @@ namespace NeKzBot.Services
     {
         [JsonProperty("map_list")]
         public List<Portal2CampaignMap> MapList { get; set; }
+        [JsonIgnore]
+        public List<Discovery> Discoveries { get; set; }
+
+        public Portal2Campaign()
+        {
+            MapList = new List<Portal2CampaignMap>();
+            Discoveries = new List<Discovery>();
+        }
     }
     public class Portal2CampaignMap
     {
@@ -28,6 +36,14 @@ namespace NeKzBot.Services
         public string ElevatorTiming { get; set; }
         [JsonProperty("map_filter")]
         public int MapFilter { get; set; }
+    }
+    public class Discovery
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Category { get; set; }
+        public string Status { get; set; }
+        public string Showcase { get; set; }
     }
 
     public class Portal2CampaignService
@@ -47,6 +63,28 @@ namespace NeKzBot.Services
             if (File.Exists(file))
                 _campaign = JsonConvert.DeserializeObject<Portal2Campaign>(File.ReadAllText(file));
 
+            file = "private/resources/portal2exploits.csv";
+            if (File.Exists(file) && _campaign != null)
+            {
+                using (var fs = File.OpenRead(file))
+                using (var sr = new StreamReader(fs))
+                {
+                    sr.ReadLine();
+                    while (!sr.EndOfStream)
+                    {
+                        var values = sr.ReadLine().Split(',');
+                        _campaign.Discoveries.Add(new Discovery()
+                        {
+                            Name = values[0],
+                            Type = values[1],
+                            Category = values[2],
+                            Status = values[3],
+                            Showcase = values[4]
+                        });
+                    }
+                }
+            }
+
             return Task.CompletedTask;
         }
 
@@ -58,6 +96,27 @@ namespace NeKzBot.Services
                     || map.ChallengeModeName.Equals(name, System.StringComparison.CurrentCultureIgnoreCase)
                     || map.ThreeLetterCode.Equals(name, System.StringComparison.CurrentCultureIgnoreCase);
             });
+        }
+        public Discovery GetDiscovery(string name)
+        {
+            return _campaign.Discoveries.FirstOrDefault(discovery =>
+            {
+                return discovery.Name.Equals(name, System.StringComparison.CurrentCultureIgnoreCase)
+                    || discovery.Name.StartsWith(name, System.StringComparison.CurrentCultureIgnoreCase)
+                    || discovery.Name.EndsWith(name, System.StringComparison.CurrentCultureIgnoreCase)
+                    || discovery.Name.IndexOf(name, System.StringComparison.CurrentCultureIgnoreCase) >= 0;
+            });
+        }
+
+        public Portal2CampaignMap GetRandomMap()
+        {
+            var rand = new System.Random();
+            return _campaign.MapList.ElementAt(rand.Next(0, _campaign.MapList.Count));
+        }
+        public Discovery GetRandomDiscovery()
+        {
+            var rand = new System.Random();
+            return _campaign.Discoveries.ElementAt(rand.Next(0, _campaign.Discoveries.Count));
         }
     }
 }

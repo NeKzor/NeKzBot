@@ -34,28 +34,64 @@ namespace NeKzBot.Modules.Public
 
             [Ratelimit(6, 1, Measure.Minutes)]
             [Command("map")]
-            public async Task Map([Remainder]string mapName)
+            public async Task Map([Remainder]string mapName = null)
             {
-                var map = _portal2.GetMap(mapName);
+                var map = (!string.IsNullOrEmpty(mapName))
+                    ? _portal2.GetMap(mapName)
+                    : _portal2.GetRandomMap();
+
                 if (map != null)
                 {
-                    await Context.Channel.SendFileAsync
+                    var embed = new EmbedBuilder()
+                        .WithColor(Color.Blue)
+                        .WithDescription(
+                            $"**{map.ChallengeModeName}**\n" +
+                            $"File Name: {map.Name}.bsp\n" +
+                            $"Abbreviation: {map.ThreeLetterCode}\n" +
+                            $"Elevator Timing: *{map.ElevatorTiming}*");
+
+                    var message = await Context.Channel.SendFileAsync
                     (
                         $"private/resources/images/maps/{map.BestTimeId}.jpg",
-                        $"**{map.ChallengeModeName}**\n" +
-                        $"File Name: {map.Name}.bsp\n" +
-                        $"Abbreviation: {map.ThreeLetterCode}\n" +
-                        $"Elevator Timing: *{map.ElevatorTiming}*"
-                    );
+                        embed: embed.Build()
+                    ).ConfigureAwait(false);
+
+                    _ = Task.Delay(TimeSpan.FromSeconds(5 * 60))
+                        .ContinueWith(_ => message.DeleteAsync().ConfigureAwait(false))
+                        .ConfigureAwait(false);
                 }
                 else
                     await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
+            }
+            [Ratelimit(6, 1, Measure.Minutes)]
+            [Command("discovery"), Alias("exploit", "glitch")]
+            public async Task Discovery([Remainder]string discoveryName = null)
+            {
+                var discovery = (!string.IsNullOrEmpty(discoveryName))
+                    ? _portal2.GetDiscovery(discoveryName)
+                    : _portal2.GetRandomDiscovery();
+
+                if (discovery != null)
+                {
+                    var embed = new EmbedBuilder()
+                        .WithColor(Color.Blue)
+                        .WithDescription(
+                            $"**{discovery.Name}**\n" +
+                            $"Type: {discovery.Type}\n" +
+                            $"Category: {discovery.Category}\n" +
+                            $"Status: {discovery.Status}\n" +
+                            $"[Showcase]({discovery.Showcase})");
+
+                    await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+                }
+                else
+                    await ReplyAndDeleteAsync("Unknown name.", timeout: TimeSpan.FromSeconds(10));
             }
             [Command("?"), Alias("info", "help")]
             public Task QuestionMark()
             {
                 var embed = new EmbedBuilder()
-                    .WithColor(Color.Blue)
+                    .WithColor(Color.Blue)  // TODO: Upgrade to P2BN v2.2
                     .WithDescription("[Powered by Portal2Boards.Net (v2.1)](https://nekzor.github.io/Portal2Boards.Net)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());

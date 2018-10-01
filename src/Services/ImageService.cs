@@ -32,8 +32,8 @@ namespace NeKzBot.Services
         }
         public string GetRandomImage()
         {
-            var rng = new System.Random();
-            return _imageCache[rng.Next(0, _imageCache.Count)];
+            var rand = new System.Random();
+            return _imageCache[rand.Next(0, _imageCache.Count)];
         }
     }
 }

@@ -62,11 +62,19 @@ namespace NeKzBot.Modules.Public
         [Command("meme")]
         public async Task Meme(string imageName = null)
         {
-            if (!string.IsNullOrEmpty(imageName)
-                && !string.IsNullOrEmpty(imageName = _imageService.GetImage(imageName)))
-                await Context.Channel.SendFileAsync(imageName);
+            var image = (!string.IsNullOrEmpty(imageName))
+                ? _imageService.GetImage(imageName)
+                : _imageService.GetRandomImage();
+
+            if (image != null)
+            {
+                var message = await Context.Channel.SendFileAsync(image).ConfigureAwait(false);
+                _ = Task.Delay(TimeSpan.FromSeconds(5 * 60))
+                        .ContinueWith(_ => message.DeleteAsync().ConfigureAwait(false))
+                        .ConfigureAwait(false);
+            }
             else
-                await Context.Channel.SendFileAsync(_imageService.GetRandomImage());
+                await ReplyAndDeleteAsync("404. Meme not found.", timeout: TimeSpan.FromSeconds(10));
         }
     }
 }

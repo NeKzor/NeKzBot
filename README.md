@@ -57,6 +57,8 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.invite` | - | InfoModule |
 | `.modules` | `help` | InfoModule |
 | `.portal2boards.` | `p2b`, `p2` | Portal2Module |
+| `.portal2boards.map (mapName:String...)` | - | Portal2Module |
+| `.portal2boards.discovery (discoveryName:String...)` | `exploit`, `glitch` | Portal2Module |
 | `.portal2boards.?` | `info`, `help` | Portal2Module |
 | `.portal2boards.leaderboard (mapName:String...)` | `lb` | Portal2Module |
 | `.portal2boards.changelog <mapName:String...>` | `cl`, `clog` | Portal2Module |
