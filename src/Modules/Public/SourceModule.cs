@@ -221,7 +221,7 @@ namespace NeKzBot.Modules.Public
             {
                 var demo = await Service.GetDemo(Context.User.Id);
                 if (demo != null)
-                    await ReplyAndDeleteAsync(demo.FileStamp);
+                    await ReplyAndDeleteAsync(demo.FileStamp.ToRawText());
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
@@ -239,7 +239,7 @@ namespace NeKzBot.Modules.Public
             {
                 var demo = await Service.GetDemo(Context.User.Id);
                 if (demo != null)
-                    await ReplyAndDeleteAsync(demo.ServerName);
+                    await ReplyAndDeleteAsync(demo.ServerName.ToRawText());
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
@@ -248,7 +248,7 @@ namespace NeKzBot.Modules.Public
             {
                 var demo = await Service.GetDemo(Context.User.Id);
                 if (demo != null)
-                    await ReplyAndDeleteAsync(demo.ClientName);
+                    await ReplyAndDeleteAsync(demo.ClientName.ToRawText());
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
@@ -257,7 +257,7 @@ namespace NeKzBot.Modules.Public
             {
                 var demo = await Service.GetDemo(Context.User.Id);
                 if (demo != null)
-                    await ReplyAndDeleteAsync(demo.MapName);
+                    await ReplyAndDeleteAsync(demo.MapName.ToRawText());
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
@@ -266,7 +266,7 @@ namespace NeKzBot.Modules.Public
             {
                 var demo = await Service.GetDemo(Context.User.Id);
                 if (demo != null)
-                    await ReplyAndDeleteAsync(demo.GameDirectory);
+                    await ReplyAndDeleteAsync(demo.GameDirectory.ToRawText());
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
@@ -328,7 +328,7 @@ namespace NeKzBot.Modules.Public
 
                             line += $"[{i + j}] {demo.Messages[i + j].Type} " +
                                 $"at {demo.Messages[i + j].CurrentTick} " +
-                                $"-> {demo.Messages[i + j].Frame?.ToString() ?? "NULL"}\n";
+                                $"-> {demo.Messages[i + j].Frame?.ToString().ToRawText() ?? "NULL"}\n";
                         }
                         pages.Add(line);
                     }
@@ -362,7 +362,7 @@ namespace NeKzBot.Modules.Public
                     (
                         $"Type: {result.Type}\n" +
                         $"Tick: {result.CurrentTick}\n" +
-                        $"Frame: {result.Frame?.ToString() ?? "NULL"}"
+                        $"Frame: {result.Frame?.ToString().ToRawText() ?? "NULL"}"
                     );
                 }
             }
