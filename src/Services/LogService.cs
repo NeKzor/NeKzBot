@@ -14,9 +14,9 @@ namespace NeKzBot.Services
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly InteractiveService _interactive;
-        private readonly Portal2NotificationService _portal2;
+        //private readonly Portal2NotificationService _portal2;
         private readonly SpeedrunNotificationService _speedrun;
-        private readonly SourceDemoService _demo;
+        //private readonly SourceDemoService _demo;
         private readonly ILoggerFactory _loggerFactory;
 
         private ILogger _discordLogger;
@@ -27,17 +27,17 @@ namespace NeKzBot.Services
             DiscordSocketClient client,
             CommandService commands,
             InteractiveService interactive,
-            Portal2NotificationService portal2,
+            //Portal2NotificationService portal2,
             SpeedrunNotificationService speedrun,
-            SourceDemoService demo,
+            //SourceDemoService demo,
             ILoggerFactory loggerFactory)
         {
             _client = client;
             _commands = commands;
             _interactive = interactive;
-            _portal2 = portal2;
+            //_portal2 = portal2;
             _speedrun = speedrun;
-            _demo = demo;
+            //_demo = demo;
             _loggerFactory = loggerFactory.AddConsole();
         }
 
@@ -49,9 +49,9 @@ namespace NeKzBot.Services
 
             _client.Log += LogDiscord;
             _commands.Log += LogCommand;
-            _portal2.Log += LogInternal;
+            //_portal2.Log += LogInternal;
             _speedrun.Log += LogInternal;
-            _demo.Log += LogInternal;
+            //_demo.Log += LogInternal;
 
             return Task.CompletedTask;
         }

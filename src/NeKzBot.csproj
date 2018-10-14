@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Portal2Boards.Net" Version="2.1.0" />
+    <!--<PackageReference Include="Portal2Boards.Net" Version="2.1.0" />-->
     <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
@@ -36,6 +36,9 @@
   <ItemGroup>
     <Reference Include="SourceDemoParser.Net">
       <HintPath>..\libs\SourceDemoParser.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="Portal2Boards.Net">
+      <HintPath>..\libs\Portal2Boards.Net.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

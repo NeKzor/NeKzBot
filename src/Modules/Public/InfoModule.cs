@@ -86,7 +86,7 @@ namespace NeKzBot.Modules.Public
         {
             var invite = "https://discordapp.com/oauth2/authorize?scope=bot" +
                 $"&client_id={Context.Client.CurrentUser.Id}" +
-                "&permissions=536873984";
+                "&permissions=536906816";
 
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))

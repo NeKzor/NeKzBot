@@ -20,14 +20,14 @@ namespace NeKzBot.Modules.Private
                     .WithDescription("**Webhook Services**\n" +
                         "Creation: .services.<subscription>.subscribe\n" +
                         "Deletion: .services.<subscription>.unsubscribe\n" +
-                        "Available Subscriptions: " +
-                        "[portal2boards](https://board.iverb.me), " +
+                        "Available subscriptions: " +
+                        //"[portal2boards](https://board.iverb.me), " +
                         "[speedruncom](https://www.speedrun.com)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
 
-            [RequireContext(ContextType.Guild)]
+            /* [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.ManageWebhooks)]
             [RequireBotPermission(GuildPermission.ManageWebhooks)]
             [Group("portal2boards"), Alias("p2b")]
@@ -70,7 +70,7 @@ namespace NeKzBot.Modules.Private
                     else
                         await ReplyAndDeleteAsync("Could not find a subscription in the database.", timeout: TimeSpan.FromSeconds(10));
                 }
-            }
+            } */
 
             [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.ManageWebhooks)]

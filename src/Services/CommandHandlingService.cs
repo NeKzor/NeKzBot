@@ -19,7 +19,6 @@ namespace NeKzBot.Services
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IConfiguration _config;
-        private readonly SourceDemoService _demoService;
         private readonly InteractiveService _interactiveService;
         private readonly IServiceProvider _provider;
 
@@ -27,14 +26,12 @@ namespace NeKzBot.Services
             DiscordSocketClient client,
             CommandService commands,
             InteractiveService interactiveService,
-            SourceDemoService demoService,
             IConfiguration config,
             IServiceProvider provider)
         {
             _client = client;
             _commands = commands;
             _interactiveService = interactiveService;
-            _demoService = demoService;
             _config = config;
             _provider = provider;
         }

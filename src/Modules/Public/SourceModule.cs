@@ -27,7 +27,7 @@ namespace NeKzBot.Modules.Public
                     .WithColor(Color.Orange)
                     .WithDescription("**Cvar Database**\n" +
                         "Usage: .cvars.<game> <name>\n" +
-                        "Available Games: halflife2, portal, portal2, thebeginnersguide, thestanleyparable\n" +
+                        "Available games: halflife2, portal, portal2, thebeginnersguide, thestanleyparable\n" +
                         "Made with [SourceAutoRecord](https://nekzor.github.io/SourceAutoRecord)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
@@ -103,7 +103,7 @@ namespace NeKzBot.Modules.Public
             }
         }
 
-        [Group("demo"), Alias("dem")]
+        /* [Group("demo"), Alias("dem")]
         public class DemoInfo : InteractiveBase<SocketCommandContext>
         {
             public SourceDemoService Service { get; set; }
@@ -430,6 +430,6 @@ namespace NeKzBot.Modules.Public
                 if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
                     await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
             }
-        }
+        } */
     }
 }

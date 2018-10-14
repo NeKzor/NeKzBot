@@ -91,13 +91,13 @@ namespace NeKzBot.Modules.Public
             public Task QuestionMark()
             {
                 var embed = new EmbedBuilder()
-                    .WithColor(Color.Blue)  // TODO: Upgrade to P2BN v2.2
-                    .WithDescription("[Powered by Portal2Boards.Net (v2.1)](https://nekzor.github.io/Portal2Boards.Net)");
+                    .WithColor(Color.Blue)
+                    .WithDescription("[Powered by Portal2Boards.Net (v2.2)](https://nekzor.github.io/Portal2Boards.Net)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
             [Ratelimit(3, 1, Measure.Minutes)]
-            [Command("leaderboard"), Alias("lb")]
+            [Command("leaderboard", RunMode = RunMode.Async), Alias("lb")]
             public async Task Leaderboard([Remainder] string mapName = null)
             {
                 if (!string.IsNullOrEmpty(mapName))
@@ -155,7 +155,7 @@ namespace NeKzBot.Modules.Public
                     await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
             }
             [Ratelimit(3, 1, Measure.Minutes)]
-            [Command("changelog"), Alias("cl", "clog")]
+            [Command("changelog", RunMode = RunMode.Async), Alias("cl", "clog")]
             public async Task Changelog([Remainder] string mapName)
             {
                 var map = Portal2Map.Search(mapName);
@@ -187,7 +187,7 @@ namespace NeKzBot.Modules.Public
                     page += $"\n{entry.Rank.Current.FormatRankToString("WR")}" +
                         $" {entry.Score.Current.AsTimeToString()}" +
                         ((entry.Score.Improvement != default)
-                            ? $" (-{entry.Score.Improvement.AsTimeToString()})"
+                            ? $" (-{((uint?)entry.Score.Improvement).AsTimeToString()})"
                             : string.Empty) +
                         $" by [{entry.Player.Name.ToRawText()}]({(entry.Player as SteamUser).Url})";
 
@@ -212,7 +212,7 @@ namespace NeKzBot.Modules.Public
                 );
             }
             [Ratelimit(3, 1, Measure.Minutes)]
-            [Command("profile"), Alias("pro", "user")]
+            [Command("profile", RunMode = RunMode.Async), Alias("pro", "user")]
             public async Task Profile([Remainder] string userNameOrSteamId64 = null)
             {
                 var profile = default(IProfile);
@@ -250,7 +250,7 @@ namespace NeKzBot.Modules.Public
                             $"\nTotal | {user.Points.Global.Score.FormatPointsToString()}",
                         $"\nSP Rank | {user.Times.SinglePlayer.PlayerRank.FormatRankToString()}" +
                             $"\nMP Rank | {user.Times.Cooperative.PlayerRank.FormatRankToString()}" +
-                            $"\nOverall | {user.Times.Global.PlayerRank.FormatRankToString()}",
+                            $"\nOverall | {user.Times.Global?.PlayerRank.FormatRankToString()}",
                         $"\nSP Avg Rank | {user.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
                             $"\nMP Avg Rank | {user.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
                             $"\nOverall | {user.GlobalAveragePlace.FormatAveragePlaceToString()}",
@@ -316,7 +316,7 @@ namespace NeKzBot.Modules.Public
                     await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
             }
             [Ratelimit(3, 1, Measure.Minutes)]
-            [Command("aggregated"), Alias("agg")]
+            [Command("aggregated", RunMode = RunMode.Async), Alias("agg")]
             public async Task Aggregated()
             {
                 var agg = await _client.GetAggregatedAsync();

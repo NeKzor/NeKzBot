@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/NeKzor/NeKzBot.svg?branch=master)](https://travis-ci.org/NeKzor/NeKzBot)
 [![Build Version](https://img.shields.io/badge/version-v2.0-brightgreen.svg)](https://github.com/NeKzor/NeKzBot/projects/2)
 
-**NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on unique services.
+**NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on providing unique services.
 
 ### Overview
 * [Services](#services)
@@ -21,8 +21,10 @@
 
 ### Permissions
 #### Required
-* READ_MESSAGES
+* VIEW_CHANNEL
 * SEND_MESSAGES
+* ADD_REACTIONS
+* ATTACH_FILES
 
 #### Optional
 * MANAGE_WEBHOOKS
@@ -44,9 +46,6 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | --- | --- | --- |
 | `.services.` | `service` | ServiceModule |
 | `.services.?` | `info`, `help` | ServiceModule |
-| `.services.portal2boards.` | `p2b` | ServiceModule |
-| `.services.portal2boards.subscribe` | `sub`, `create`, `hook` | ServiceModule |
-| `.services.portal2boards.unsubscribe` | `unsub`, `delete`, `unhook` | ServiceModule |
 | `.services.speedruncom.` | `srcom` | ServiceModule |
 | `.services.speedruncom.subscribe` | `sub`, `create`, `hook` | ServiceModule |
 | `.services.speedruncom.unsubscribe` | `unsub`, `delete`, `unhook` | ServiceModule |
@@ -71,27 +70,6 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.cvars.portal2 <cvar:String>` | `p2` | SourceModule |
 | `.cvars.thebeginnersguide <cvar:String>` | `beginnersguide`, `tbg` | SourceModule |
 | `.cvars.thestanleyparable <cvar:String>` | `stanley`, `tsp` | SourceModule |
-| `.demo.` | `dem` | SourceModule |
-| `.demo.?` | `info`, `help` | SourceModule |
-| `.demo.parse` | - | SourceModule |
-| `.demo.get` | - | SourceModule |
-| `.demo.filestamp` | `magic` | SourceModule |
-| `.demo.protocol` | `protoc` | SourceModule |
-| `.demo.servername` | `server` | SourceModule |
-| `.demo.clientname` | `client` | SourceModule |
-| `.demo.mapname` | `map` | SourceModule |
-| `.demo.gamedirectory` | `dir` | SourceModule |
-| `.demo.playbacktime` | `time` | SourceModule |
-| `.demo.playbackticks` | `ticks` | SourceModule |
-| `.demo.playbackframes` | `frames` | SourceModule |
-| `.demo.signonlength` | `signon` | SourceModule |
-| `.demo.messages` | `msg` | SourceModule |
-| `.demo.messages <index:Int32>` | `msg` | SourceModule |
-| `.demo.gettickrate` | `tickrate` | SourceModule |
-| `.demo.gettickspersecond` | `tickspersecond`, `tps`, `intervalpertick`, `ipt` | SourceModule |
-| `.demo.adjustexact (overwrite:Boolean=False)` | `adj` | SourceModule |
-| `.demo.adjustflag (overwrite:Boolean=False)` | `adjf` | SourceModule |
-| `.demo.adjust (overwrite:Boolean=False)` | `adj2` | SourceModule |
 | `.guild` | `server` | StatsModule |
 | `.hierarchy` | - | StatsModule |
 | `.channel` | - | StatsModule |

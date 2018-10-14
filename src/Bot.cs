@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define WIN7
+//#define DB_CLEANUP
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
@@ -40,33 +42,33 @@ namespace NeKzBot
 
             var log = services.GetRequiredService<LogService>();
             var chs = services.GetRequiredService<CommandHandlingService>();
-            var p2s = services.GetRequiredService<Portal2NotificationService>();
+            //var p2s = services.GetRequiredService<Portal2NotificationService>();
             var srs = services.GetRequiredService<SpeedrunNotificationService>();
-            var sds = services.GetRequiredService<SourceDemoService>();
+            //var sds = services.GetRequiredService<SourceDemoService>();
             var scs = services.GetRequiredService<SourceCvarService>();
             var ims = services.GetRequiredService<ImageService>();
             var pcs = services.GetRequiredService<Portal2CampaignService>();
 
             await log.Initialize();
             await chs.Initialize();
-            await p2s.Initialize();
+            //await p2s.Initialize();
             await srs.Initialize();
-            await sds.Initialize();
+            //await sds.Initialize();
             await scs.Initialize();
             await ims.Initialize();
             await pcs.Initialize();
 
 #if DB_CLEANUP
-			await p2s.CleanupAsync();
+			//await p2s.CleanupAsync();
 			await srs.CleanupAsync();
-			await sds.DeleteExpiredDemos();
+			//await sds.DeleteExpiredDemos();
 #else
             await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
             await _client.StartAsync();
 
             await Task.WhenAll
             (
-                p2s.StartAsync(),
+                //p2s.StartAsync(),
                 srs.StartAsync()
             );
 
@@ -100,9 +102,9 @@ namespace NeKzBot
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton(new InteractiveService(_client, TimeSpan.FromSeconds(5 * 60)))
                 // Others
-                .AddSingleton<Portal2NotificationService>()
+                //.AddSingleton<Portal2NotificationService>()
                 .AddSingleton<SpeedrunNotificationService>()
-                .AddSingleton<SourceDemoService>()
+                //.AddSingleton<SourceDemoService>()
                 .AddSingleton<SourceCvarService>()
                 .AddSingleton<ImageService>()
                 .AddSingleton<Portal2CampaignService>()

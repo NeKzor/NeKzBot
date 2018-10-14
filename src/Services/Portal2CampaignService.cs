@@ -50,13 +50,6 @@ namespace NeKzBot.Services
     {
         private Portal2Campaign _campaign;
 
-        private readonly IConfiguration _config;
-
-        public Portal2CampaignService(IConfiguration config)
-        {
-            _config = config;
-        }
-
         public Task Initialize()
         {
             var file = "private/resources/portal2campaign.json";

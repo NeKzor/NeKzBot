@@ -66,7 +66,7 @@ namespace NeKzBot.Modules.Public
                 ? _imageService.GetImage(imageName)
                 : _imageService.GetRandomImage();
 
-            if (image != null)
+            if (image != null && Context.User.Id == 84272932246810624)
             {
                 var message = await Context.Channel.SendFileAsync(image).ConfigureAwait(false);
                 _ = Task.Delay(TimeSpan.FromSeconds(5 * 60))
