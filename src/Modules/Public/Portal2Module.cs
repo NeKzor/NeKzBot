@@ -235,9 +235,10 @@ namespace NeKzBot.Modules.Public
                 if (profile != null)
                 {
                     // Local funcion
-                    Portal2Map GetMap(IDataScore score)
+                    string GetMap(IDataScore score)
                     {
-                        return Portal2Map.Search((score as DataScore).Id);
+                        var map = Portal2Map.Search((score as DataScore).Id);
+                        return (map != null) ? map.Alias : "several chambers";
                     }
                     var user = profile as Profile;
                     var pages = new List<string>
@@ -248,18 +249,18 @@ namespace NeKzBot.Modules.Public
                         $"\nSP Points | {user.Points.SinglePlayer.Score.FormatPointsToString()}" +
                             $"\nMP Points | {user.Points.Cooperative.Score.FormatPointsToString()}" +
                             $"\nTotal | {user.Points.Global.Score.FormatPointsToString()}",
-                        $"\nSP Rank | {user.Times.SinglePlayer.PlayerRank.FormatRankToString()}" +
-                            $"\nMP Rank | {user.Times.Cooperative.PlayerRank.FormatRankToString()}" +
-                            $"\nOverall | {user.Times.Global?.PlayerRank.FormatRankToString()}",
+                        $"\nSP Rank | {user.Points.SinglePlayer.PlayerRank.FormatRankToString()}" +
+                            $"\nMP Rank | {user.Points.Cooperative.PlayerRank.FormatRankToString()}" +
+                            $"\nOverall | {user.Points.Global.PlayerRank.FormatRankToString()}",
                         $"\nSP Avg Rank | {user.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
                             $"\nMP Avg Rank | {user.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
                             $"\nOverall | {user.GlobalAveragePlace.FormatAveragePlaceToString()}",
-                        $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore).Alias}" +
-                            $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore).Alias}",
-                        $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore).Alias}" +
-                            $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore).Alias}",
-                        $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore).Alias}" +
-                            $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore).Alias}"
+                        $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore)}" +
+                            $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore)}",
+                        $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore)}" +
+                            $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore)}",
+                        $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore)}" +
+                            $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore)}"
                     };
 
                     var page = string.Empty;
