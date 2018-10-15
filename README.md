@@ -17,7 +17,7 @@
   * [speedrun.com](https://speedrun.com)
 * Source Engine
   * [Demo Parser](https://github.com/NeKzor/SourceDemoParser.Net)
-  * [Cvar Dictionary](https://github.com/NeKzor/NeKzBot/SourceAutoRecord)
+  * [Cvar Dictionary](https://github.com/NeKzor/SourceAutoRecord)
 
 ### Permissions
 #### Required
