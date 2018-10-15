@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define TEST
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -79,7 +80,7 @@ namespace NeKzBot.Services.Notifications
 
                     if (cache == null)
                         throw new Exception("Task cache not found!");
-                    await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
+                    //await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
 
                     var clog = await _client.GetChangelogAsync(() => _changelogQuery);
                     var entries = clog.Entries.Where(e => !e.IsBanned);
@@ -105,15 +106,22 @@ namespace NeKzBot.Services.Notifications
 #if TEST
 					sending.Add(entries.First());
 #endif
-                    await SendAsync(sending);
+                    if (sending.Count > 0)
+                    {
+                        await LogInfo($"Found {sending.Count} new notifications to send");
 
-                    // Cache
-                    cache.EntryIds = entries
-                        .Select(e => (uint)(e as ChangelogEntry).Id)
-                        .Take(11);
+                        if (sending.Count >= 11)
+                            throw new Exception("Webhook rate limit exceeded!");
+                        await SendAsync(sending);
 
-                    if (!db.Update(cache))
-                        throw new Exception("Failed to update cache!");
+                        // Cache
+                        cache.EntryIds = entries
+                            .Select(e => (uint)(e as ChangelogEntry).Id)
+                            .Take(11);
+
+                        if (!db.Update(cache))
+                            throw new Exception("Failed to update cache!");
+                    }
 
                     // Sleep
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);

@@ -65,14 +65,6 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual async Task SendAsync(IEnumerable<object> notifications)
         {
-            var count = notifications.Count();
-            await LogInfo($"Found {count} new notifications to send");
-
-            if (count == 0) return;
-
-            if (count >= 11)
-                throw new Exception("Webhook rate limit exceeded!");
-
             var db = await GetSubscribers();
             var subscribers = db
                 .FindAll()

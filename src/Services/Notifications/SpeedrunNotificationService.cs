@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define TEST
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace NeKzBot.Services.Notifications
 
                     if (cache == null)
                         throw new Exception("Task cache not found!");
-                    await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
+                    //await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
 
                     var notifications = await _client.GetNotificationsAsync(21);
                     var sending = new List<SpeedrunNotification>();
@@ -97,13 +98,20 @@ namespace NeKzBot.Services.Notifications
 #if TEST
 					sending.Add(notifications.First());
 #endif
-                    await SendAsync(sending);
+                    if (sending.Count > 0)
+                    {
+                        await LogInfo($"Found {sending.Count} new notifications to send");
 
-                    cache.Notifications = notifications
-                        .Take(11);
+                        if (sending.Count >= 11)
+                            throw new Exception("Webhook rate limit exceeded!");
 
-                    if (!db.Update(cache))
-                        throw new Exception("Failed to update cache!");
+                        await SendAsync(sending);
+
+                        cache.Notifications = notifications.Take(11);
+
+                        if (!db.Update(cache))
+                            throw new Exception("Failed to update cache!");
+                    }
 
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
                     if (delay < 0)
@@ -122,61 +130,58 @@ namespace NeKzBot.Services.Notifications
         private async Task<Embed> BuildEmbedAsync(SpeedrunNotification nf)
         {
             var author = nf.Text.Split(' ')[0];
-            var title = "Latest Notification";
-            var category = string.Empty;
+            var game = default(string);
+            var category = default(string);
             var description = nf.Text;
+
+            // Local function
+            (string, string) ExtractGame(string str)
+            {
+                var temp = str.Split(new[] { " - " }, 2, StringSplitOptions.None);
+                return (temp.Length == 2) ? (temp[0], temp[1]) : (str, default);
+            }
 
             // Old code here, I hope this won't throw an exception :>
             switch (nf.Item.Rel)
             {
                 case "post":
-                    title = "Thread Response";
-                    category = nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length);
+                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length));
                     description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})*";
                     break;
                 case "run":
-                    title = "Run Submission";
-                    category = nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length);
-                    description = $"New {(nf.Text.Contains(" beat the WR in ") ? "**World Record**" : "Personal Best")} in [{category.ToRawText()}]({nf.Item.Uri})\nwith a time of {nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length)}.";
+                    (game, category) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length));
+                    description = $"**New {(nf.Text.Contains(" beat the WR in ") ? "World Record" : "Personal Best")}**\n{(!string.IsNullOrEmpty(category) ? $"{category}\n" : string.Empty)}{nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length).TrimEnd(new char[1])}";
                     break;
                 case "game":
-                    // ???
                     break;
                 case "guide":
-                    title = "New Guide";
-                    // ???
                     break;
                 case "thread":      // Undocumented API
-                    title = "New Thread Post";
-                    category = nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length);
+                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length));
                     description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})*";
                     break;
                 case "moderator":   // Undocumented API
-                    title = "New Moderator";
-                    category = nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length);
-                    description = $"{author.ToRawText()} is now a moderator for {category.ToRawText()}! :heart:";
+                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length));
+                    description = $"{author.ToRawText()} is now a moderator! :heart:";
                     break;
                 case "resource":    // Undocumented API
-                    category = nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length);
+                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length));
                     if (nf.Text.EndsWith("updated."))
-                    {
-                        title = "Updated Resource";
-                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated for {category.ToRawText()}.";
-                    }
+                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated!";
                     else if (nf.Text.EndsWith("added."))
-                    {
-                        title = "New Resource";
-                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added for {category.ToRawText()}.";
-                    }
+                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added!";
                     break;
             }
 
             var thumbnail = default(string);
-            if (!string.IsNullOrEmpty(category))
+            if (!string.IsNullOrEmpty(game))
             {
-                var games = await _client.GetGamesAsync(category);
-                var game = games?.FirstOrDefault();
-                thumbnail = game.Assets.CoverTiny.Uri;
+                var games = await _client.GetGamesAsync(game);
+                thumbnail = games?.FirstOrDefault()?.Assets?.CoverTiny?.Uri ?? string.Empty;
+            }
+            else
+            {
+                game = "?";
             }
 
             // API doesn't support user avatar nice...
@@ -192,10 +197,10 @@ namespace NeKzBot.Services.Notifications
             {
                 Author = new EmbedAuthorBuilder
                 {
-                    Name = author,
+                    Name = author.ToRawText(),
                     Url = $"https://www.speedrun.com/{author}",
                 },
-                Title = title,
+                Title = game,
                 Url = nf.Item.Uri,
                 Description = description,
                 Color = new Color(229, 227, 87),
