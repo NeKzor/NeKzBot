@@ -87,7 +87,7 @@ namespace NeKzBot.Modules.Public
                 var description = (!string.IsNullOrEmpty(result.HelpText))
                     ? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
                     : "-";
-                var os = (result.Os != OperatingSystem.Both)
+                var os = (result.Os != NeKzBot.Data.OperatingSystem.Both)
                     ? result.Os.ToString()
                     : "Windows/Linux";
 
