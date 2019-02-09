@@ -74,16 +74,25 @@ namespace NeKzBot.Services.Notifications
                         .FirstOrDefault();
 
                     if (cache == null)
-                        throw new Exception("Task cache not found!");
-                    //await LogInfo($"Cache: {cache.Notifications.Count()} (ID = {cache.Id})");
+                    {
+                        await LogWarning("Task cache not found!");
+                        goto retry;
+                    }
 
                     var notifications = await _client.GetNotificationsAsync(21);
+                    if (notifications == null)
+                    {
+                        await LogWarning("Fetch failed!");
+                        goto retry;
+                    }
+
                     var sending = new List<SpeedrunNotification>();
 
                     if (cache.Notifications.Any())
                     {
                         foreach (var old in cache.Notifications)
                         {
+                            sending.Clear();
                             foreach (var notification in notifications)
                             {
                                 if (old.Id == notification.Id)
@@ -113,9 +122,11 @@ namespace NeKzBot.Services.Notifications
                             throw new Exception("Failed to update cache!");
                     }
 
+                retry:
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
                     if (delay < 0)
-                        throw new Exception($"Task took too long ({delay}ms)");
+                        await LogWarning($"Task took too long: {delay}ms");
+
                     await Task.Delay(delay, _cancellation.Token);
                 }
             }
@@ -189,7 +200,7 @@ namespace NeKzBot.Services.Notifications
             var avatar = false;
             using (var wc = new WebClient(_config["user_agent"]))
             {
-                var (success, _) = await wc.TryGetBytesAsync($"https://www.speedrun.com/themes/user/{author}/image.png");
+                var (success, _) = await wc.GetBytesAsync($"https://www.speedrun.com/themes/user/{author}/image.png");
                 avatar = success;
             }
 

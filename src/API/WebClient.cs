@@ -27,43 +27,19 @@ namespace NeKzBot.API
         }
 
         // GET
-        public async Task<T> GetJsonObjectAsync<T>(string url)
+        public async Task<(bool, T)> GetJsonObjectAsync<T>(string url)
         {
             var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            return JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            return (response.IsSuccessStatusCode)
+                ? (true, JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false)))
+                : (false, default);
         }
-        public async Task<(bool, T)> TryGetJsonObjectAsync<T>(string url)
-        {
-            try
-            {
-                var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                return (true, JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false)));
-            }
-            catch
-            {
-            }
-            return (default, default);
-        }
-        public async Task<byte[]> GetBytesAsync(string url)
+        public async Task<(bool, byte[])> GetBytesAsync(string url)
         {
             var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-        }
-        public async Task<(bool, byte[])> TryGetBytesAsync(string url)
-        {
-            try
-            {
-                var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-                return (true, await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false));
-            }
-            catch
-            {
-            }
-            return (default, default);
+            return (response.IsSuccessStatusCode)
+                ? (true, await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false))
+                : (false, default);
         }
 
         public void Dispose()

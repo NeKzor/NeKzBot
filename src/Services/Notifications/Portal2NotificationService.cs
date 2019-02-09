@@ -79,10 +79,18 @@ namespace NeKzBot.Services.Notifications
                         .FirstOrDefault();
 
                     if (cache == null)
-                        throw new Exception("Task cache not found!");
-                    //await LogInfo($"Cache: {cache.EntryIds.Count()} (ID = {cache.Id})");
+                    {
+                        await LogWarning("Task cache not found");
+                        goto retry;
+                    }
 
                     var clog = await _client.GetChangelogAsync(() => _changelogQuery);
+                    if (clog == null)
+                    {
+                        await LogWarning("Fetch failed");
+                        goto retry;
+                    }
+
                     var entries = clog.Entries.Where(e => !e.IsBanned);
                     var sending = new List<object>();
 
@@ -92,6 +100,7 @@ namespace NeKzBot.Services.Notifications
                         // Check cached entries
                         foreach (var id in cache.EntryIds)
                         {
+                            sending.Clear();
                             foreach (ChangelogEntry entry in entries)
                             {
                                 if (id >= entry.Id)
@@ -112,6 +121,7 @@ namespace NeKzBot.Services.Notifications
 
                         if (sending.Count >= 11)
                             throw new Exception("Webhook rate limit exceeded!");
+
                         await SendAsync(sending);
 
                         // Cache
@@ -123,10 +133,11 @@ namespace NeKzBot.Services.Notifications
                             throw new Exception("Failed to update cache!");
                     }
 
+                retry:
                     // Sleep
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
                     if (delay < 0)
-                        throw new Exception($"Task took too long ({delay}ms)");
+                        await LogWarning($"Task took too long: {delay}ms");
 
                     await Task.Delay(delay, _cancellation.Token);
                 }

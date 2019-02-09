@@ -51,7 +51,7 @@ namespace NeKzBot.Services
 
         public async Task<bool> DownloadDemoAsync(ulong userId, string demoLink)
         {
-            var (success, result) = await _client.TryGetBytesAsync(demoLink);
+            var (success, result) = await _client.GetBytesAsync(demoLink);
             if (success)
             {
                 try
