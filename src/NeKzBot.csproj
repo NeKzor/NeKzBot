@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <Authors>NeKz</Authors>
     <Company>NeKz</Company>
     <Description>yo</Description>
@@ -21,15 +21,16 @@
   
   <ItemGroup>
   	<PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.0-beta2-00970" />
-    <PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.0-beta2-00970" />
+    <PackageReference Include="Discord.Net" Version="2.0.2-dev-01059" />
+    <!--<PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.2-dev-01059" />-->
     <PackageReference Include="LiteDB" Version="4.1.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <!--<PackageReference Include="Portal2Boards.Net" Version="2.1.0" />-->
-    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
+    <!--<PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />-->
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 
