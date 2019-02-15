@@ -125,7 +125,6 @@ namespace NeKzBot.Modules.Public
                 .AddField("Position", $"{(Context.Channel as SocketGuildChannel).Position}", true)
                 .AddField("Permissions", $"{(Context.Channel as SocketGuildChannel).PermissionOverwrites.Count}", true);
 
-
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
         [Ratelimit(1, 1, Measure.Minutes)]
@@ -141,35 +140,49 @@ namespace NeKzBot.Modules.Public
                 order = "(asc.)";
                 users = Context.Guild.Users
                     .OrderBy(u => u.Id)
-                    .Take(10);
+                    ;//.Take(10);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
                     .OrderByDescending(u => u.Id)
-                    .Take(10);
+                    ;//.Take(10);
             }
 
+            var page = string.Empty;
+            var pages = new List<string>();
             var count = 0;
-            var result = string.Empty;
 
             foreach (var user in users)
             {
-                var temp = $"\n{user.Id} = {user.Username}";
-                if (result.Length + temp.Length > 2048)
-                    break;
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
 
-                result += temp;
+                page += $"\n{user.Id} = {user.Username}";
+
                 count++;
             }
+            pages.Add(page);
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithTitle($"Top {count} User IDs {order}")
-                .WithDescription(result);
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top User IDs {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
         [Ratelimit(1, 1, Measure.Minutes)]
         [RequireContext(ContextType.Guild)]
@@ -184,35 +197,49 @@ namespace NeKzBot.Modules.Public
                 order = "(asc.)";
                 users = Context.Guild.Users
                     .OrderBy(u => u.DiscriminatorValue)
-                    .Take(10);
+                    ;//.Take(10);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
                     .OrderByDescending(u => u.DiscriminatorValue)
-                    .Take(10);
+                    ;//.Take(10);
             }
 
+            var page = string.Empty;
+            var pages = new List<string>();
             var count = 0;
-            var result = string.Empty;
 
             foreach (var user in users)
             {
-                var temp = $"\n{user.Discriminator} = {user.Username}";
-                if (result.Length + temp.Length > 2048)
-                    break;
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
 
-                result += temp;
+                page += $"\n#{user.Discriminator} = {user.Username}";
+
                 count++;
             }
+            pages.Add(page);
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithTitle($"Top {count} User Discriminators {order}")
-                .WithDescription(result);
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top User Discriminators {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
         [RequireContext(ContextType.Guild)]
         [Command("joined")]
@@ -226,35 +253,49 @@ namespace NeKzBot.Modules.Public
                 order = "(asc.)";
                 users = Context.Guild.Users
                     .OrderBy(u => u.JoinedAt)
-                    .Take(10);
+                    ;//.Take(10);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
                     .OrderByDescending(u => u.JoinedAt)
-                    .Take(10);
+                    ;//.Take(10);
             }
 
+            var page = string.Empty;
+            var pages = new List<string>();
             var count = 0;
-            var result = string.Empty;
 
             foreach (var user in users)
             {
-                var temp = $"\n{user.CreatedAt.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")} = {user.Username}";
-                if (result.Length + temp.Length > 2048)
-                    break;
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
 
-                result += temp;
+                page += $"\n{user.JoinedAt?.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")} = {user.Username}";
+
                 count++;
             }
+            pages.Add(page);
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithTitle($"Top {count} User Joined Dates {order}")
-                .WithDescription(result);
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top User Joined Dates {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
         [RequireContext(ContextType.Guild)]
         [Command("created")]
@@ -268,35 +309,49 @@ namespace NeKzBot.Modules.Public
                 order = "(asc.)";
                 users = Context.Guild.Users
                     .OrderBy(u => u.CreatedAt)
-                    .Take(10);
+                    ;//.Take(10);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
                     .OrderByDescending(u => u.CreatedAt)
-                    .Take(10);
+                    ;//.Take(10);
             }
 
+            var page = string.Empty;
+            var pages = new List<string>();
             var count = 0;
-            var result = string.Empty;
 
             foreach (var user in users)
             {
-                var temp = $"\n{user.CreatedAt.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")} = {user.Username}";
-                if (result.Length + temp.Length > 2048)
-                    break;
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
 
-                result += temp;
+                page += $"\n{user.CreatedAt.ToString(@"yyyy\-MM\-dd hh\:mm\:ss")} = {user.Username}";
+
                 count++;
             }
+            pages.Add(page);
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithTitle($"Top {count} User Created Dates {order}")
-                .WithDescription(result);
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top User Created Dates {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
         // Not sure if this algorithm is fair:
         // Appending user discriminator with user id
@@ -312,37 +367,50 @@ namespace NeKzBot.Modules.Public
                 order = "(asc.)";
                 users = Context.Guild.Users
                     .OrderBy(u => double.Parse($"{u.DiscriminatorValue}{u.Id}"))
-                    .Take(10);
+                    ;//.Take(10);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
                     .OrderByDescending(u => double.Parse($"{u.DiscriminatorValue}{u.Id}"))
-                    .Take(10);
+                    ;//.Take(10);
             }
 
+            var page = string.Empty;
+            var pages = new List<string>();
             var count = 0;
-            var result = string.Empty;
 
             foreach (var user in users)
             {
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
+
                 var score = Math.Round(Math.Log(double.Parse($"{user.DiscriminatorValue}{user.Id}")), 3);
-                var temp = $"\n{score.ToString("N3")} = {user.Username}";
+                page += $"\n{score.ToString("N3")} = {user.Username}";
 
-                if (result.Length + temp.Length > 2048)
-                    break;
-
-                result += temp;
                 count++;
             }
+            pages.Add(page);
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithTitle($"Top {count} User Scores {order}")
-                .WithDescription(result);
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top User Scores {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
     }
 }
