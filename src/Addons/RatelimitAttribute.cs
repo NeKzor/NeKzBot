@@ -57,7 +57,7 @@ namespace Discord.Addons.Preconditions
             if (_noLimitForAdmins && context.User is IGuildUser gu && gu.GuildPermissions.Administrator)
                 return Task.FromResult(PreconditionResult.FromSuccess());
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var timeout = (_invokeTracker.TryGetValue(context.User.Id, out var t)
                 && ((now - t.FirstInvoke) < _invokeLimitPeriod))
                     ? t : new CommandTimeout(now);

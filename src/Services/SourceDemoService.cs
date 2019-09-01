@@ -80,14 +80,14 @@ namespace NeKzBot.Services
                     UserId = userId,
                     DownloadUrl = downloadUrl,
                     Demo = demo,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
             }
             else
             {
                 // Demo has been adjusted
                 if (string.IsNullOrEmpty(downloadUrl))
-                    data.CreatedAt = DateTime.UtcNow;
+                    data.CreatedAt = DateTime.Now;
                 else
                     data.DownloadUrl = downloadUrl;
 
@@ -118,7 +118,7 @@ namespace NeKzBot.Services
 
             foreach (var demo in db.FindAll())
             {
-                if ((DateTime.UtcNow - demo.CreatedAt).Days > 21)
+                if ((DateTime.Now - demo.CreatedAt).Days > 21)
                 {
                     _ = LogWarning($"Deleting expired demo from user {demo.UserId}");
                     if (!db.Delete(demo.Id))

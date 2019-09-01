@@ -25,6 +25,8 @@ namespace NeKzBot
 
         public async Task RunAsync()
         {
+            AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+
             _config = BuildConfig();
 
             _client = new DiscordSocketClient(new DiscordSocketConfig()

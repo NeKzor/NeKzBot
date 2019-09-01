@@ -103,7 +103,7 @@ namespace NeKzBot.Services
                 0,
                 message,
                 ex,
-                (_, __) => $"{DateTime.UtcNow.ToString("HH:mm:ss")} {message}"
+                (_, __) => $"{DateTime.Now.ToString("HH:mm:ss")} {message}"
             );
             return Task.CompletedTask;
         }

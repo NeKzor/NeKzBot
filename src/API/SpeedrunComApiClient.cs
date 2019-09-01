@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NeKzBot.API
@@ -23,12 +24,12 @@ namespace NeKzBot.API
         public async Task<IEnumerable<SpeedrunNotification>> GetNotificationsAsync(uint max = 0)
         {
             var (success, obj) = await _client.GetJsonObjectAsync<SpeedrunData<SpeedrunNotification>>($"{ApiUri}/notifications?max={max}");
-            return (success && obj?.Data != null) ? obj.Data : default;
+            return (success && obj?.Data != null) ? obj.Data : Enumerable.Empty<SpeedrunNotification>();
         }
         public async Task<IEnumerable<SpeedrunGame>> GetGamesAsync(string name)
         {
             var (success, obj) = await _client.GetJsonObjectAsync<SpeedrunData<SpeedrunGame>>($"{ApiUri}/games?name={name}");
-            return (success && obj?.Data != null) ? obj.Data : default;
+            return (success && obj?.Data != null) ? obj.Data : Enumerable.Empty<SpeedrunGame>();
         }
 
         public void Dispose()

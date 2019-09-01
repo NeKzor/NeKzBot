@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Webhook;
-using Discord.WebSocket;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.Data;
@@ -54,7 +53,6 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual Task StopAsync()
         {
-            // I'll never use this anyway...
             if (!_isRunning)
             {
                 _cancellation.Cancel();
@@ -107,7 +105,7 @@ namespace NeKzBot.Services.Notifications
                     // Make sure to catch only on this special exception
                     // which tells us that this webhook doesn't exist
                     catch (InvalidOperationException ex)
-                        when (ex.Message == "Could not find a webhook for the supplied credentials.")
+                        when (ex.Message.StartsWith("Could not find a webhook"))
                     {
                         failed.Add(sub);
                         await LogWarning($"Sub ID = {sub.Id} not found");

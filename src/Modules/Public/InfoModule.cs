@@ -29,7 +29,7 @@ namespace NeKzBot.Modules.Public
                 .AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
                 .AddField("Threads", $"{Process.GetCurrentProcess().Threads.Count}", true)
                 .AddField("Uptime", (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"hh\:mm\:ss"), true)
-                .AddField("Local Time (UTC)", DateTime.UtcNow.ToString("HH:mm:ss"), true)
+                .AddField($"Local Time (UTC+{DateTimeOffset.Now.Offset.Hours})", DateTime.Now.ToString("HH:mm:ss"), true)
                 .AddField("Location", "Graz, Austria", true)
                 .AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
                 .AddField("Runtime", RuntimeInformation.FrameworkDescription, false)
@@ -81,6 +81,7 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
+        [Ratelimit(3, 1, Measure.Minutes)]
         [Command("invite")]
         public async Task Invite()
         {
@@ -94,6 +95,7 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
+        [Ratelimit(3, 1, Measure.Minutes)]
         [Command("modules"), Alias("help")]
         public async Task Modules()
         {
@@ -121,6 +123,48 @@ namespace NeKzBot.Modules.Public
                 .WithDescription((list != string.Empty) ? list : "Modules are not loaded.");
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+        }
+        [Ratelimit(3, 1, Measure.Minutes)]
+        [Command("invites")]
+        public async Task Invites()
+        {
+            var invites = await Context.Guild.GetInvitesAsync();
+
+            var page = string.Empty;
+            var pages = new List<string>();
+            var count = 0;
+
+            foreach (var invite in invites.OrderBy(x => x.CreatedAt))
+            {
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
+
+                page += $"\n{invite.Id}" +
+                    $" created by {invite.Inviter.Username}#{invite.Inviter.Discriminator}" +
+                    $" at {invite.CreatedAt.Value.ToString("yyyy-MM-dd")} ({invite.Uses}/{(((invite.MaxUses ?? 0) == 0) ? "∞" : $"{invite.MaxUses}")})";
+
+                count++;
+            }
+            pages.Add(page);
+
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = "Server Invites",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false // Allow other users to control the pages too
+            );
         }
     }
 }

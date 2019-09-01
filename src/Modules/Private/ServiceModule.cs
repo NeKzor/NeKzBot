@@ -45,7 +45,7 @@ namespace NeKzBot.Modules.Private
                         var hook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("Portal2BoardsHook");
                         if (hook != null)
                         {
-                            if (!await Service.SubscribeAsync(hook, "Portal2Boards Webhook Test!"))
+                            if (!await Service.SubscribeAsync(hook, "Subscribed to this service!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
                         }
                         else
@@ -90,7 +90,7 @@ namespace NeKzBot.Modules.Private
                         var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("SpeedrunComHook");
                         if (webhook != null)
                         {
-                            if (!await Service.SubscribeAsync(webhook, "SpeedrunCom Webhook Test!"))
+                            if (!await Service.SubscribeAsync(webhook, "Subscribed to this service!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
                         }
                         else

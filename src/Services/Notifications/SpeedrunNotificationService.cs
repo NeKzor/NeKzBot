@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -17,6 +18,11 @@ namespace NeKzBot.Services.Notifications
 {
     public class SpeedrunNotificationService : NotificationService
     {
+        public static readonly Regex PostPattern = new Regex(@"^(.+) responded to the thread '([\w %]+)' in the (.+) forum\.$");
+        public static readonly Regex RunPattern = new Regex(@"^(.+) (?:got a new PB in|beat the WR in) (.+)\. (?:Their time|The new WR) is ([0-9 hms]+)\.$");
+        public static readonly Regex ThreadPattern = new Regex(@"^(.+) posted a new thread in the (.+) forum: (.+)\.$");
+        public static readonly Regex ModeratorPattern = new Regex(@"^(.+) has been added to (.+) as a moderator\.$");
+
         private SpeedrunComApiClient _client;
 
         public SpeedrunNotificationService(IConfiguration config, LiteDatabase dataBase)
@@ -39,19 +45,18 @@ namespace NeKzBot.Services.Notifications
                 _config["speedrun_token"]
             );
 
-            var data = GetTaskCache<SpeedrunCacheData>()
+            var db = GetTaskCache<SpeedrunCacheData>()
                 .GetAwaiter()
                 .GetResult();
 
-            var cache = data
+            var cache = db
                 .FindAll()
                 .FirstOrDefault();
 
             if (cache == null)
             {
                 _ = LogWarning("Creating new cache");
-                cache = new SpeedrunCacheData();
-                data.Insert(cache);
+                db.Insert(new SpeedrunCacheData());
             }
             return Task.CompletedTask;
         }
@@ -64,7 +69,7 @@ namespace NeKzBot.Services.Notifications
 
                 while (_isRunning)
                 {
-                    await LogInfo("Checking...");
+                    //await LogInfo("Checking...");
 
                     var watch = Stopwatch.StartNew();
 
@@ -80,33 +85,43 @@ namespace NeKzBot.Services.Notifications
                     }
 
                     var notifications = await _client.GetNotificationsAsync(21);
-                    if (notifications == null)
+
+                    void UpdateCache()
+                    {
+                        cache.Notifications = notifications.Take(11);
+
+                        if (!db.Update(cache))
+                            throw new Exception("Failed to update cache!");
+                    }
+
+                    if (!notifications.Any())
                     {
                         await LogWarning("Fetch failed!");
                         goto retry;
                     }
 
-                    var sending = new List<SpeedrunNotification>();
-
-                    if (cache.Notifications.Any())
+                    if (!cache.Notifications.Any())
                     {
-                        foreach (var old in cache.Notifications)
+                        UpdateCache();
+                        goto retry;
+                    }
+
+                    var sending = new List<SpeedrunNotification>();
+                    foreach (var old in cache.Notifications)
+                    {
+                        sending.Clear();
+                        foreach (var notification in notifications)
                         {
-                            sending.Clear();
-                            foreach (var notification in notifications)
-                            {
-                                if (old.Id == notification.Id)
-                                    goto send;
-                                sending.Add(notification);
-                            }
+                            if (old.Id == notification.Id)
+                                goto send;
+                            sending.Add(notification);
                         }
-                        throw new Exception("Could not find the last notification entry!");
                     }
 
                 send:
-#if TEST
-					sending.Add(notifications.First());
-#endif
+
+                    //sending.AddRange(notifications.Take(5));
+
                     if (sending.Count > 0)
                     {
                         await LogInfo($"Found {sending.Count} new notifications to send");
@@ -116,10 +131,7 @@ namespace NeKzBot.Services.Notifications
 
                         await SendAsync(sending);
 
-                        cache.Notifications = notifications.Take(11);
-
-                        if (!db.Update(cache))
-                            throw new Exception("Failed to update cache!");
+                        UpdateCache();
                     }
 
                 retry:
@@ -142,45 +154,58 @@ namespace NeKzBot.Services.Notifications
         {
             var author = nf.Text.Split(' ')[0];
             var game = default(string);
-            var category = default(string);
             var description = nf.Text;
 
-            // Local function
-            (string, string) ExtractGame(string str)
-            {
-                var temp = str.Split(new[] { " - " }, 2, StringSplitOptions.None);
-                return (temp.Length == 2) ? (temp[0], temp[1]) : (str, default);
-            }
-
-            // Old code here, I hope this won't throw an exception :>
             switch (nf.Item.Rel)
             {
                 case "post":
-                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum.") - nf.Text.IndexOf(" in the ") - " in the ".Length));
-                    description = $"*[{nf.Text.Substring(nf.Text.IndexOf("'") + 1, nf.Text.LastIndexOf("'") - nf.Text.IndexOf("'") - 1)}]({nf.Item.Uri.ToRawText()})*";
-                    break;
+                    {
+                        var match = PostPattern.Match(nf.Text);
+                        author = match.Groups[1].Success ? match.Groups[1].Value : default;
+                        game = match.Groups[3].Success ? match.Groups[3].Value : default;
+
+                        var thread = match.Groups[2].Success ? match.Groups[2].Value : default;
+                        description = $"*[{thread.ToRawText()}]({nf.Item.Uri.ToRawText()})*";
+                        break;
+                    }
                 case "run":
-                    (game, category) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf("beat the WR in ") + "beat the WR in ".Length, nf.Text.IndexOf(". The new WR is") - nf.Text.IndexOf("beat the WR in ") - "beat the WR in ".Length));
-                    description = $"**New {(nf.Text.Contains(" beat the WR in ") ? "World Record" : "Personal Best")}**\n{(!string.IsNullOrEmpty(category) ? $"{category}\n" : string.Empty)}{nf.Text.Substring(nf.Text.LastIndexOf(". The new WR is ") + ". The new WR is ".Length).TrimEnd(new char[1])}";
-                    break;
+                    {
+                        var match = RunPattern.Match(nf.Text);
+                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
+                        var gameCategory = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
+                        game = gameCategory.Split(" - ")[0];
+                        var category = gameCategory.Split(" - ")[1];
+
+                        var time = match.Groups[3].Success ? match.Groups[3].Value : string.Empty;
+                        var type = nf.Text.Contains("beat the WR in") ? "World Record" : "Personal Best";
+                        description = $"**New {type}**\n{category.ToRawText()} in {time.ToRawText()}";
+
+                        if (author.Contains(" "))
+                            description += $" by {author}";
+                        break;
+                    }
                 case "game":
                     break;
                 case "guide":
                     break;
-                case "thread":      // Undocumented API
-                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.LastIndexOf(" in the ") + " in the ".Length, nf.Text.IndexOf(" forum:") - nf.Text.IndexOf(" in the ") - "in the ".Length));
-                    description = $"*[{nf.Text.Substring(nf.Text.LastIndexOf(" forum: ") + " forum: ".Length)}]({nf.Item.Uri.ToRawText()})*";
-                    break;
-                case "moderator":   // Undocumented API
-                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf("has been added to ") + "has been added to ".Length, nf.Text.IndexOf(" as a moderator.") - nf.Text.IndexOf("has been added to ") - "has been added to ".Length));
-                    description = $"{author.ToRawText()} is now a moderator! :heart:";
-                    break;
-                case "resource":    // Undocumented API
-                    (game, _) = ExtractGame(nf.Text.Substring(nf.Text.IndexOf(" for ") + " for ".Length, nf.Text.LastIndexOf(" has") - nf.Text.IndexOf(" for ") - "for".Length));
-                    if (nf.Text.EndsWith("updated."))
-                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("The tool resource '") + "The tool resource '".Length + 1, nf.Text.LastIndexOf("' for ") - nf.Text.IndexOf("The tool resource '") - "The tool resource '".Length - 1)}* has been updated!";
-                    else if (nf.Text.EndsWith("added."))
-                        description = $"The resource *{nf.Text.Substring(nf.Text.IndexOf("A new tool resource, ") + "A new tool resource, ".Length + 1, nf.Text.LastIndexOf(", has been added to ") - nf.Text.IndexOf("A new tool resource, ") - "A new tool resource, ".Length - 1)}* has been added!";
+                case "thread":
+                    {
+                        var match = ThreadPattern.Match(nf.Text);
+                        game = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
+
+                        var title = match.Groups[3].Success ? match.Groups[3].Value : default;
+                        description = $"*[{title.ToRawText()}]({nf.Item.Uri.ToRawText()})*";
+                        break;
+                    }
+                case "moderator":
+                    {
+                        var match = ModeratorPattern.Match(nf.Text);
+                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
+                        game = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
+                        description = $"{author.ToRawText()} is now a moderator! :heart:";
+                        break;
+                    }
+                case "resource":
                     break;
             }
 
@@ -195,27 +220,14 @@ namespace NeKzBot.Services.Notifications
                 game = "?";
             }
 
-            // API doesn't support user avatar nice...
-            // Let's try to download it
-            var avatar = false;
-            using (var wc = new WebClient(_config["user_agent"]))
-            {
-                var (success, _) = await wc.GetBytesAsync($"https://www.speedrun.com/themes/user/{author}/image.png");
-                avatar = success;
-            }
-
             var embed = new EmbedBuilder
             {
-                Author = new EmbedAuthorBuilder
-                {
-                    Name = author.ToRawText(),
-                    Url = $"https://www.speedrun.com/{author}",
-                },
+
                 Title = game,
                 Url = nf.Item.Uri,
                 Description = description,
                 Color = new Color(229, 227, 87),
-                Timestamp = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 Footer = new EmbedFooterBuilder
                 {
                     Text = "speedrun.com",
@@ -225,8 +237,23 @@ namespace NeKzBot.Services.Notifications
 
             if (!string.IsNullOrEmpty(thumbnail))
                 embed.WithThumbnailUrl(thumbnail);
-            if (avatar)
-                embed.Author.WithIconUrl($"https://www.speedrun.com/themes/user/{author}/image.png");
+
+            if (!string.IsNullOrEmpty(author) && !author.Contains(" "))
+            {
+                embed.WithAuthor(new EmbedAuthorBuilder
+                {
+                    Name = author,
+                    Url = $"https://www.speedrun.com/{author}",
+                });
+
+                using (var wc = new WebClient(_config["user_agent"]))
+                {
+                    var avatar = $"https://www.speedrun.com/themes/user/{author}/image.png";
+                    var (success, _) = await wc.Ping(avatar);
+                    if (success)
+                        embed.Author.WithIconUrl(avatar);
+                }
+            }
 
             return embed.Build();
         }

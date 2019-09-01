@@ -169,7 +169,7 @@ namespace NeKzBot.Services.Notifications
                 Url = "https://board.iverb.me/changelog?wr=1",
                 Color = new Color(4, 128, 165),
                 ImageUrl = wr.ImageFullUrl,
-                Timestamp = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 Footer = new EmbedFooterBuilder
                 {
                     Text = "board.iverb.me",

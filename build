@@ -1,2 +1,6 @@
 #!/bin/bash
 dotnet build src -c Release
+
+if [ "$1" = "ARM" ]; then
+    dotnet publish src -c Release -r linux-arm
+fi
