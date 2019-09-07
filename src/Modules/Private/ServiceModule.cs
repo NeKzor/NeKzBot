@@ -22,7 +22,8 @@ namespace NeKzBot.Modules.Private
                         "Deletion: .services.<subscription>.unsubscribe\n" +
                         "Available subscriptions: " +
                         //"[portal2boards](https://board.iverb.me), " +
-                        "[speedruncom](https://www.speedrun.com)");
+                        "[speedruncom](https://www.speedrun.com), " +
+                        "auditor");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
@@ -42,10 +43,10 @@ namespace NeKzBot.Modules.Private
                     var (_, sub) = await Service.FindSubscriptionAsync(hooks);
                     if (sub == null)
                     {
-                        var hook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("Portal2BoardsHook");
+                        var hook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("NeKzBot_Portal2BoardsHook");
                         if (hook != null)
                         {
-                            if (!await Service.SubscribeAsync(hook, "Subscribed to this service!"))
+                            if (!await Service.SubscribeAsync(hook, "Subscribed!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
                         }
                         else
@@ -87,10 +88,55 @@ namespace NeKzBot.Modules.Private
                     var (_, sub) = await Service.FindSubscriptionAsync(hooks);
                     if (sub == null)
                     {
-                        var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("SpeedrunComHook");
+                        var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("NeKzBot_SpeedrunComHook");
                         if (webhook != null)
                         {
-                            if (!await Service.SubscribeAsync(webhook, "Subscribed to this service!"))
+                            if (!await Service.SubscribeAsync(webhook, "Subscribed!"))
+                                await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
+                        }
+                        else
+                            await ReplyAndDeleteAsync("Failed to create a webhook.", timeout: TimeSpan.FromSeconds(10));
+                    }
+                    else
+                        await ReplyAndDeleteAsync("Already subscribed to this service.", timeout: TimeSpan.FromSeconds(10));
+                }
+                [Command("unsubscribe"), Alias("unsub", "delete", "unhook")]
+                public async Task Unsubscribe()
+                {
+                    var hooks = await Context.Guild.GetWebhooksAsync();
+                    var (hook, sub) = await Service.FindSubscriptionAsync(hooks);
+                    if (sub != null)
+                    {
+                        await hook.DeleteAsync();
+                        if (await Service.UnsubscribeAsync(sub))
+                            await ReplyAndDeleteAsync("Unsubscribed from SpeedrunCom service.");
+                        else
+                            await ReplyAndDeleteAsync("Failed to unsubscribe.", timeout: TimeSpan.FromSeconds(10));
+                    }
+                    else
+                        await ReplyAndDeleteAsync("Could not find a subscription in the database.", timeout: TimeSpan.FromSeconds(10));
+                }
+            }
+
+            [RequireContext(ContextType.Guild)]
+            [RequireUserPermission(GuildPermission.ManageWebhooks)]
+            [RequireBotPermission(GuildPermission.ManageWebhooks)]
+            [Group("auditor"), Alias("audits")]
+            public class Auditor : InteractiveBase<SocketCommandContext>
+            {
+                public AuditNotificationService Service { get; set; }
+
+                [Command("subscribe"), Alias("sub", "create", "hook")]
+                public async Task Subscribe()
+                {
+                    var hooks = await Context.Guild.GetWebhooksAsync();
+                    var (_, sub) = await Service.FindSubscriptionAsync(hooks);
+                    if (sub == null)
+                    {
+                        var webhook = await (Context.Channel as ITextChannel)?.CreateWebhookAsync("NeKzBot_AuditorHook");
+                        if (webhook != null)
+                        {
+                            if (!await Service.SubscribeAsync(webhook, "Subscribed!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
                         }
                         else

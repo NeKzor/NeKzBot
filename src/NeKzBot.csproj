@@ -21,7 +21,8 @@
   
   <ItemGroup>
   	<PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net" Version="2.0.2-dev-01059" />
+    <PackageReference Include="Discord.Net" Version="2.2.0-dev-20190825.4" />
+    <PackageReference Include="Humanizer" Version="2.7.2" />
     <!--<PackageReference Include="Discord.Net.Providers.WS4Net" Version="2.0.2-dev-01059" />-->
     <PackageReference Include="LiteDB" Version="4.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />

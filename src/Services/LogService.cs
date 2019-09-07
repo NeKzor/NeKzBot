@@ -17,6 +17,7 @@ namespace NeKzBot.Services
         //private readonly Portal2NotificationService _portal2;
         private readonly SpeedrunNotificationService _speedrun;
         //private readonly SourceDemoService _demo;
+        private readonly AuditNotificationService _auditor;
         private readonly ILoggerFactory _loggerFactory;
 
         private ILogger _discordLogger;
@@ -30,6 +31,7 @@ namespace NeKzBot.Services
             //Portal2NotificationService portal2,
             SpeedrunNotificationService speedrun,
             //SourceDemoService demo,
+            AuditNotificationService auditor,
             ILoggerFactory loggerFactory)
         {
             _client = client;
@@ -38,6 +40,7 @@ namespace NeKzBot.Services
             //_portal2 = portal2;
             _speedrun = speedrun;
             //_demo = demo;
+            _auditor = auditor;
             _loggerFactory = loggerFactory.AddConsole();
         }
 
@@ -52,6 +55,7 @@ namespace NeKzBot.Services
             //_portal2.Log += LogInternal;
             _speedrun.Log += LogInternal;
             //_demo.Log += LogInternal;
+            _auditor.Log += LogInternal;
 
             return Task.CompletedTask;
         }
