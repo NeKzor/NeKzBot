@@ -6,4 +6,4 @@
 	url = https://github.com/foxbot/Discord.Addons.Interactive
 [submodule "lib/Discord.Addons"]
 	path = lib/Discord.Addons
-	url = https://github.com/Joe4evr/Discord.Addons
+	url = https://github.com/NeKzor/Discord.Addons
