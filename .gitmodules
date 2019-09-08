@@ -2,5 +2,8 @@
 	path = lib/Portal2Boards.Net
 	url = https://github.com/NeKzor/Portal2Boards.Net
 [submodule "lib/Discord.Addons.Interactive"]
-    path = lib/Discord.Addons.Interactive
-    url = https://github.com/foxbot/Discord.Addons.Interactive
+	path = lib/Discord.Addons.Interactive
+	url = https://github.com/foxbot/Discord.Addons.Interactive
+[submodule "lib/Discord.Addons"]
+	path = lib/Discord.Addons
+	url = https://github.com/Joe4evr/Discord.Addons

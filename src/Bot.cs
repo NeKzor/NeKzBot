@@ -1,14 +1,9 @@
-﻿//#define WIN7
-//#define DB_CLEANUP
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
-#if WIN7
-using Discord.Net.Providers.WS4Net;
-#endif
 using Discord.WebSocket;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
@@ -32,9 +27,6 @@ namespace NeKzBot
             _client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 MessageCacheSize = 100,
-#if WIN7
-				WebSocketProvider = WS4NetProvider.Instance,
-#endif
 #if DEBUG
                 LogLevel = LogSeverity.Debug
 #endif
@@ -44,9 +36,7 @@ namespace NeKzBot
 
             var log = services.GetRequiredService<LogService>();
             var chs = services.GetRequiredService<CommandHandlingService>();
-            //var p2s = services.GetRequiredService<Portal2NotificationService>();
             var srs = services.GetRequiredService<SpeedrunNotificationService>();
-            //var sds = services.GetRequiredService<SourceDemoService>();
             var scs = services.GetRequiredService<SourceCvarService>();
             var ims = services.GetRequiredService<ImageService>();
             var pcs = services.GetRequiredService<Portal2CampaignService>();
@@ -54,25 +44,20 @@ namespace NeKzBot
 
             await log.Initialize();
             await chs.Initialize();
-            //await p2s.Initialize();
             await srs.Initialize();
-            //await sds.Initialize();
             await scs.Initialize();
             await ims.Initialize();
             await pcs.Initialize();
             await aus.Initialize();
 
 #if DB_CLEANUP
-			//await p2s.CleanupAsync();
 			await srs.CleanupAsync();
-			//await sds.DeleteExpiredDemos();
 #else
             await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
             await _client.StartAsync();
 
             await Task.WhenAll
             (
-                //p2s.StartAsync(),
                 //srs.StartAsync(),
                 aus.StartAsync()
             );
@@ -105,11 +90,9 @@ namespace NeKzBot
 #endif
                 }))
                 .AddSingleton<CommandHandlingService>()
-                .AddSingleton(new InteractiveService(_client, TimeSpan.FromSeconds(5 * 60)))
+                .AddSingleton(new InteractiveService(_client, new InteractiveServiceConfig() { DefaultTimeout = TimeSpan.FromSeconds(5 * 60) }))
                 // Others
-                //.AddSingleton<Portal2NotificationService>()
                 .AddSingleton<SpeedrunNotificationService>()
-                //.AddSingleton<SourceDemoService>()
                 .AddSingleton<SourceCvarService>()
                 .AddSingleton<ImageService>()
                 .AddSingleton<Portal2CampaignService>()

@@ -169,7 +169,7 @@ namespace NeKzBot.Services.Notifications
 
         public override Task SendAsync(IEnumerable<object> notifications)
         {
-            throw new InvalidOperationException("Don't!");
+            throw new InvalidOperationException("No.");
         }
 
         private Task<Embed> BuildEmbedAsync(RestAuditLogEntry audit, SocketGuild guild)
@@ -210,7 +210,12 @@ namespace NeKzBot.Services.Notifications
             switch (audit.Data)
             {
                 case GuildUpdateAuditLogData a:
-                    AddPropChange(a, "AfkChannelId");
+                    if (a.Before.AfkChannelId != a.After.AfkChannelId)
+                    {
+                        var before = a.Before.AfkChannelId.HasValue ? guild.GetChannel(a.Before.AfkChannelId.Value)?.Name : "null";
+                        var after = a.After.AfkChannelId.HasValue ? guild.GetChannel(a.After.AfkChannelId.Value)?.Name : "null";
+                        changes.Add($"Afk Channel: {before} -> {after}");
+                    }
                     AddPropChange(a, "AfkTimeout");
                     AddPropChange(a, "ContentFilterLevel");
                     AddPropChange(a, "DefaultMessageNotifications");
@@ -220,11 +225,9 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Owner");
                     AddPropChange(a, "RegionId");
                     AddPropChange(a, "VerificationLevel");
-                    AddPropChange(a, "Topic");
-                    AddPropChange(a, "UserLimit");
                     break;
                 case ChannelCreateAuditLogData a:
-                    changes.Add($"Channel: {a.ChannelName}");
+                    AddChannel(a.ChannelId);
                     changes.Add($"Type: {a.ChannelType}");
                     break;
                 case ChannelUpdateAuditLogData a:
@@ -299,10 +302,9 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Color");
                     AddPropChange(a, "Hoist");
                     AddPropChange(a, "Mentionable");
-                    if (a.Before.Permissions.HasValue
-                        && a.After.Permissions.HasValue
-                        && a.Before.Permissions.Value.RawValue != a.After.Permissions.Value.RawValue)
+                    if (a.Before.Permissions.Value.RawValue != a.After.Permissions.Value.RawValue)
                     {
+                        Console.WriteLine("Dude what is this");
                         var before = a.Before.Permissions.Value.ToList();
                         var after = a.After.Permissions.Value.ToList();
                         var removed = before.Where(p => !after.Contains(p));
@@ -325,7 +327,12 @@ namespace NeKzBot.Services.Notifications
                     changes.Add($"Temporary: {a.Temporary}");
                     break;
                 case InviteUpdateAuditLogData a:
-                    AddPropChange(a, "ChannelId");
+                    if (a.Before.ChannelId != a.After.ChannelId)
+                    {
+                        var before = a.Before.ChannelId.HasValue ? guild.GetChannel(a.Before.ChannelId.Value) : default;
+                        var after = a.After.ChannelId.HasValue ? guild.GetChannel(a.After.ChannelId.Value) : default;
+                        changes.Add($"Channel: {(before != default ? $"<#{before.Id}>" : "null")} -> {(after != default ? $"<#{after.Id}>" : "null")}");
+                    }
                     AddPropChange(a, "Code");
                     AddPropChange(a, "MaxAge");
                     AddPropChange(a, "MaxUses");
@@ -347,7 +354,9 @@ namespace NeKzBot.Services.Notifications
                 case WebhookUpdateAuditLogData a:
                     if (a.Before.ChannelId != a.After.ChannelId)
                     {
-                        changes.Add($"Channel: <#{a.Before.ChannelId}> -> <#{a.After.ChannelId}>");
+                        var before = a.Before.ChannelId.HasValue ? guild.GetChannel(a.Before.ChannelId.Value) : default;
+                        var after = a.After.ChannelId.HasValue ? guild.GetChannel(a.After.ChannelId.Value) : default;
+                        changes.Add($"Channel: {(before != default ? $"<#{before.Id}>" : "null")} -> {(after != default ? $"<#{after.Id}>" : "null")}");
                     }
                     AddPropChange(a, "Avatar");
                     AddPropChange(a, "Name");

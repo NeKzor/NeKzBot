@@ -179,7 +179,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
         [Ratelimit(1, 1, Measure.Minutes)]
@@ -236,7 +236,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
         [RequireContext(ContextType.Guild)]
@@ -292,7 +292,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
         [RequireContext(ContextType.Guild)]
@@ -348,7 +348,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
         // Not sure if this algorithm is fair:
@@ -407,7 +407,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
     }

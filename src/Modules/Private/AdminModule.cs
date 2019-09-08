@@ -55,7 +55,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
         [Ratelimit(3, 1, Measure.Minutes)]
@@ -64,7 +64,7 @@ namespace NeKzBot.Modules.Public
         [Command("audits")]
         public async Task Audits(int auditCount = 10)
         {
-            var audits = await Context.Guild.GetAuditLogsAsync(auditCount).FlattenAsync();
+            var audits = await (Context.Guild as IGuild).GetAuditLogsAsync(auditCount);
 
             var page = string.Empty;
             var pages = new List<string>();
@@ -100,7 +100,7 @@ namespace NeKzBot.Modules.Public
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false // Allow other users to control the pages too
+                false
             );
         }
     }

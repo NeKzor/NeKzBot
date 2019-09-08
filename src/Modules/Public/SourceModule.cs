@@ -340,7 +340,7 @@ namespace NeKzBot.Modules.Public
                             Color = Discord.Color.Green,
                             Pages = pages
                         },
-                        false // Allow other users to control the pages too
+                        false
                     );
                 }
             }
