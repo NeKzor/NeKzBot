@@ -180,6 +180,10 @@ namespace NeKzBot.Services.Notifications
         {
             return Task.FromResult(_dataBase.GetCollection<T>($"{_globalId}_cache"));
         }
+        protected Task<bool> DropTaskCache()
+        {
+            return Task.FromResult(_dataBase.DropCollection($"{_globalId}_cache"));
+        }
         protected Task<LiteCollection<SubscriptionData>> GetSubscribers()
         {
             return Task.FromResult(_dataBase.GetCollection<SubscriptionData>(_globalId));

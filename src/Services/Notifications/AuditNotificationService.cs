@@ -180,17 +180,21 @@ namespace NeKzBot.Services.Notifications
             {
                 object GetPropValue(object target, string propName)
                 {
-                    return target.GetType().GetProperty(propName).GetValue(target, null);
+                    var prop = target.GetType().GetProperty(propName);
+                    if (prop == null)
+                        throw new Exception($"Prop with name {propName} does not exist for this object!");
+                    return prop.GetValue(target, null);
                 }
 
                 var before = GetPropValue(GetPropValue(source, "Before"), property);
                 var after = GetPropValue(GetPropValue(source, "After"), property);
                 if (before != after)
-                    changes.Add($"{property.Humanize(LetterCasing.Title)}: {before ?? null} -> {after ?? null}");
+                    changes.Add($"{property}: {before ?? null} -> {after ?? null}");
             }
             void AddChannel(ulong id)
             {
-                changes.Add($"Channel: <#{id}>");
+                var channel = guild.GetChannel(id);
+                changes.Add($"Channel: {(channel is SocketVoiceChannel ? channel.Name : $"<#{id}>")}");
             }
             void AddUser(ulong id)
             {
@@ -206,6 +210,11 @@ namespace NeKzBot.Services.Notifications
                 var emote = guild.GetEmoteAsync(id).GetAwaiter().GetResult();
                 if (emote != null) changes.Add($"Emote: {emote.Name} <:{emote.Name}:{emote.Id}>");
             }
+            string ToAllowDenyList(IEnumerable<ChannelPermission> allow, IEnumerable<ChannelPermission> deny)
+            {
+                return (allow.Any() ? "Allow: " + string.Join(",", allow) : string.Empty)
+                    + (deny.Any() ? "Deny: " + string.Join(",", deny) : string.Empty);
+            }
 
             switch (audit.Data)
             {
@@ -217,7 +226,7 @@ namespace NeKzBot.Services.Notifications
                         changes.Add($"Afk Channel: {before} -> {after}");
                     }
                     AddPropChange(a, "AfkTimeout");
-                    AddPropChange(a, "ContentFilterLevel");
+                    AddPropChange(a, "ExplicitContentFilter");
                     AddPropChange(a, "DefaultMessageNotifications");
                     AddPropChange(a, "IconHash");
                     AddPropChange(a, "MfaLevel");
@@ -225,6 +234,20 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Owner");
                     AddPropChange(a, "RegionId");
                     AddPropChange(a, "VerificationLevel");
+                    AddPropChange(a, "ExplicitContentFilter");
+                    if (a.Before.SystemChannelId != a.After.SystemChannelId)
+                    {
+                        var before = a.Before.SystemChannelId.HasValue ? guild.GetChannel(a.Before.SystemChannelId.Value)?.Name : "null";
+                        var after = a.After.SystemChannelId.HasValue ? guild.GetChannel(a.After.SystemChannelId.Value)?.Name : "null";
+                        changes.Add($"System Channel: {before} -> {after}");
+                    }
+                    if (a.Before.EmbedChannelId != a.After.EmbedChannelId)
+                    {
+                        var before = a.Before.EmbedChannelId.HasValue ? guild.GetChannel(a.Before.EmbedChannelId.Value)?.Name : "null";
+                        var after = a.After.EmbedChannelId.HasValue ? guild.GetChannel(a.After.EmbedChannelId.Value)?.Name : "null";
+                        changes.Add($"Embed Channel: {before} -> {after}");
+                    }
+                    AddPropChange(a, "IsEmbeddable");
                     break;
                 case ChannelCreateAuditLogData a:
                     AddChannel(a.ChannelId);
@@ -235,7 +258,8 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Bitrate");
                     AddPropChange(a, "Name");
                     AddPropChange(a, "Topic");
-                    AddPropChange(a, "UserLimit");
+                    AddPropChange(a, "SlowModeInterval");
+                    AddPropChange(a, "IsNsfw");
                     break;
                 case ChannelDeleteAuditLogData a:
                     changes.Add($"Channel: {a.ChannelName}");
@@ -246,15 +270,21 @@ namespace NeKzBot.Services.Notifications
                         AddRole(a.Overwrite.TargetId);
                     else if (a.Overwrite.TargetType == PermissionTarget.User)
                         AddUser(a.Overwrite.TargetId);
-                    changes.Add($"Permissions: {a.Overwrite.Permissions}");
+                    AddChannel(a.ChannelId);
+                    changes.Add($"Permissions: {ToAllowDenyList(a.Overwrite.Permissions.ToAllowList(), a.Overwrite.Permissions.ToDenyList())}");
                     break;
                 case OverwriteUpdateAuditLogData a:
                     if (a.OverwriteType == PermissionTarget.Role)
                         AddRole(a.OverwriteTargetId);
                     else if (a.OverwriteType == PermissionTarget.User)
                         AddUser(a.OverwriteTargetId);
-                    changes.Add($"Old Permissions: {a.OldPermissions}");
-                    changes.Add($"New Permissions: {a.NewPermissions}");
+                    AddChannel(a.ChannelId);
+                    var allowOld = a.OldPermissions.ToAllowList();
+                    var denyOld = a.OldPermissions.ToDenyList();
+                    var allowNew = a.NewPermissions.ToAllowList();
+                    var denyNew = a.NewPermissions.ToDenyList();
+                    changes.Add($"Old Permissions: {ToAllowDenyList(allowOld.Where(x => !allowNew.Contains(x)), denyOld.Where(x => !denyNew.Contains(x)))}");
+                    changes.Add($"New Permissions:  {ToAllowDenyList(allowNew.Where(x => !allowOld.Contains(x)), denyNew.Where(x => !denyOld.Contains(x)))}");
                     changes.Add($"Overwrite Type: {a.OverwriteType}");
                     break;
                 case OverwriteDeleteAuditLogData a:
@@ -262,7 +292,8 @@ namespace NeKzBot.Services.Notifications
                         AddRole(a.Overwrite.TargetId);
                     else if (a.Overwrite.TargetType == PermissionTarget.User)
                         AddUser(a.Overwrite.TargetId);
-                    changes.Add($"Permissions: {a.Overwrite.Permissions}");
+                    AddChannel(a.ChannelId);
+                    changes.Add($"Permissions: {ToAllowDenyList(a.Overwrite.Permissions.ToAllowList(), a.Overwrite.Permissions.ToDenyList())}");
                     break;
                 case KickAuditLogData a:
                     changes.Add($"User: <@{a.Target.Id}>");
@@ -279,7 +310,6 @@ namespace NeKzBot.Services.Notifications
                     break;
                 case MemberUpdateAuditLogData a:
                     changes.Add($"User: <@{a.Target.Id}>");
-                    AddPropChange(a, "AvatarHash");
                     AddPropChange(a, "Deaf");
                     AddPropChange(a, "Mute");
                     AddPropChange(a, "Nickname");
@@ -304,7 +334,6 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Mentionable");
                     if (a.Before.Permissions.Value.RawValue != a.After.Permissions.Value.RawValue)
                     {
-                        Console.WriteLine("Dude what is this");
                         var before = a.Before.Permissions.Value.ToList();
                         var after = a.After.Permissions.Value.ToList();
                         var removed = before.Where(p => !after.Contains(p));
@@ -312,7 +341,7 @@ namespace NeKzBot.Services.Notifications
                         if (removed.Any())
                             changes.Add($"Removed Perms: {string.Join(", ", removed)}");
                         if (added.Any())
-                            changes.Add($"Added Perms: {string.Join(", ", removed)}");
+                            changes.Add($"Added Perms: {string.Join(", ", added)}");
                     }
                     break;
                 case RoleDeleteAuditLogData a:
@@ -382,10 +411,13 @@ namespace NeKzBot.Services.Notifications
                     break;
             }
 
+             if (!string.IsNullOrEmpty(audit.Reason))
+                changes.Add($"Reason: {audit.Reason}");
+
             var embed = new EmbedBuilder
             {
                 Title = audit.Action.ToString().Humanize(LetterCasing.Title),
-                Description = string.Join("\n", changes) + (!string.IsNullOrEmpty(audit.Reason) ? $"\nReason: {audit.Reason}" : string.Empty),
+                Description = string.Join("\n", changes),
                 Color = new Color(229, 227, 87),
                 Timestamp = DateTime.Now,
                 Author = new EmbedAuthorBuilder()
