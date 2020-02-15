@@ -60,7 +60,7 @@ namespace NeKzBot.Modules.Public
         }
         [Ratelimit(6, 1, Measure.Minutes)]
         [Command("meme")]
-        public async Task Meme(string imageName = null)
+        public async Task Meme(string? imageName = null)
         {
             var image = (!string.IsNullOrEmpty(imageName))
                 ? _imageService.GetImage(imageName)

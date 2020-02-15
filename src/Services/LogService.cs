@@ -14,32 +14,29 @@ namespace NeKzBot.Services
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly InteractiveService _interactive;
-        //private readonly Portal2NotificationService _portal2;
         private readonly SpeedrunNotificationService _speedrun;
-        //private readonly SourceDemoService _demo;
+        private readonly SourceDemoService _demo;
         private readonly AuditNotificationService _auditor;
         private readonly ILoggerFactory _loggerFactory;
 
-        private ILogger _discordLogger;
-        private ILogger _commandsLogger;
-        private ILogger _serviceLogger;
+        private ILogger? _discordLogger;
+        private ILogger? _commandsLogger;
+        private ILogger? _serviceLogger;
 
         public LogService(
             DiscordSocketClient client,
             CommandService commands,
             InteractiveService interactive,
-            //Portal2NotificationService portal2,
             SpeedrunNotificationService speedrun,
-            //SourceDemoService demo,
+            SourceDemoService demo,
             AuditNotificationService auditor,
             ILoggerFactory loggerFactory)
         {
             _client = client;
             _commands = commands;
             _interactive = interactive;
-            //_portal2 = portal2;
             _speedrun = speedrun;
-            //_demo = demo;
+            _demo = demo;
             _auditor = auditor;
             _loggerFactory = loggerFactory.AddConsole();
         }
@@ -52,9 +49,8 @@ namespace NeKzBot.Services
 
             _client.Log += LogDiscord;
             _commands.Log += LogCommand;
-            //_portal2.Log += LogInternal;
             _speedrun.Log += LogInternal;
-            //_demo.Log += LogInternal;
+            _demo.Log += LogInternal;
             _auditor.Log += LogInternal;
 
             return Task.CompletedTask;
@@ -62,7 +58,7 @@ namespace NeKzBot.Services
 
         private Task LogDiscord(LogMessage message)
         {
-            _discordLogger.Log
+            _discordLogger!.Log
             (
                 LogLevelFromSeverity(message.Severity),
                 0,
@@ -84,7 +80,7 @@ namespace NeKzBot.Services
                 );
             }
 
-            _commandsLogger.Log
+            _commandsLogger!.Log
             (
                 LogLevelFromSeverity(message.Severity),
                 0,
@@ -94,12 +90,12 @@ namespace NeKzBot.Services
             );
             return Task.CompletedTask;
         }
-        private Task LogInternal(string message, Exception ex)
+        private Task LogInternal(string message, Exception? ex)
         {
-            _serviceLogger.Log
+            _serviceLogger!.Log
             (
                 // :^)
-                (ex != null)
+                (ex is {})
                     ? LogLevel.Error
                     : (message.EndsWith("!"))
                         ? LogLevel.Warning

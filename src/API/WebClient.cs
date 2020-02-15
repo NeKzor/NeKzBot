@@ -34,7 +34,7 @@ namespace NeKzBot.API
                 ? (true, JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false)))
                 : (false, default);
         }
-        public async Task<(bool, byte[])> GetBytesAsync(string url)
+        public async Task<(bool, byte[]?)> GetBytesAsync(string url)
         {
             var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
             return (response.IsSuccessStatusCode)

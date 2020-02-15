@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using LiteDB;
-using NeKzBot.API;
 
 namespace NeKzBot.Data
 {

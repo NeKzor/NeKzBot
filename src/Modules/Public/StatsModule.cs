@@ -106,7 +106,7 @@ namespace NeKzBot.Modules.Public
         [Command("channel")]
         public async Task Channel()
         {
-            var users = (Context.Channel as SocketChannel).Users;
+            var users = (Context.Channel as SocketChannel)!.Users;
             var bots = users.Count(m => m.IsBot);
 
             var embed = new EmbedBuilder()
@@ -120,8 +120,8 @@ namespace NeKzBot.Modules.Public
                     $"Bots • {bots}\n" +
                     $"Total • {users.Count}",
                     true)
-                .AddField("Position", $"{(Context.Channel as SocketGuildChannel).Position}", true)
-                .AddField("Permissions", $"{(Context.Channel as SocketGuildChannel).PermissionOverwrites.Count}", true);
+                .AddField("Position", $"{(Context.Channel as SocketGuildChannel)!.Position}", true)
+                .AddField("Permissions", $"{(Context.Channel as SocketGuildChannel)!.PermissionOverwrites.Count}", true);
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }

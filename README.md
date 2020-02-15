@@ -4,6 +4,7 @@
 **NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on providing unique services.
 
 ### Overview
+
 * [Services](#services)
 * [Permissions](#permissions)
 * [Data](#data)
@@ -12,24 +13,30 @@
 * [Libraries](#libraries)
 
 ### Services
+
 * Notifications
-  * [board.iverb.me](https://board.iverb.me)
+  * ~~[board.iverb.me](https://board.iverb.me)~~
   * [speedrun.com](https://speedrun.com)
+  * Audit Logs
 * Source Engine
   * [Demo Parser](https://github.com/NeKzor/SourceDemoParser.Net)
   * [Cvar Dictionary](https://github.com/NeKzor/SourceAutoRecord)
 
 ### Permissions
+
 #### Required
+
 * VIEW_CHANNEL
 * SEND_MESSAGES
 * ADD_REACTIONS
 * ATTACH_FILES
 
 #### Optional
+
 * MANAGE_WEBHOOKS
 
 ### Data
+
 NeKzBot does not log any potential sensitive user data. However, these informations will be saved in the bot's database:
 
 | Data | Module | Why |
@@ -68,8 +75,6 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.cvars.halflife2 <cvar:String>` | `hl2` | SourceModule |
 | `.cvars.portal <cvar:String>` | `p`, `p1` | SourceModule |
 | `.cvars.portal2 <cvar:String>` | `p2` | SourceModule |
-| `.cvars.thebeginnersguide <cvar:String>` | `beginnersguide`, `tbg` | SourceModule |
-| `.cvars.thestanleyparable <cvar:String>` | `stanley`, `tsp` | SourceModule |
 | `.guild` | `server` | StatsModule |
 | `.hierarchy` | - | StatsModule |
 | `.channel` | - | StatsModule |
@@ -80,10 +85,12 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.score (ascending:Boolean=True)` | - | StatsModule |
 
 ### Credits
+
 * [Discord](https://discordapp.com/developers)
 * [Discord.Net](https://github.com/RogueException/Discord.Net)
 
 ### Libraries
+
 * [Discord.Addons.Interactive](https://github.com/foxbot/Discord.Addons.Interactive)
 * [Discord.Addons.Preconditions](https://github.com/Joe4evr/Discord.Addons/tree/master/src/Discord.Addons.Preconditions)
 * [LiteDB](https://github.com/mbdavid/LiteDB)

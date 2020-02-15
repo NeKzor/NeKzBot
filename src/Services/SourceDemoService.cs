@@ -12,15 +12,15 @@ namespace NeKzBot.Services
 {
     public class SourceDemoService
     {
-        public event Func<string, Exception, Task> Log;
+        public event Func<string, Exception?, Task>? Log;
 
-        private WebClient _client;
-        private SourceParser _parser;
+        private WebClient? _client;
+        private SourceParser? _parser;
 
         // Using database to find user's SourceDemo is really expensive
         // because it has to generate the object everytime on request
         // Let's just cache everything and use the DB for saving
-        private ConcurrentDictionary<ulong, SourceDemoData> _cache;
+        private ConcurrentDictionary<ulong, SourceDemoData>? _cache;
 
         private readonly IConfiguration _config;
         private readonly LiteDatabase _dataBase;
@@ -31,7 +31,7 @@ namespace NeKzBot.Services
             _dataBase = dataBase;
         }
 
-        public Task Initialize(string demoPath = null)
+        public Task Initialize(string? demoPath = null)
         {
             _client = new WebClient(_config["user_agent"]);
             _parser = new SourceParser();
@@ -51,7 +51,11 @@ namespace NeKzBot.Services
 
         public async Task<bool> DownloadDemoAsync(ulong userId, string demoLink)
         {
+            if (_client is null || _parser is null)
+                throw new System.Exception("Service is not initialized");
+
             var (success, result) = await _client.GetBytesAsync(demoLink);
+
             if (success)
             {
                 try
@@ -66,14 +70,17 @@ namespace NeKzBot.Services
             }
             return false;
         }
-        public async Task<bool> SaveDemoAsync(ulong userId, SourceDemo demo, string downloadUrl = null)
+        public async Task<bool> SaveDemoAsync(ulong userId, SourceDemo demo, string? downloadUrl = null)
         {
+            if (_cache is null)
+                throw new System.Exception("Service is not initialized");
+
             var db = _dataBase
                 .GetCollection<SourceDemoData>(nameof(SourceDemoService));
 
             var data = await Get(userId);
 
-            if (data == null)
+            if (data is null)
             {
                 data = new SourceDemoData()
                 {
@@ -94,19 +101,24 @@ namespace NeKzBot.Services
                 data.Demo = demo;
             }
 
-            return db.Upsert(data)
-                && _cache.TryRemove(userId, out _)
-                && _cache.TryAdd(userId, data);
+            db.Upsert(data);
+            return _cache.TryRemove(userId, out _) && _cache.TryAdd(userId, data);
         }
 
         // From cache
-        public Task<SourceDemoData> Get(ulong userId)
+        public Task<SourceDemoData?> Get(ulong userId)
         {
+            if (_cache is null)
+                throw new System.Exception("Service is not initialized");
+
             _cache.TryGetValue(userId, out var data);
             return Task.FromResult(data ?? default(SourceDemoData));
         }
-        public Task<SourceDemo> GetDemo(ulong userId)
+        public Task<SourceDemo?> GetDemo(ulong userId)
         {
+            if (_cache is null)
+                throw new System.Exception("Service is not initialized");
+
             _cache.TryGetValue(userId, out var data);
             return Task.FromResult(data?.Demo ?? default(SourceDemo));
         }
@@ -130,12 +142,12 @@ namespace NeKzBot.Services
 
         protected Task LogWarning(string message)
         {
-            _ = Log.Invoke($"{nameof(SourceDemoData)}\t{message}!", null);
+            _ = Log?.Invoke($"{nameof(SourceDemoData)}\t{message}!", null);
             return Task.CompletedTask;
         }
         protected Task LogException(Exception ex)
         {
-            _ = Log.Invoke(nameof(SourceDemoData), ex);
+            _ = Log?.Invoke(nameof(SourceDemoData), ex);
             return Task.CompletedTask;
         }
     }

@@ -1,4 +1,10 @@
-/private/
+private/credentials.json
+private/nekzbot.db
+private/**/*.png
+private/**/*.jpg
+private/**/*.gif
+private/**/*.json
+!private/resources/cvars/sar.json
 Modules.md
 
 ## Ignore Visual Studio temporary files, build results, and

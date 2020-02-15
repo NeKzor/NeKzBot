@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Webhook;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.API;
@@ -23,12 +21,12 @@ namespace NeKzBot.Services.Notifications
         public static readonly Regex ThreadPattern = new Regex(@"^(.+) posted a new thread in the (.+) forum: (.+)\.$");
         public static readonly Regex ModeratorPattern = new Regex(@"^(.+) has been added to (.+) as a moderator\.$");
 
-        private SpeedrunComApiClient _client;
+        private SpeedrunComApiClient? _client;
 
         public SpeedrunNotificationService(IConfiguration config, LiteDatabase dataBase)
             : base(config, dataBase)
         {
-            _embedBuilder = x => BuildEmbedAsync(x as SpeedrunNotification);
+            _embedBuilder = x => BuildEmbedAsync(x);
         }
 
         public override Task Initialize()
@@ -53,7 +51,7 @@ namespace NeKzBot.Services.Notifications
                 .FindAll()
                 .FirstOrDefault();
 
-            if (cache == null)
+            if (cache is null)
             {
                 _ = LogWarning("Creating new cache");
                 db.Insert(new SpeedrunCacheData());
@@ -63,6 +61,9 @@ namespace NeKzBot.Services.Notifications
 
         public override async Task StartAsync()
         {
+            if (_client is null || _cancellation is null)
+                throw new System.Exception("Service not initialized");
+
             try
             {
                 await base.StartAsync();
@@ -78,7 +79,7 @@ namespace NeKzBot.Services.Notifications
                         .FindAll()
                         .FirstOrDefault();
 
-                    if (cache == null)
+                    if (cache is null)
                     {
                         await LogWarning("Task cache not found!");
                         goto retry;
@@ -150,22 +151,28 @@ namespace NeKzBot.Services.Notifications
             await LogWarning("Task ended");
         }
 
-        private async Task<Embed> BuildEmbedAsync(SpeedrunNotification nf)
+        private async Task<Embed> BuildEmbedAsync(object notification)
         {
-            var author = nf.Text.Split(' ')[0];
+            if (_client is null)
+                throw new System.Exception("Service not initialized");
+            
+            if (!(notification is SpeedrunNotification nf))
+                throw new System.Exception("Notification object was not type of SpeedrunNotification");
+
+            var author = (nf.Text ?? string.Empty).Split(' ')[0];
             var game = default(string);
             var description = nf.Text;
 
-            switch (nf.Item.Rel)
+            switch (nf.Item?.Rel)
             {
                 case "post":
                     {
                         var match = PostPattern.Match(nf.Text);
-                        author = match.Groups[1].Success ? match.Groups[1].Value : default;
+                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
                         game = match.Groups[3].Success ? match.Groups[3].Value : default;
 
-                        var thread = match.Groups[2].Success ? match.Groups[2].Value : default;
-                        description = $"*[{thread.ToRawText()}]({nf.Item.Uri.ToRawText()})*";
+                        var thread = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
+                        description = $"*[{thread.ToRawText()}]({(nf.Item.Uri ?? string.Empty).ToRawText()})*";
                         break;
                     }
                 case "run":
@@ -177,7 +184,7 @@ namespace NeKzBot.Services.Notifications
                         var category = gameCategory.Split(" - ")[1];
 
                         var time = match.Groups[3].Success ? match.Groups[3].Value : string.Empty;
-                        var type = nf.Text.Contains("beat the WR in") ? "World Record" : "Personal Best";
+                        var type = (nf.Text ?? string.Empty).Contains("beat the WR in") ? "World Record" : "Personal Best";
                         description = $"**New {type}**\n{category.ToRawText()} in {time.ToRawText()}";
 
                         if (author.Contains(" "))
@@ -193,8 +200,8 @@ namespace NeKzBot.Services.Notifications
                         var match = ThreadPattern.Match(nf.Text);
                         game = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
 
-                        var title = match.Groups[3].Success ? match.Groups[3].Value : default;
-                        description = $"*[{title.ToRawText()}]({nf.Item.Uri.ToRawText()})*";
+                        var title = match.Groups[3].Success ? match.Groups[3].Value : string.Empty;
+                        description = $"*[{title.ToRawText()}]({(nf.Item.Uri ?? string.Empty).ToRawText()})*";
                         break;
                     }
                 case "moderator":
@@ -224,7 +231,7 @@ namespace NeKzBot.Services.Notifications
             {
 
                 Title = game,
-                Url = nf.Item.Uri,
+                Url = nf.Item?.Uri,
                 Description = description,
                 Color = new Color(229, 227, 87),
                 Timestamp = DateTime.Now,
@@ -246,13 +253,11 @@ namespace NeKzBot.Services.Notifications
                     Url = $"https://www.speedrun.com/{author}",
                 });
 
-                using (var wc = new WebClient(_config["user_agent"]))
-                {
-                    var avatar = $"https://www.speedrun.com/themes/user/{author}/image.png";
-                    var (success, _) = await wc.Ping(avatar);
-                    if (success)
-                        embed.Author.WithIconUrl(avatar);
-                }
+                using var wc = new WebClient(_config["user_agent"]);
+                var avatar = $"https://www.speedrun.com/themes/user/{author}/image.png";
+                var (success, _) = await wc.Ping(avatar);
+                if (success)
+                    embed.Author.WithIconUrl(avatar);
             }
 
             return embed.Build();

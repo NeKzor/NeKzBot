@@ -15,15 +15,15 @@ namespace NeKzBot.Services.Notifications
 {
     public abstract class NotificationService : INotificationService
     {
-        public event Func<string, Exception, Task> Log;
+        public event Func<string, Exception?, Task>? Log;
 
-        protected string _userName { get; set; }
-        protected string _userAvatar { get; set; }
+        protected string? _userName { get; set; }
+        protected string? _userAvatar { get; set; }
         protected uint _sleepTime { get; set; }
-        protected string _globalId { get; set; }
+        protected string? _globalId { get; set; }
         protected bool _isRunning { get; set; }
-        protected CancellationTokenSource _cancellation { get; set; }
-        protected Func<object, Task<Embed>> _embedBuilder { get; set; }
+        protected CancellationTokenSource? _cancellation { get; set; }
+        protected Func<object, Task<Embed>>? _embedBuilder { get; set; }
 
         protected readonly IConfiguration _config;
         protected readonly LiteDatabase _dataBase;
@@ -55,7 +55,7 @@ namespace NeKzBot.Services.Notifications
         {
             if (!_isRunning)
             {
-                _cancellation.Cancel();
+                _cancellation!.Cancel();
                 _cancellation.Dispose();
                 _isRunning = false;
             }
@@ -63,6 +63,9 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual async Task SendAsync(IEnumerable<object> notifications)
         {
+            if (_embedBuilder is null)
+                throw new System.Exception("Embed builder is not set");
+
             var db = await GetSubscribers();
             var subscribers = db
                 .FindAll()
@@ -86,21 +89,19 @@ namespace NeKzBot.Services.Notifications
 
                     try
                     {
-                        using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
+                        using var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken);
+                        await wc.SendMessageAsync
+                        (
+                            string.Empty,
+                            embeds: new Embed[] { embed },
+                            username: _userName,
+                            avatarUrl: _userAvatar
+                        // Un-comment this if it ever becomes a problem
+                        /* options: new RequestOptions()
                         {
-                            await wc.SendMessageAsync
-                            (
-                                string.Empty,
-                                embeds: new Embed[] { embed },
-                                username: _userName,
-                                avatarUrl: _userAvatar
-                            // Un-comment this if it ever becomes a problem
-                            /* options: new RequestOptions()
-                            {
-                                RetryMode = RetryMode.RetryRatelimit
-                            } */
-                            );
-                        }
+                            RetryMode = RetryMode.RetryRatelimit
+                        } */
+                        );
                     }
                     // Make sure to catch only on this special exception
                     // which tells us that this webhook doesn't exist
@@ -124,26 +125,24 @@ namespace NeKzBot.Services.Notifications
         }
 
         // Subscription tasks
-        public virtual async Task<bool> SubscribeAsync(IWebhook hook, string helloWorldMessage = null)
+        public virtual async Task<bool> SubscribeAsync(IWebhook hook, string? helloWorldMessage = null)
         {
             var db = await GetSubscribers();
             var data = db.FindOne(d => d.WebhookId == hook.ChannelId);
 
             // When is the guild id null again???
-            if ((data == null) && (hook.GuildId != null))
+            if ((data is null) && (hook.GuildId != null))
             {
                 // Test message
                 if (!string.IsNullOrEmpty(helloWorldMessage))
                 {
-                    using (var wc = new DiscordWebhookClient(hook))
-                    {
-                        await wc.SendMessageAsync
-                        (
-                            helloWorldMessage,
-                            username: _userName,
-                            avatarUrl: _userAvatar
-                        );
-                    }
+                    using var wc = new DiscordWebhookClient(hook);
+                    await wc.SendMessageAsync
+                    (
+                        helloWorldMessage,
+                        username: _userName,
+                        avatarUrl: _userAvatar
+                    );
                 }
 
                 return db.Upsert
@@ -152,7 +151,7 @@ namespace NeKzBot.Services.Notifications
                     {
                         WebhookId = hook.Id,
                         WebhookToken = hook.Token,
-                        GuildId = hook.GuildId
+                        GuildId = hook.GuildId.Value
                     }
                 );
             }
@@ -163,13 +162,13 @@ namespace NeKzBot.Services.Notifications
             var db = await GetSubscribers();
             return (db.Delete(d => d.WebhookId == subscription.WebhookId) == 1);
         }
-        public virtual async Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks)
+        public virtual async Task<(IWebhook?, SubscriptionData?)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks)
         {
             var db = await GetSubscribers();
             foreach (var hook in webhooks)
             {
                 var sub = db.FindOne(d => d.WebhookId == hook.Id);
-                if (sub == null) continue;
+                if (sub is null) continue;
                 return (hook, sub);
             }
             return (default, default);
@@ -205,7 +204,7 @@ namespace NeKzBot.Services.Notifications
                 }
 
                 if (db.Delete(sub.Id))
-                    await LogWarning($"Deleted sub ID = {sub.Id} in {sub.GuildId ?? 0}");
+                    await LogWarning($"Deleted sub ID = {sub.Id} in {sub.GuildId}");
                 else
                     await LogWarning($"Database failed to delete sub ID = {sub.Id}");
             }
@@ -215,18 +214,21 @@ namespace NeKzBot.Services.Notifications
         protected Task LogInfo(string message)
         {
 #if DEBUG || TEST
-            _ = Log.Invoke($"{_globalId}\t{message}", null);
+            _ = Log?.Invoke($"{_globalId}\t{message}", null);
 #endif
             return Task.CompletedTask;
         }
         protected Task LogWarning(string message)
         {
-            _ = Log.Invoke($"{_globalId}\t{message}!", null);
+            _ = Log?.Invoke($"{_globalId}\t{message}!", null);
             return Task.CompletedTask;
         }
         protected Task LogException(Exception ex)
         {
-            _ = Log.Invoke(_globalId, ex);
+            if (_globalId is null)
+                throw new System.Exception("Service not initialized");
+
+            _ = Log?.Invoke(_globalId, ex);
             return Task.CompletedTask;
         }
     }

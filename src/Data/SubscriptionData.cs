@@ -1,6 +1,4 @@
 ﻿using LiteDB;
-using Discord;
-using Discord.Webhook;
 
 namespace NeKzBot.Data
 {
@@ -9,7 +7,7 @@ namespace NeKzBot.Data
         [BsonId(true)]
         public int Id { get; set; }
         public ulong WebhookId { get; set; }
-        public string WebhookToken { get; set; }
-        public ulong? GuildId { get; set; }
+        public string? WebhookToken { get; set; }
+        public ulong GuildId { get; set; }
     }
 }

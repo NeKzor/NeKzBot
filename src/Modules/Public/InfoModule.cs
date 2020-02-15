@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,13 +7,12 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
-using Discord.WebSocket;
 
 namespace NeKzBot.Modules.Public
 {
     public class InfoModule : InteractiveBase<SocketCommandContext>
     {
-        public CommandService Commands { get; set; }
+        public CommandService? Commands { get; set; }
 
         [Ratelimit(3, 1, Measure.Minutes)]
         [Command("info"), Alias("?")]
@@ -30,7 +28,7 @@ namespace NeKzBot.Modules.Public
                 .AddField("Threads", $"{Process.GetCurrentProcess().Threads.Count}", true)
                 .AddField("Uptime", (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"hh\:mm\:ss"), true)
                 .AddField($"Local Time (UTC+{DateTimeOffset.Now.Offset.Hours})", DateTime.Now.ToString("HH:mm:ss"), true)
-                .AddField("Location", "Graz, Austria", true)
+                .AddField("Location", "Limburg, Germany", true)
                 .AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
                 .AddField("Runtime", RuntimeInformation.FrameworkDescription, false)
                 .AddField("Operating System", RuntimeInformation.OSDescription, true);
@@ -99,7 +97,7 @@ namespace NeKzBot.Modules.Public
         [Command("modules"), Alias("help")]
         public async Task Modules()
         {
-            var modules = Commands.Modules
+            var modules = Commands!.Modules
                 .Where(m => !m.IsSubmodule)
                 .OrderBy(m => m.Name);
 

@@ -33,7 +33,7 @@ namespace NeKzBot.Modules.Public
 
             [Ratelimit(6, 1, Measure.Minutes)]
             [Command("map")]
-            public async Task Map([Remainder]string mapName = null)
+            public async Task Map([Remainder] string? mapName = null)
             {
                 var map = (!string.IsNullOrEmpty(mapName))
                     ? _portal2.GetMap(mapName)
@@ -51,7 +51,7 @@ namespace NeKzBot.Modules.Public
 
                     var message = await Context.Channel.SendFileAsync
                     (
-                        $"private/resources/images/maps/{map.BestTimeId}.jpg",
+                        $"public/resources/images/maps/{map.BestTimeId}.jpg",
                         embed: embed.Build()
                     ).ConfigureAwait(false);
 
@@ -64,7 +64,7 @@ namespace NeKzBot.Modules.Public
             }
             [Ratelimit(6, 1, Measure.Minutes)]
             [Command("discovery"), Alias("exploit", "glitch")]
-            public async Task Discovery([Remainder]string discoveryName = null)
+            public async Task Discovery([Remainder] string? discoveryName = null)
             {
                 var discovery = (!string.IsNullOrEmpty(discoveryName))
                     ? _portal2.GetDiscovery(discoveryName)
@@ -97,7 +97,7 @@ namespace NeKzBot.Modules.Public
             }
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("leaderboard", RunMode = RunMode.Async), Alias("lb")]
-            public async Task Leaderboard([Remainder] string mapName = null)
+            public async Task Leaderboard([Remainder] string? mapName = null)
             {
                 if (!string.IsNullOrEmpty(mapName))
                 {
@@ -122,7 +122,7 @@ namespace NeKzBot.Modules.Public
 
                                 page += $"\n{entry.ScoreRank.FormatRankToString()} " +
                                     $"{entry.Score.AsTimeToString()} " +
-                                    $"by [{entry.Player.Name.ToRawText()}]({(entry.Player as SteamUser).Url})";
+                                    $"by [{entry.Player.Name.ToRawText()}]({(entry.Player as SteamUser)!.Url})";
 
                                 count++;
                             }
@@ -158,12 +158,12 @@ namespace NeKzBot.Modules.Public
             public async Task Changelog([Remainder] string mapName)
             {
                 var map = Portal2Map.Search(mapName);
-                if (map == null)
+                if (map is null)
                 {
                     await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
                     return;
                 }
-                if (map.BestTimeId == null)
+                if (map.BestTimeId is null)
                 {
                     await ReplyAndDeleteAsync("This map does not have a leaderboard.", timeout: TimeSpan.FromSeconds(10));
                     return;
@@ -185,10 +185,10 @@ namespace NeKzBot.Modules.Public
 
                     page += $"\n{entry.Rank.Current.FormatRankToString("WR")}" +
                         $" {entry.Score.Current.AsTimeToString()}" +
-                        ((entry.Score.Improvement != default)
+                        ((entry.Score.Improvement.HasValue)
                             ? $" (-{((uint?)entry.Score.Improvement).AsTimeToString()})"
                             : string.Empty) +
-                        $" by [{entry.Player.Name.ToRawText()}]({(entry.Player as SteamUser).Url})";
+                        $" by [{entry.Player.Name.ToRawText()}]({(entry.Player as SteamUser)!.Url})";
 
                     count++;
                 }
@@ -212,7 +212,7 @@ namespace NeKzBot.Modules.Public
             }
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("profile", RunMode = RunMode.Async), Alias("pro", "user")]
-            public async Task Profile([Remainder] string userNameOrSteamId64 = null)
+            public async Task Profile([Remainder] string? userNameOrSteamId64 = null)
             {
                 var profile = default(IProfile);
                 if (string.IsNullOrEmpty(userNameOrSteamId64))
@@ -223,7 +223,7 @@ namespace NeKzBot.Modules.Public
                     var name = Context.User.Username;
                     if (nick != null)
                         profile = await _client.GetProfileAsync(nick);
-                    if (profile == null)
+                    if (profile is null)
                         profile = await _client.GetProfileAsync(name);
                 }
                 else
@@ -236,13 +236,13 @@ namespace NeKzBot.Modules.Public
                     // Local funcion
                     string GetMap(IDataScore score)
                     {
-                        var map = Portal2Map.Search((score as DataScore).Id);
+                        var map = Portal2Map.Search((score as DataScore)!.Id);
                         return (map != null) ? map.Alias : "several chambers";
                     }
                     var user = profile as Profile;
                     var pages = new List<string>
                     {
-                        $"\nSP WRs | {user.Times.SinglePlayerChapters.WorldRecords}" +
+                        $"\nSP WRs | {user!.Times.SinglePlayerChapters.WorldRecords}" +
                             $"\nMP WRs | {user.Times.CooperativeChapters.WorldRecords}" +
                             $"\nTotal | {user.WorldRecords}",
                         $"\nSP Points | {user.Points.SinglePlayer.Score.FormatPointsToString()}" +
@@ -267,8 +267,8 @@ namespace NeKzBot.Modules.Public
 
                     foreach (var map in Portal2.CampaignMaps)
                     {
-                        var chamber = (user.Times as DataTimes).GetMapData(map);
-                        if (chamber == null) continue;
+                        var chamber = (user.Times as DataTimes)!.GetMapData(map);
+                        if (chamber is null) continue;
 
                         if ((count % 5 == 0) && (count != 0))
                         {
@@ -334,7 +334,7 @@ namespace NeKzBot.Modules.Public
                     }
 
                     page += $"\n{entry.Score}" +
-                        $"\t[{entry.Player.Name}](https://board.iverb.me/profile/{(entry.Player as SteamUser).Id})";
+                        $"\t[{entry.Player.Name}](https://board.iverb.me/profile/{(entry.Player as SteamUser)!.Id})";
 
                     count++;
                 }

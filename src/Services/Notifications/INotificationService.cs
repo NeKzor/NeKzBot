@@ -13,6 +13,6 @@ namespace NeKzBot.Services.Notification
         Task SendAsync(IEnumerable<object> notifications);
         Task<bool> SubscribeAsync(IWebhook hook, string helloWorldMessage);
         Task<bool> UnsubscribeAsync(SubscriptionData subscription);
-        Task<(IWebhook, SubscriptionData)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks);
+        Task<(IWebhook?, SubscriptionData?)> FindSubscriptionAsync(IEnumerable<IWebhook> webhooks);
     }
 }

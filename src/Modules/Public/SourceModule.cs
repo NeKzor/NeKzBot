@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
-using NeKzBot.Data;
+using NeKzBot.API;
 using NeKzBot.Extensions;
 using NeKzBot.Services;
 using SourceDemoParser.Extensions;
@@ -18,7 +17,7 @@ namespace NeKzBot.Modules.Public
         [Group("cvars"), Alias("cvar")]
         public class CvarDictionary : InteractiveBase<SocketCommandContext>
         {
-            public SourceCvarService Service { get; set; }
+            public SourceCvarService? Service { get; set; }
 
             [Command("?"), Alias("info", "help")]
             public Task QuestionMark()
@@ -27,7 +26,7 @@ namespace NeKzBot.Modules.Public
                     .WithColor(Color.Orange)
                     .WithDescription("**Cvar Database**\n" +
                         "Usage: .cvars.<game> <name>\n" +
-                        "Available games: halflife2, portal, portal2, thebeginnersguide, thestanleyparable\n" +
+                        "Available games: halflife2, portal, portal2\n" +
                         "Made with [SourceAutoRecord](https://nekzor.github.io/SourceAutoRecord)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
@@ -36,7 +35,7 @@ namespace NeKzBot.Modules.Public
             [Command("halflife2"), Alias("hl2")]
             public async Task HalfLife2(string cvar)
             {
-                var result = await Service.LookUpCvar(cvar, CvarGameType.HalfLife2);
+                var result = await Service!.LookUpCvar(cvar, CvarGameType.HalfLife2);
                 if (result != null)
                     await PrintResult(result);
                 else
@@ -45,7 +44,7 @@ namespace NeKzBot.Modules.Public
             [Command("portal"), Alias("p", "p1")]
             public async Task Portal(string cvar)
             {
-                var result = await Service.LookUpCvar(cvar, CvarGameType.Portal);
+                var result = await Service!.LookUpCvar(cvar, CvarGameType.Portal);
                 if (result != null)
                     await PrintResult(result);
                 else
@@ -54,46 +53,38 @@ namespace NeKzBot.Modules.Public
             [Command("portal2"), Alias("p2")]
             public async Task Portal2(string cvar)
             {
-                var result = await Service.LookUpCvar(cvar, CvarGameType.Portal2);
-                if (result != null)
+                var result = await Service!.LookUpCvar(cvar, CvarGameType.Portal2);
+                if (result is {})
                     await PrintResult(result);
                 else
                     await ReplyAndDeleteAsync("Unknown Portal 2 cvar.", timeout: TimeSpan.FromSeconds(10));
             }
-            [Command("thebeginnersguide"), Alias("beginnersguide", "tbg")]
-            public async Task TheBeginnersGuide(string cvar)
+            [Command("sourceautorecord"), Alias("sar")]
+            public async Task SourceAutoRecord(string cvar)
             {
-                var result = await Service.LookUpCvar(cvar, CvarGameType.TheBeginnersGuide);
-                if (result != null)
+                var result = await Service!.LookUpCvar(cvar, CvarGameType.SAR);
+                if (result is {})
                     await PrintResult(result);
                 else
-                    await ReplyAndDeleteAsync("Unknown The Beginners Guide cvar.", timeout: TimeSpan.FromSeconds(10));
-            }
-            [Command("thestanleyparable"), Alias("stanley", "tsp")]
-            public async Task TheStanleyParable(string cvar)
-            {
-                var result = await Service.LookUpCvar(cvar, CvarGameType.TheStanleyParable);
-                if (result != null)
-                    await PrintResult(result);
-                else
-                    await ReplyAndDeleteAsync("Unknown The Stanley Parable cvar.", timeout: TimeSpan.FromSeconds(10));
+                    await ReplyAndDeleteAsync("Unknown SAR cvar.", timeout: TimeSpan.FromSeconds(10));
             }
 
-            private async Task PrintResult(SourceCvarData result)
+            private async Task PrintResult(Cvar result)
             {
-                var flags = (result.Flags.Any())
-                    ? string.Join("/", result.Flags).ToLower()
+                var flagList = result.GetFlags();
+                var flags = (flagList.Any())
+                    ? string.Join("/", flagList).ToLower()
                     : "-";
                 var description = (!string.IsNullOrEmpty(result.HelpText))
                     ? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
                     : "-";
-                var os = (result.Os != NeKzBot.Data.OperatingSystem.Both)
+                var os = (result.Os != NeKzBot.API.OperatingSystem.Both)
                     ? result.Os.ToString()
                     : "Windows/Linux";
 
                 var embed = new EmbedBuilder()
                     .WithColor(Color.Orange)
-                    .WithDescription($"**{result.Name.ToRawText()}**" +
+                    .WithDescription($"**{(result.Name ?? string.Empty).ToRawText()}**" +
                         $"\nDefault Value: {result.DefaultValue}" +
                         $"\nFlags: {flags}" +
                         $"\nOS: {os}" +
@@ -101,12 +92,31 @@ namespace NeKzBot.Modules.Public
 
                 await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
+
+            private async Task PrintResultSar(Cvar result)
+            {
+                var games = (result.Games.Any())
+                    ? string.Join(", ", result.Games ?? Enumerable.Empty<string>())
+                    : "-";
+                var description = (!string.IsNullOrEmpty(result.HelpText))
+                    ? result.HelpText.Replace('\n', ' ').Replace('\t', ' ').ToRawText()
+                    : "-";
+
+                var embed = new EmbedBuilder()
+                    .WithColor(Color.Orange)
+                    .WithDescription($"**{(result.Name ?? string.Empty).ToRawText()}**" +
+                        $"\nDefault Value: {result.DefaultValue}" +
+                        $"\nSupported: {games}" +
+                        $"\nDescription: {description}");
+
+                await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+            }
         }
 
-        /* [Group("demo"), Alias("dem")]
+        [Group("demo"), Alias("dem")]
         public class DemoInfo : InteractiveBase<SocketCommandContext>
         {
-            public SourceDemoService Service { get; set; }
+            public SourceDemoService? Service { get; set; }
 
             [Command("?"), Alias("info", "help")]
             public Task QuestionMark()
@@ -127,7 +137,7 @@ namespace NeKzBot.Modules.Public
                     .Where(a => a.Filename.EndsWith(".dem"))
                     .FirstOrDefault() as IAttachment;
 
-                if (file == null)
+                if (file is null)
                 {
                     var reply = await ReplyAndDeleteAsync
                     (
@@ -175,9 +185,9 @@ namespace NeKzBot.Modules.Public
                     {
                         // Downloading the same file is unnecessary
                         // Check if we haven't already downloaded this
-                        var data = await Service.Get(Context.User.Id);
+                        var data = await Service!.Get(Context.User.Id);
 
-                        if (file.Url == data.DownloadUrl)
+                        if (file.Url == data?.DownloadUrl)
                             await Get();
                         else if (await Service.DownloadDemoAsync(Context.Message.Author.Id, file.Url))
                             await Get();
@@ -196,12 +206,12 @@ namespace NeKzBot.Modules.Public
             [Command("get")]
             public async Task Get()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                 {
                     // Automatically adjust but don't
                     // save it in the database
-                    await demo.AdjustExact();
+                    await demo.AdjustAsync();
 
                     var embed = new EmbedBuilder()
                         .WithColor(Color.Green)
@@ -219,7 +229,7 @@ namespace NeKzBot.Modules.Public
             [Command("filestamp"), Alias("magic")]
             public async Task FileStamp()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync(demo.FileStamp.ToRawText());
                 else
@@ -228,7 +238,7 @@ namespace NeKzBot.Modules.Public
             [Command("protocol"), Alias("protoc")]
             public async Task Protocol()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.Protocol}");
                 else
@@ -237,7 +247,7 @@ namespace NeKzBot.Modules.Public
             [Command("servername"), Alias("server")]
             public async Task ServerName()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync(demo.ServerName.ToRawText());
                 else
@@ -246,7 +256,7 @@ namespace NeKzBot.Modules.Public
             [Command("clientname"), Alias("client")]
             public async Task ClientName()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync(demo.ClientName.ToRawText());
                 else
@@ -255,7 +265,7 @@ namespace NeKzBot.Modules.Public
             [Command("mapname"), Alias("map")]
             public async Task MapName()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync(demo.MapName.ToRawText());
                 else
@@ -264,7 +274,7 @@ namespace NeKzBot.Modules.Public
             [Command("gamedirectory"), Alias("dir")]
             public async Task GameDirectory()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync(demo.GameDirectory.ToRawText());
                 else
@@ -273,7 +283,7 @@ namespace NeKzBot.Modules.Public
             [Command("playbacktime"), Alias("time")]
             public async Task PlaybackTime()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.PlaybackTime}");
                 else
@@ -282,7 +292,7 @@ namespace NeKzBot.Modules.Public
             [Command("playbackticks"), Alias("ticks")]
             public async Task PlaybackTicks()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.PlaybackTicks}");
                 else
@@ -291,7 +301,7 @@ namespace NeKzBot.Modules.Public
             [Command("playbackframes"), Alias("frames")]
             public async Task PlaybackFrames()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.PlaybackFrames}");
                 else
@@ -300,7 +310,7 @@ namespace NeKzBot.Modules.Public
             [Command("signonlength"), Alias("signon")]
             public async Task SignOnLength()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.SignOnLength}");
                 else
@@ -310,14 +320,14 @@ namespace NeKzBot.Modules.Public
             [Command("messages", RunMode = RunMode.Async), Alias("msg")]
             public async Task Messages()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
-                if (demo == null)
+                var demo = await Service!.GetDemo(Context.User.Id);
+                if (demo is null)
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
                 else if (demo.Messages.Count == 0)
                     await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(10));
                 else
                 {
-                    var pages = new List<string>();
+                    var pages = new System.Collections.Generic.List<string>();
                     for (int i = 0; i < demo.Messages.Count - 1; i += 5)
                     {
                         var line = string.Empty;
@@ -348,8 +358,8 @@ namespace NeKzBot.Modules.Public
             [Command("messages", RunMode = RunMode.Async), Alias("msg")]
             public async Task Messages(int index)
             {
-                var demo = await Service.GetDemo(Context.User.Id);
-                if (demo == null)
+                var demo = await Service!.GetDemo(Context.User.Id);
+                if (demo is null)
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
                 else if (demo.Messages.Count == 0)
                     await ReplyAndDeleteAsync("Demo parser didn't parse any messages.", timeout: TimeSpan.FromSeconds(10));
@@ -369,7 +379,7 @@ namespace NeKzBot.Modules.Public
             [Command("gettickrate"), Alias("tickrate")]
             public async Task GetTickrate()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.GetTickrate()}");
                 else
@@ -379,7 +389,7 @@ namespace NeKzBot.Modules.Public
             [Alias("tickspersecond", "tps", "intervalpertick", "ipt")]
             public async Task GetTicksPerSecond()
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
                 if (demo != null)
                     await ReplyAndDeleteAsync($"{demo.GetTicksPerSecond()}");
                 else
@@ -389,7 +399,12 @@ namespace NeKzBot.Modules.Public
             [Command("adjustexact", RunMode = RunMode.Async), Alias("adj")]
             public async Task AdjustExact(bool overwrite = false)
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
+                if (demo is null)
+                {
+                    await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
 
                 var before = demo.PlaybackTicks;
                 await demo.AdjustExact();
@@ -404,7 +419,12 @@ namespace NeKzBot.Modules.Public
             [Command("adjustflag", RunMode = RunMode.Async), Alias("adjf")]
             public async Task AdjustFlag(bool overwrite = false)
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
+                if (demo is null)
+                {
+                    await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
 
                 var before = demo.PlaybackTicks;
                 await demo.AdjustFlagAsync();
@@ -419,7 +439,12 @@ namespace NeKzBot.Modules.Public
             [Command("adjust", RunMode = RunMode.Async), Alias("adj2")]
             public async Task Adjust(bool overwrite = false)
             {
-                var demo = await Service.GetDemo(Context.User.Id);
+                var demo = await Service!.GetDemo(Context.User.Id);
+                if (demo is null)
+                {
+                    await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
 
                 var before = demo.PlaybackTicks;
                 await demo.AdjustAsync();
@@ -430,6 +455,6 @@ namespace NeKzBot.Modules.Public
                 if ((overwrite) && !(await Service.SaveDemoAsync(Context.User.Id, demo)))
                     await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
             }
-        } */
+        }
     }
 }

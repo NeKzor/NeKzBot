@@ -39,7 +39,7 @@ namespace NeKzBot.Services.Notifications
             var cache = db
                 .FindAll();
 
-            if (cache == null)
+            if (cache is null)
             {
                 _ = LogWarning("Creating new cache");
                 db.Insert(new AuditData());
@@ -49,6 +49,9 @@ namespace NeKzBot.Services.Notifications
 
         public override async Task StartAsync()
         {
+            if (_cancellation is null)
+                throw new Exception("Service not initialized");
+
             try
             {
                 await base.StartAsync();
@@ -73,15 +76,15 @@ namespace NeKzBot.Services.Notifications
                     async Task DeleteSub(SubscriptionData sub, string message)
                     {
                         if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
-                            await LogWarning($"Tried to delete subscribtion for {sub.GuildId} but failed");
+                            await LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
                         else
                             await LogWarning($"{message} for {sub.GuildId}. Ended service");
                     }
 
                     foreach (var sub in subscribers)
                     {
-                        var guild = _client.GetGuild(sub.GuildId.Value);
-                        if (guild == null)
+                        var guild = _client.GetGuild(sub.GuildId);
+                        if (guild is null)
                         {
                             await DeleteSub(sub, "Unable to find guild");
                             continue;
@@ -96,12 +99,12 @@ namespace NeKzBot.Services.Notifications
                         _ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
 
                         var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
-                        if (auditor == null)
+                        if (auditor is null)
                         {
                             await LogInfo($"Inserting new audits for guild {sub.GuildId}!");
                             auditDb.Insert(new AuditData()
                             {
-                                GuildId = sub.GuildId.Value,
+                                GuildId = sub.GuildId,
                                 AuditIds = audits.Select(x => x.Id),
                             });
                             continue;
@@ -127,16 +130,15 @@ namespace NeKzBot.Services.Notifications
 
                             try
                             {
-                                using (var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken))
-                                {
-                                    await wc.SendMessageAsync
-                                    (
-                                        string.Empty,
-                                        embeds: embeds,
-                                        username: _userName,
-                                        avatarUrl: _userAvatar
-                                    );
-                                }
+                                using var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken);
+
+                                await wc.SendMessageAsync
+                                (
+                                    string.Empty,
+                                    embeds: embeds,
+                                    username: _userName,
+                                    avatarUrl: _userAvatar
+                                );
                             }
                             catch (InvalidOperationException ex)
                                 when (ex.Message.StartsWith("Could not find a webhook"))
@@ -172,17 +174,24 @@ namespace NeKzBot.Services.Notifications
             throw new InvalidOperationException("No.");
         }
 
-        private Task<Embed> BuildEmbedAsync(RestAuditLogEntry audit, SocketGuild guild)
+        private Task<Embed> BuildEmbedAsync(RestAuditLogEntry? audit, SocketGuild guild)
         {
+            if (audit is null)
+                throw new NullReferenceException("Audit object was null");
+
             var changes = new List<string>();
 
             void AddPropChange(object source, string property)
             {
-                object GetPropValue(object target, string propName)
+                object? GetPropValue(object? target, string propName)
                 {
+                    if (target is null)
+                        throw new NullReferenceException("Target object is null");
+
                     var prop = target.GetType().GetProperty(propName);
-                    if (prop == null)
+                    if (prop is null)
                         throw new Exception($"Prop with name {propName} does not exist for this object!");
+
                     return prop.GetValue(target, null);
                 }
 
@@ -332,7 +341,9 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Color");
                     AddPropChange(a, "Hoist");
                     AddPropChange(a, "Mentionable");
-                    if (a.Before.Permissions.Value.RawValue != a.After.Permissions.Value.RawValue)
+                    if (a.Before.Permissions.HasValue
+                        && a.After.Permissions.HasValue
+                        && a.Before.Permissions.Value.RawValue != a.After.Permissions.Value.RawValue)
                     {
                         var before = a.Before.Permissions.Value.ToList();
                         var after = a.After.Permissions.Value.ToList();
@@ -411,7 +422,7 @@ namespace NeKzBot.Services.Notifications
                     break;
             }
 
-             if (!string.IsNullOrEmpty(audit.Reason))
+            if (!string.IsNullOrEmpty(audit.Reason))
                 changes.Add($"Reason: {audit.Reason}");
 
             var embed = new EmbedBuilder

@@ -23,19 +23,15 @@ namespace NeKzBot.Extensions
         // Numbers to string
         public static string FormatPointsToString(this uint? points)
         {
-            if (points != 0)
-                return points?.ToString("#,###,###.##");
-            return $"{points}";
+            return points?.ToString("#,###,###.##") ?? "0";
         }
         public static string FormatAveragePlaceToString(this float? place)
         {
-            if (place == default)
-                return "NO";
-            return place?.ToString("N1");
+            return place?.ToString("N1") ?? "NO";
         }
-        public static string FormatRankToString(this uint? rank, string wr = null)
+        public static string FormatRankToString(this uint? rank, string? wr = null)
         {
-            if (rank == default)
+            if (rank is null)
                 return "NO";
             if ((rank == 1) && (wr != null))
                 return wr;

@@ -3,7 +3,6 @@ using System;
 #if DOCS
 using System.Collections.Generic;
 #endif
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -65,105 +64,104 @@ namespace NeKzBot.Services
                 await _interactiveService.ReplyAndDeleteAsync(context, $"{result}", timeout: TimeSpan.FromSeconds(10));
         }
 #if DOCS
-		private Task GenerateDocs()
-		{
-			System.IO.File.WriteAllText("Modules.md", String.Empty);
-			using (var fs = System.IO.File.OpenWrite("Modules.md"))
-			using (var sw = new System.IO.StreamWriter(fs))
-			{
-				sw.WriteLine("| Command | Alias | Module |");
-				sw.WriteLine("| --- | --- | --- |");
+        private Task GenerateDocs()
+        {
+            System.IO.File.WriteAllText("Modules.md", String.Empty);
+            using var fs = System.IO.File.OpenWrite("Modules.md");
+            using var sw = new System.IO.StreamWriter(fs);
 
-				string GetParameters(CommandInfo command)
-				{
-					var result = command.Name;
-					foreach (var parameter in command.Parameters)
-					{
-						var before = " ";
-						var after = string.Empty;
+            sw.WriteLine("| Command | Alias | Module |");
+            sw.WriteLine("| --- | --- | --- |");
 
-						var type = parameter.Type.Name;
-						
-						if (parameter.IsOptional)
-						{
-							before += "(";
-							
-							if (type != "String")
-								after += $"={parameter.DefaultValue}";
-							if (parameter.IsRemainder)
-								after += "...)";
-							else
-								after += ")";
-						}
-						else
-						{
-							before += "<";
-							if (parameter.IsRemainder)
-								after += "...";
-							after += ">";
-						}
-						if (parameter.IsMultiple)
-						{
-							if (parameter.IsOptional)
-								after += " (...)";
-							else
-								after += " <...>";
-						}
-						result += $"{before}{parameter.Name}:{parameter.Type.Name}{after}";
-					}
-					return result;
-				}
+            string GetParameters(CommandInfo command)
+            {
+                var result = command.Name;
+                foreach (var parameter in command.Parameters)
+                {
+                    var before = " ";
+                    var after = string.Empty;
 
-				string GetAliases(string name, IEnumerable<string> allAliases)
-				{
-					var aliases = new List<string>();
-					foreach (var alias in allAliases)
-					{
-						if (alias.Contains('.'))
-							aliases.Add(alias.Split('.').Last());
-						else
-							aliases.Add(alias);
-					}
-					
-					aliases = aliases.Distinct().ToList();
-					aliases.Remove(name);
-					
-                    if (aliases.Count == 0)
-						return "-";
+                    var type = parameter.Type.Name;
 
-					var result = string.Empty;
-					foreach	(var alias in aliases)
-						result += $"`{alias}`, ";
-					return result.Substring(0, result.Length - 2);
-				}
+                    if (parameter.IsOptional)
+                    {
+                        before += "(";
 
-				// Most nested and multiple foreach-loops I've ever used
-				foreach	(var module in _commands.Modules.Where(c => !c.IsSubmodule))
-				{
-					foreach (var cmd in module.Commands)
-					{
-						sw.WriteLine($"| `.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
-					}
-					foreach (var submodule in module.Submodules)
-					{
-						sw.WriteLine($"| `.{submodule.Name}.` | {GetAliases(submodule.Name, submodule.Aliases)} | {module.Name} |");
-						foreach (var cmd in submodule.Commands)
-						{
-							sw.WriteLine($"| `.{submodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
-						}
-						foreach (var subsubmodule in submodule.Submodules)
-						{
-							sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.` | {GetAliases(subsubmodule.Name, subsubmodule.Aliases)} | {module.Name} |");
-							foreach (var cmd in subsubmodule.Commands)
-							{
-								sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
-							}
-						}
-					}
-				}
-			}
-			return Task.CompletedTask;
-		}
+                        if (type != "String")
+                            after += $"={parameter.DefaultValue}";
+                        if (parameter.IsRemainder)
+                            after += "...)";
+                        else
+                            after += ")";
+                    }
+                    else
+                    {
+                        before += "<";
+                        if (parameter.IsRemainder)
+                            after += "...";
+                        after += ">";
+                    }
+                    if (parameter.IsMultiple)
+                    {
+                        if (parameter.IsOptional)
+                            after += " (...)";
+                        else
+                            after += " <...>";
+                    }
+                    result += $"{before}{parameter.Name}:{parameter.Type.Name}{after}";
+                }
+                return result;
+            }
+
+            string GetAliases(string name, IEnumerable<string> allAliases)
+            {
+                var aliases = new List<string>();
+                foreach (var alias in allAliases)
+                {
+                    if (alias.Contains('.'))
+                        aliases.Add(alias.Split('.').Last());
+                    else
+                        aliases.Add(alias);
+                }
+
+                aliases = aliases.Distinct().ToList();
+                aliases.Remove(name);
+
+                if (aliases.Count == 0)
+                    return "-";
+
+                var result = string.Empty;
+                foreach (var alias in aliases)
+                    result += $"`{alias}`, ";
+                return result.Substring(0, result.Length - 2);
+            }
+
+            // Most nested and multiple foreach-loops I've ever used
+            foreach (var module in _commands.Modules.Where(c => !c.IsSubmodule))
+            {
+                foreach (var cmd in module.Commands)
+                {
+                    sw.WriteLine($"| `.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
+                }
+                foreach (var submodule in module.Submodules)
+                {
+                    sw.WriteLine($"| `.{submodule.Name}.` | {GetAliases(submodule.Name, submodule.Aliases)} | {module.Name} |");
+                    foreach (var cmd in submodule.Commands)
+                    {
+                        sw.WriteLine($"| `.{submodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
+                    }
+                    foreach (var subsubmodule in submodule.Submodules)
+                    {
+                        sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.` | {GetAliases(subsubmodule.Name, subsubmodule.Aliases)} | {module.Name} |");
+                        foreach (var cmd in subsubmodule.Commands)
+                        {
+                            sw.WriteLine($"| `.{submodule.Name}.{subsubmodule.Name}.{GetParameters(cmd)}` | {GetAliases(cmd.Name, cmd.Aliases)} | {module.Name} |");
+                        }
+                    }
+                }
+            }
+            return Task.CompletedTask;
+        }
 #endif
     }
 }

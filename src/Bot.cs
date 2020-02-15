@@ -15,8 +15,8 @@ namespace NeKzBot
 {
     internal class Bot
     {
-        private DiscordSocketClient _client;
-        private IConfiguration _config;
+        private DiscordSocketClient? _client;
+        private IConfiguration? _config;
 
         public async Task RunAsync()
         {
@@ -38,6 +38,7 @@ namespace NeKzBot
             var chs = services.GetRequiredService<CommandHandlingService>();
             var srs = services.GetRequiredService<SpeedrunNotificationService>();
             var scs = services.GetRequiredService<SourceCvarService>();
+            var sds = services.GetRequiredService<SourceDemoService>();
             var ims = services.GetRequiredService<ImageService>();
             var pcs = services.GetRequiredService<Portal2CampaignService>();
             var aus = services.GetRequiredService<AuditNotificationService>();
@@ -46,6 +47,7 @@ namespace NeKzBot
             await chs.Initialize();
             await srs.Initialize();
             await scs.Initialize();
+            await sds.Initialize();
             await ims.Initialize();
             await pcs.Initialize();
             await aus.Initialize();
@@ -59,7 +61,7 @@ namespace NeKzBot
             await Task.WhenAll
             (
                 //srs.StartAsync(),
-                aus.StartAsync()
+                //aus.StartAsync()
             );
 
             await Task.Delay(-1);
@@ -79,7 +81,7 @@ namespace NeKzBot
                 .AddLogging()
                 .AddSingleton<LogService>()
                 .AddSingleton(_config)
-                .AddSingleton(new LiteDatabase(_config["database_path"]))
+                .AddSingleton(new LiteDatabase("private/nekzbot.db"))
                 // Discord
                 .AddSingleton(_client)
                 .AddSingleton(new CommandService(new CommandServiceConfig
@@ -94,10 +96,17 @@ namespace NeKzBot
                 // Others
                 .AddSingleton<SpeedrunNotificationService>()
                 .AddSingleton<SourceCvarService>()
+                .AddSingleton<SourceDemoService>()
                 .AddSingleton<ImageService>()
                 .AddSingleton<Portal2CampaignService>()
                 .AddSingleton<AuditNotificationService>()
                 .BuildServiceProvider();
         }
+    }
+
+    internal class App
+    {
+        private static async Task Main()
+            => await new Bot().RunAsync();
     }
 }

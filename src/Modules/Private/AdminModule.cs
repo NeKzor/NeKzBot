@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
-using Discord.WebSocket;
 
 namespace NeKzBot.Modules.Public
 {
@@ -36,7 +33,8 @@ namespace NeKzBot.Modules.Public
 
                 page += $"\n{invite.Id}" +
                     $" created by {invite.Inviter.Username}#{invite.Inviter.Discriminator}" +
-                    $" at {invite.CreatedAt.Value.ToString("yyyy-MM-dd")} ({invite.Uses}/{(((invite.MaxUses ?? 0) == 0) ? "∞" : $"{invite.MaxUses}")})";
+                    $" at {(invite.CreatedAt.HasValue ? invite.CreatedAt.Value.ToString("yyyy-MM-dd") : "Unknown")}" +
+                    $" ({invite.Uses}/{(((invite.MaxUses ?? 0) == 0) ? "∞" : $"{invite.MaxUses}")})";
 
                 count++;
             }

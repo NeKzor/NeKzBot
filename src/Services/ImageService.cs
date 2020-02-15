@@ -20,8 +20,11 @@ namespace NeKzBot.Services
 
         public Task Initialize()
         {
-            foreach (var file in Directory.GetFiles(_config["image_path"]))
-                _imageCache.Add(file);
+            foreach (var file in Directory.GetFiles("private/resources/images"))
+            {
+                if (file.EndsWith(".png") || file.EndsWith(".jpg") || file.EndsWith(".gif"))
+                    _imageCache.Add(file);
+            }
 
             return Task.CompletedTask;
         }
