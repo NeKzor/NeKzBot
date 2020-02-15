@@ -53,15 +53,15 @@ namespace NeKzBot
             await aus.Initialize();
 
 #if DB_CLEANUP
-			await srs.CleanupAsync();
+            await srs.CleanupAsync();
 #else
             await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
             await _client.StartAsync();
 
             await Task.WhenAll
             (
-                //srs.StartAsync(),
-                //aus.StartAsync()
+                srs.StartAsync(),
+                aus.StartAsync()
             );
 
             await Task.Delay(-1);

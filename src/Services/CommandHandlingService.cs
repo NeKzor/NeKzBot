@@ -2,6 +2,7 @@
 using System;
 #if DOCS
 using System.Collections.Generic;
+using System.Linq;
 #endif
 using System.Reflection;
 using System.Threading.Tasks;
@@ -41,11 +42,13 @@ namespace NeKzBot.Services
 
             _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 #if DOCS
-			GenerateDocs()
-				.GetAwaiter()
-				.GetResult();
-#endif
+            GenerateDocs()
+                .GetAwaiter()
+                .GetResult();
+            throw new Exception("Generated Modules.md");
+#else
             return Task.CompletedTask;
+#endif
         }
 
         private async Task MessageReceived(SocketMessage rawMessage)

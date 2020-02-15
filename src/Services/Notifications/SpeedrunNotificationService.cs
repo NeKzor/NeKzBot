@@ -61,8 +61,8 @@ namespace NeKzBot.Services.Notifications
 
         public override async Task StartAsync()
         {
-            if (_client is null || _cancellation is null)
-                throw new System.Exception("Service not initialized");
+            if (_client is null)
+                throw new Exception("Service not initialized");
 
             try
             {
@@ -140,7 +140,7 @@ namespace NeKzBot.Services.Notifications
                     if (delay < 0)
                         await LogWarning($"Task took too long: {delay}ms");
 
-                    await Task.Delay(delay, _cancellation.Token);
+                    await Task.Delay(delay, _cancellation!.Token);
                 }
             }
             catch (Exception ex)

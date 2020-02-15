@@ -56,8 +56,12 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.services.speedruncom.` | `srcom` | ServiceModule |
 | `.services.speedruncom.subscribe` | `sub`, `create`, `hook` | ServiceModule |
 | `.services.speedruncom.unsubscribe` | `unsub`, `delete`, `unhook` | ServiceModule |
+| `.services.auditor.` | `audits` | ServiceModule |
+| `.services.auditor.subscribe` | `sub`, `create`, `hook` | ServiceModule |
+| `.services.auditor.unsubscribe` | `unsub`, `delete`, `unhook` | ServiceModule |
+| `.invites` | - | AdminModule |
+| `.audits (auditCount:Int32=10)` | - | AdminModule |
 | `.ris <text:String...>` | - | FunModule |
-| `.meme (imageName:String)` | - | FunModule |
 | `.info` | `?` | InfoModule |
 | `.stats` | - | InfoModule |
 | `.invite` | - | InfoModule |
@@ -75,6 +79,28 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.cvars.halflife2 <cvar:String>` | `hl2` | SourceModule |
 | `.cvars.portal <cvar:String>` | `p`, `p1` | SourceModule |
 | `.cvars.portal2 <cvar:String>` | `p2` | SourceModule |
+| `.cvars.sourceautorecord <cvar:String>` | `sar` | SourceModule |
+| `.demo.` | `dem` | SourceModule |
+| `.demo.?` | `info`, `help` | SourceModule |
+| `.demo.parse` | - | SourceModule |
+| `.demo.get` | - | SourceModule |
+| `.demo.filestamp` | `magic` | SourceModule |
+| `.demo.protocol` | `protoc` | SourceModule |
+| `.demo.servername` | `server` | SourceModule |
+| `.demo.clientname` | `client` | SourceModule |
+| `.demo.mapname` | `map` | SourceModule |
+| `.demo.gamedirectory` | `dir` | SourceModule |
+| `.demo.playbacktime` | `time` | SourceModule |
+| `.demo.playbackticks` | `ticks` | SourceModule |
+| `.demo.playbackframes` | `frames` | SourceModule |
+| `.demo.signonlength` | `signon` | SourceModule |
+| `.demo.messages` | `msg` | SourceModule |
+| `.demo.messages <index:Int32>` | `msg` | SourceModule |
+| `.demo.gettickrate` | `tickrate` | SourceModule |
+| `.demo.gettickspersecond` | `tickspersecond`, `tps`, `intervalpertick`, `ipt` | SourceModule |
+| `.demo.adjustexact (overwrite:Boolean=False)` | `adj` | SourceModule |
+| `.demo.adjustflag (overwrite:Boolean=False)` | `adjf` | SourceModule |
+| `.demo.adjust (overwrite:Boolean=False)` | `adj2` | SourceModule |
 | `.guild` | `server` | StatsModule |
 | `.hierarchy` | - | StatsModule |
 | `.channel` | - | StatsModule |

@@ -49,14 +49,11 @@ namespace NeKzBot.Services.Notifications
 
         public override async Task StartAsync()
         {
-            if (_cancellation is null)
-                throw new Exception("Service not initialized");
-
             try
             {
                 await base.StartAsync();
 
-                await Task.Delay(3000, _cancellation.Token);
+                await Task.Delay(3000, _cancellation!.Token);
 
                 while (_isRunning)
                 {
@@ -70,7 +67,7 @@ namespace NeKzBot.Services.Notifications
                         .FindAll()
                         .ToList();
 
-                    await LogInfo($"{subscribers.Count} subs found");
+                    //await LogInfo($"{subscribers.Count} subs found");
                     if (subscribers.Count == 0) goto retry;
 
                     async Task DeleteSub(SubscriptionData sub, string message)
