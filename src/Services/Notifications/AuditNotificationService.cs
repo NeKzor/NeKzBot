@@ -93,7 +93,7 @@ namespace NeKzBot.Services.Notifications
                             return (user != null) ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator) : false;
                         });
 
-                        _ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
+                        //_ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
 
                         var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
                         if (auditor is null)
@@ -108,7 +108,7 @@ namespace NeKzBot.Services.Notifications
                         }
 
                         var sending = audits.Where(audit => !auditor.AuditIds.Contains(audit.Id)).ToList();
-                        _ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
+                        //_ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
 
                         if (sending.Count > 0)
                         {
@@ -389,6 +389,7 @@ namespace NeKzBot.Services.Notifications
                     changes.Add($"Name: {a.Name}");
                     break;
                 case WebhookUpdateAuditLogData a:
+                    changes.Add($"Webhook: {a.Webhook.Name}");
                     if (a.Before.ChannelId != a.After.ChannelId)
                     {
                         var before = a.Before.ChannelId.HasValue ? guild.GetChannel(a.Before.ChannelId.Value) : default;
@@ -399,8 +400,8 @@ namespace NeKzBot.Services.Notifications
                     AddPropChange(a, "Name");
                     break;
                 case WebhookDeleteAuditLogData a:
+                    changes.Add($"Webhook: {a.Name}");
                     AddChannel(a.ChannelId);
-                    changes.Add($"Name: {a.Name}");
                     break;
                 case EmoteCreateAuditLogData a:
                     AddEmote(a.EmoteId);
