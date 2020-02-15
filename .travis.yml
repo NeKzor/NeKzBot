@@ -4,5 +4,5 @@ dotnet: 3.0
 dist: bionic
 solution: NeKzBot.sln
 script:
-  - dotnet restore
-  - dotnet build src -c Release
+  - ./install
+  - ./build
