@@ -277,7 +277,7 @@ namespace NeKzBot.Modules.Public
                         }
 
                         page += $"\n[{map.Alias}]({map.Url}) | " +
-                            $"{chamber.ScoreRank.FormatRankToString("WR")} | " +
+                            $"{chamber.PlayerRank.FormatRankToString("WR")} | " +
                             $"{chamber.Score.AsTimeToString()}";
 
                         count++;
