@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Addons.Interactive;
-using NeKzBot.Services.Notifications;
+using NeKzBot.Services.Notifications.Auditor;
+using NeKzBot.Services.Notifications.Speedrun;
 
 namespace NeKzBot.Modules.Private
 {
@@ -78,7 +79,7 @@ namespace NeKzBot.Modules.Private
             [Group("auditor"), Alias("audits")]
             public class Auditor : InteractiveBase<SocketCommandContext>
             {
-                public AuditNotificationService? Service { get; set; }
+                public AuditorNotificationService? Service { get; set; }
 
                 [Command("subscribe"), Alias("sub", "create", "hook")]
                 public async Task Subscribe()

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using NeKzBot.Data;
 
-namespace NeKzBot.Services.Notification
+namespace NeKzBot.Services.Notifications
 {
     public interface INotificationService
     {

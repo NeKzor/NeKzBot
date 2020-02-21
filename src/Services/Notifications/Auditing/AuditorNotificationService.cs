@@ -12,13 +12,13 @@ using LiteDB;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.Data;
 
-namespace NeKzBot.Services.Notifications
+namespace NeKzBot.Services.Notifications.Auditor
 {
-    public class AuditNotificationService : NotificationService
+    public class AuditorNotificationService : NotificationService
     {
         private DiscordSocketClient _client;
 
-        public AuditNotificationService(IConfiguration config, LiteDatabase dataBase, DiscordSocketClient client)
+        public AuditorNotificationService(IConfiguration config, LiteDatabase dataBase, DiscordSocketClient client)
             : base(config, dataBase)
         {
             _client = client;
@@ -31,6 +31,7 @@ namespace NeKzBot.Services.Notifications
             _userName = "Auditor";
             _userAvatar = string.Empty;
             _sleepTime = 1 * 60 * 1000;
+            _retryTime = 1 * 60 * 1000;
 
             var db = GetTaskCache<AuditData>()
                 .GetAwaiter()
@@ -49,6 +50,7 @@ namespace NeKzBot.Services.Notifications
 
         public override async Task StartAsync()
         {
+        task_start:
             try
             {
                 await base.StartAsync();
@@ -161,6 +163,9 @@ namespace NeKzBot.Services.Notifications
             catch (Exception ex)
             {
                 await LogException(ex);
+                await StopAsync();
+                await Task.Delay((int)_retryTime);
+                goto task_start;
             }
 
             await LogWarning("Task ended");

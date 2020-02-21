@@ -1,5 +1,4 @@
-﻿#define TEST
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,7 +8,6 @@ using Discord.Webhook;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.Data;
-using NeKzBot.Services.Notification;
 
 namespace NeKzBot.Services.Notifications
 {
@@ -20,6 +18,7 @@ namespace NeKzBot.Services.Notifications
         protected string? _userName { get; set; }
         protected string? _userAvatar { get; set; }
         protected uint _sleepTime { get; set; }
+        protected uint _retryTime { get; set; }
         protected string? _globalId { get; set; }
         protected bool _isRunning { get; set; }
         protected CancellationTokenSource? _cancellation { get; set; }
@@ -96,11 +95,6 @@ namespace NeKzBot.Services.Notifications
                             embeds: new Embed[] { embed },
                             username: _userName,
                             avatarUrl: _userAvatar
-                        // Un-comment this if it ever becomes a problem
-                        /* options: new RequestOptions()
-                        {
-                            RetryMode = RetryMode.RetryRatelimit
-                        } */
                         );
                     }
                     // Make sure to catch only on this special exception
@@ -213,7 +207,7 @@ namespace NeKzBot.Services.Notifications
         // Logging tasks
         protected Task LogInfo(string message)
         {
-#if DEBUG || TEST
+#if DEBUG
             _ = Log?.Invoke($"{_globalId}\t{message}", null);
 #endif
             return Task.CompletedTask;

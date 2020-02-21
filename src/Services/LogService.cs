@@ -5,7 +5,8 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
-using NeKzBot.Services.Notifications;
+using NeKzBot.Services.Notifications.Auditor;
+using NeKzBot.Services.Notifications.Speedrun;
 
 namespace NeKzBot.Services
 {
@@ -16,7 +17,7 @@ namespace NeKzBot.Services
         private readonly InteractiveService _interactive;
         private readonly SpeedrunNotificationService _speedrun;
         private readonly SourceDemoService _demo;
-        private readonly AuditNotificationService _auditor;
+        private readonly AuditorNotificationService _auditor;
         private readonly ILoggerFactory _loggerFactory;
 
         private ILogger? _discordLogger;
@@ -29,7 +30,7 @@ namespace NeKzBot.Services
             InteractiveService interactive,
             SpeedrunNotificationService speedrun,
             SourceDemoService demo,
-            AuditNotificationService auditor,
+            AuditorNotificationService auditor,
             ILoggerFactory loggerFactory)
         {
             _client = client;

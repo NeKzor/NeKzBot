@@ -1,26 +1,18 @@
-﻿//#define TEST
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using LiteDB;
 using Microsoft.Extensions.Configuration;
 using NeKzBot.API;
 using NeKzBot.Data;
-using NeKzBot.Extensions;
 
-namespace NeKzBot.Services.Notifications
+namespace NeKzBot.Services.Notifications.Speedrun
 {
     public class SpeedrunNotificationService : NotificationService
     {
-        public static readonly Regex PostPattern = new Regex(@"^(.+) responded to the thread '([\w %]+)' in the (.+) forum\.$");
-        public static readonly Regex RunPattern = new Regex(@"^(.+) (?:got a new PB in|beat the WR in) (.+)\. (?:Their time|The new WR) is ([0-9 hms]+)\.$");
-        public static readonly Regex ThreadPattern = new Regex(@"^(.+) posted a new thread in the (.+) forum: (.+)\.$");
-        public static readonly Regex ModeratorPattern = new Regex(@"^(.+) has been added to (.+) as a moderator\.$");
-
         private SpeedrunComApiClient? _client;
 
         public SpeedrunNotificationService(IConfiguration config, LiteDatabase dataBase)
@@ -36,6 +28,7 @@ namespace NeKzBot.Services.Notifications
             _userName = "SpeedrunCom";
             _userAvatar = "https://raw.githubusercontent.com/NeKzor/NeKzBot/master/public/resources/avatars/speedruncom_avatar.png";
             _sleepTime = 1 * 60 * 1000;
+            _retryTime = 1 * 60 * 1000;
 
             _client = new SpeedrunComApiClient
             (
@@ -64,6 +57,7 @@ namespace NeKzBot.Services.Notifications
             if (_client is null)
                 throw new Exception("Service not initialized");
 
+            task_start:
             try
             {
                 await base.StartAsync();
@@ -123,14 +117,17 @@ namespace NeKzBot.Services.Notifications
 
                     //sending.AddRange(notifications.Take(5));
 
+                    //sending = notifications.Take(11).ToList();
+
                     if (sending.Count > 0)
                     {
                         await LogInfo($"Found {sending.Count} new notifications to send");
 
                         if (sending.Count >= 11)
-                            throw new Exception("Webhook rate limit exceeded!");
+                            await LogWarning("Webhook rate limit exceeded: " + sending.Count);
 
                         await SendAsync(sending);
+                        //return;
 
                         UpdateCache();
                     }
@@ -146,6 +143,9 @@ namespace NeKzBot.Services.Notifications
             catch (Exception ex)
             {
                 await LogException(ex);
+                await StopAsync();
+                await Task.Delay((int)_retryTime);
+                goto task_start;
             }
 
             await LogWarning("Task ended");
@@ -155,66 +155,22 @@ namespace NeKzBot.Services.Notifications
         {
             if (_client is null)
                 throw new System.Exception("Service not initialized");
-            
+
             if (!(notification is SpeedrunNotification nf))
                 throw new System.Exception("Notification object was not type of SpeedrunNotification");
 
-            var author = (nf.Text ?? string.Empty).Split(' ')[0];
-            var game = default(string);
-            var description = nf.Text;
-
-            switch (nf.Item?.Rel)
+            static SpeedrunNotificationType ResolveNotificationType(string? type) => type switch
             {
-                case "post":
-                    {
-                        var match = PostPattern.Match(nf.Text);
-                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
-                        game = match.Groups[3].Success ? match.Groups[3].Value : default;
+                "thread" => new ThreadNotification(),
+                "post" => new PostNotification(),
+                "guide" => new GuideNotification(),
+                "resource" => new ResourceNotification(),
+                "run" => new RunNotification(),
+                "moderator" => new ModeratorNotification(),
+                _ => throw new Exception("Unknown rel notification type: " + type)
+            };
 
-                        var thread = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
-                        description = $"*[{thread.ToRawText()}]({(nf.Item.Uri ?? string.Empty).ToRawText()})*";
-                        break;
-                    }
-                case "run":
-                    {
-                        var match = RunPattern.Match(nf.Text);
-                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
-                        var gameCategory = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
-                        game = gameCategory.Split(" - ")[0];
-                        var category = gameCategory.Split(" - ")[1];
-
-                        var time = match.Groups[3].Success ? match.Groups[3].Value : string.Empty;
-                        var type = (nf.Text ?? string.Empty).Contains("beat the WR in") ? "World Record" : "Personal Best";
-                        description = $"**New {type}**\n{category.ToRawText()} in {time.ToRawText()}";
-
-                        if (author.Contains(" "))
-                            description += $" by {author}";
-                        break;
-                    }
-                case "game":
-                    break;
-                case "guide":
-                    break;
-                case "thread":
-                    {
-                        var match = ThreadPattern.Match(nf.Text);
-                        game = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
-
-                        var title = match.Groups[3].Success ? match.Groups[3].Value : string.Empty;
-                        description = $"*[{title.ToRawText()}]({(nf.Item.Uri ?? string.Empty).ToRawText()})*";
-                        break;
-                    }
-                case "moderator":
-                    {
-                        var match = ModeratorPattern.Match(nf.Text);
-                        author = match.Groups[1].Success ? match.Groups[1].Value : string.Empty;
-                        game = match.Groups[2].Success ? match.Groups[2].Value : string.Empty;
-                        description = $"{author.ToRawText()} is now a moderator! :heart:";
-                        break;
-                    }
-                case "resource":
-                    break;
-            }
+            var (author, game, description) = ResolveNotificationType(nf.Item?.Rel).Get(nf);
 
             var thumbnail = default(string);
             if (!string.IsNullOrEmpty(game))

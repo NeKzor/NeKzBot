@@ -9,7 +9,8 @@ using LiteDB;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NeKzBot.Services;
-using NeKzBot.Services.Notifications;
+using NeKzBot.Services.Notifications.Auditor;
+using NeKzBot.Services.Notifications.Speedrun;
 
 namespace NeKzBot
 {
@@ -41,7 +42,7 @@ namespace NeKzBot
             var sds = services.GetRequiredService<SourceDemoService>();
             var ims = services.GetRequiredService<ImageService>();
             var pcs = services.GetRequiredService<Portal2CampaignService>();
-            var aus = services.GetRequiredService<AuditNotificationService>();
+            var aus = services.GetRequiredService<AuditorNotificationService>();
 
             await log.Initialize();
             await chs.Initialize();
@@ -99,7 +100,7 @@ namespace NeKzBot
                 .AddSingleton<SourceDemoService>()
                 .AddSingleton<ImageService>()
                 .AddSingleton<Portal2CampaignService>()
-                .AddSingleton<AuditNotificationService>()
+                .AddSingleton<AuditorNotificationService>()
                 .BuildServiceProvider();
         }
     }
