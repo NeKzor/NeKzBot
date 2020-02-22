@@ -1,2 +1,7 @@
 #!/bin/bash
-dotnet run -p src -c Release --no-build
+
+if [ "$1" = "DEBUG" ]; then
+    dotnet run -p src -c Debug --no-build
+else
+    dotnet run -p src -c Release --no-build
+fi
