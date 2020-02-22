@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
@@ -59,13 +60,13 @@ namespace NeKzBot
             await _client.LoginAsync(TokenType.Bot, _config["discord_token"]);
             await _client.StartAsync();
 
-            await Task.WhenAll
+            _ = Task.WhenAll
             (
                 srs.StartAsync(),
                 aus.StartAsync()
             );
 
-            await Task.Delay(-1);
+            await Task.Delay(Timeout.Infinite);
 #endif
         }
 
