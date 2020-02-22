@@ -118,7 +118,9 @@ namespace NeKzBot.Modules.Public
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
                 .WithTitle("NeKzBot Modules")
                 .WithUrl("https://nekzor.github.io/NeKzBot#modules")
-                .WithDescription((list != string.Empty) ? list : "Modules are not loaded.");
+                .WithDescription((list != string.Empty)
+                    ? list + "\nVisit [nekzor.github.io/NeKzBot](https://nekzor.github.io/NeKzBot#modules) for available commands."
+                    : "Modules are not loaded.");
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
