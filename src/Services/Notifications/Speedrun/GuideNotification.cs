@@ -5,10 +5,11 @@ namespace NeKzBot.Services.Notifications.Speedrun
 {
     internal sealed class GuideNotification : SpeedrunNotificationType
     {
-        public GuideNotification()
+        public GuideNotification(bool notifyUpdated)
             : base(user: 0, game: 2, data: 4)
         {
-            Add(user: -1, game: 3, data: 1, keyword: "has been updated", key: 4);
+            if (notifyUpdated)
+                Add(user: -1, game: 3, data: 1, keyword: "has been updated", key: 4);
         }
 
         public override string Description(SpeedrunNotification? nf)
@@ -17,8 +18,8 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
             return _meta.Keyword switch
             {
-                "has been updated" => "**New Guide Added**\n" + link,
-                _                  => "**Guide Updated**\n" + link,
+                "has been updated" => "**Guide Updated**\n" + link,
+                _                  => "**Guide Added**\n" + link,
             };
         }
     }

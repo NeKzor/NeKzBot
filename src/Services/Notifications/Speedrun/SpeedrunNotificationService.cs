@@ -151,7 +151,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
             await LogWarning("Task ended");
         }
 
-        private async Task<Embed> BuildEmbedAsync(object notification)
+        private async Task<Embed?> BuildEmbedAsync(object notification)
         {
             if (_client is null)
                 throw new System.Exception("Service not initialized");
@@ -161,16 +161,21 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
             static SpeedrunNotificationType ResolveNotificationType(string? type) => type switch
             {
-                "thread" => new ThreadNotification(),
-                "post" => new PostNotification(),
-                "guide" => new GuideNotification(),
-                "resource" => new ResourceNotification(),
-                "run" => new RunNotification(),
+                "thread"    => new ThreadNotification(),
+                "post"      => new PostNotification(),
+                "guide"     => new GuideNotification(notifyUpdated: false),
+                "resource"  => new ResourceNotification(),
+                "run"       => new RunNotification(),
                 "moderator" => new ModeratorNotification(),
-                _ => throw new Exception("Unknown rel notification type: " + type)
+                _           => throw new Exception("Unknown rel notification type: " + type)
             };
 
-            var (author, game, description) = ResolveNotificationType(nf.Item?.Rel).Get(nf);
+            var notificationType = ResolveNotificationType(nf.Item?.Rel);
+
+            if (notificationType is ThreadNotification)
+                return default(Embed?);
+
+            var (author, game, description) = notificationType.Get(nf);
 
             var thumbnail = default(string);
             if (!string.IsNullOrEmpty(game))

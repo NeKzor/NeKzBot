@@ -22,7 +22,7 @@ namespace NeKzBot.Services.Notifications
         protected string? _globalId { get; set; }
         protected bool _isRunning { get; set; }
         protected CancellationTokenSource? _cancellation { get; set; }
-        protected Func<object, Task<Embed>>? _embedBuilder { get; set; }
+        protected Func<object, Task<Embed?>>? _embedBuilder { get; set; }
 
         protected readonly IConfiguration _config;
         protected readonly LiteDatabase _dataBase;
@@ -82,6 +82,8 @@ namespace NeKzBot.Services.Notifications
             foreach (var nf in notifications)
             {
                 var embed = await _embedBuilder(nf);
+                if (embed is null) continue;
+
                 foreach (var sub in subscribers)
                 {
                     if (failed.Contains(sub)) continue;
