@@ -126,6 +126,9 @@ namespace NeKzBot.Services.Notifications.Speedrun
                         if (sending.Count >= 11)
                             await LogWarning("Webhook rate limit exceeded: " + sending.Count);
 
+                        // Send oldest first
+                        sending.Reverse();
+
                         await SendAsync(sending);
                         //return;
 

@@ -75,9 +75,6 @@ namespace NeKzBot.Services.Notifications
 
             await LogInfo("Sending hooks");
 
-            // Send oldest first
-            notifications.Reverse();
-
             var failed = new List<SubscriptionData>();
             foreach (var nf in notifications)
             {
