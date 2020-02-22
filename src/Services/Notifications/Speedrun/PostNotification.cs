@@ -12,7 +12,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
         public override string Description(SpeedrunNotification? nf)
         {
-            return $"**Form Post**\n*[{Data?.ToRawText()}]({(nf?.Item?.Uri ?? string.Empty).ToRawText()})*";
+            return $"**New Forum Post**\n*[{Data?.ToRawText()}]({(nf?.Item?.Uri ?? string.Empty).ToRawText()})*";
         }
     }
 }
