@@ -14,6 +14,8 @@ namespace NeKzBot.Services.Notifications
     public abstract class NotificationService : INotificationService
     {
         public event Func<string, Exception?, Task>? Log;
+        public bool IsRunning => _isRunning;
+        public string? Name =>  _globalId;
 
         protected string? _userName { get; set; }
         protected string? _userAvatar { get; set; }
@@ -52,11 +54,11 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual Task StopAsync()
         {
-            if (!_isRunning)
+            if (_isRunning)
             {
+                _isRunning = false;
                 _cancellation!.Cancel();
                 _cancellation.Dispose();
-                _isRunning = false;
             }
             return Task.CompletedTask;
         }

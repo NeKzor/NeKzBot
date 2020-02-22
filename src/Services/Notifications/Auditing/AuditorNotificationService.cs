@@ -50,13 +50,12 @@ namespace NeKzBot.Services.Notifications.Auditor
 
         public override async Task StartAsync()
         {
+            await base.StartAsync();
+            await Task.Delay(3000, _cancellation!.Token);
+
         task_start:
             try
             {
-                await base.StartAsync();
-
-                await Task.Delay(3000, _cancellation!.Token);
-
                 while (_isRunning)
                 {
                     var watch = Stopwatch.StartNew();
@@ -69,15 +68,16 @@ namespace NeKzBot.Services.Notifications.Auditor
                         .FindAll()
                         .ToList();
 
-                    //await LogInfo($"{subscribers.Count} subs found");
+                    _ = LogInfo($"{subscribers.Count} subs found");
+
                     if (subscribers.Count == 0) goto retry;
 
-                    async Task DeleteSub(SubscriptionData sub, string message)
+                    void DeleteSub(SubscriptionData sub, string message)
                     {
                         if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
-                            await LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
+                            _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
                         else
-                            await LogWarning($"{message} for {sub.GuildId}. Ended service");
+                            _ = LogWarning($"{message} for {sub.GuildId}. Ended service");
                     }
 
                     foreach (var sub in subscribers)
@@ -85,7 +85,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                         var guild = _client.GetGuild(sub.GuildId);
                         if (guild is null)
                         {
-                            await DeleteSub(sub, "Unable to find guild");
+                            DeleteSub(sub, "Unable to find guild");
                             continue;
                         }
 
@@ -95,12 +95,13 @@ namespace NeKzBot.Services.Notifications.Auditor
                             return (user != null) ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator) : false;
                         });
 
-                        //_ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
+                        _ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
 
                         var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
                         if (auditor is null)
                         {
-                            await LogInfo($"Inserting new audits for guild {sub.GuildId}!");
+                            _ = LogInfo($"Inserting new audits for guild {sub.GuildId}!");
+
                             auditDb.Insert(new AuditData()
                             {
                                 GuildId = sub.GuildId,
@@ -110,11 +111,12 @@ namespace NeKzBot.Services.Notifications.Auditor
                         }
 
                         var sending = audits.Where(audit => !auditor.AuditIds.Contains(audit.Id)).ToList();
-                        //_ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
+
+                        _ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
 
                         if (sending.Count > 0)
                         {
-                            await LogInfo($"Found {sending.Count} new notifications to send");
+                            _ = LogInfo($"Found {sending.Count} new notifications to send");
 
                             if (sending.Count > 25)
                                 throw new Exception("Webhook rate limit exceeded!");
@@ -142,7 +144,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                             catch (InvalidOperationException ex)
                                 when (ex.Message.StartsWith("Could not find a webhook"))
                             {
-                                await DeleteSub(sub, "Unable to send hook");
+                                DeleteSub(sub, "Unable to send hook");
                             }
                         }
 
@@ -155,20 +157,25 @@ namespace NeKzBot.Services.Notifications.Auditor
                 retry:
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
                     if (delay < 0)
-                        await LogWarning($"Task took too long: {delay}ms");
+                        _ = LogWarning($"Task took too long: {delay}ms");
 
                     await Task.Delay(delay, _cancellation.Token);
                 }
             }
             catch (Exception ex)
             {
-                await LogException(ex);
-                await StopAsync();
-                await Task.Delay((int)_retryTime);
-                goto task_start;
+                _ = LogException(ex);
+
+                if (!(ex is TaskCanceledException))
+                {
+                    await StopAsync();
+                    await base.StartAsync();
+                    await Task.Delay((int)_retryTime);
+                    goto task_start;
+                }
             }
 
-            await LogWarning("Task ended");
+            _ = LogWarning("Task ended");
         }
 
         public override Task SendAsync(IEnumerable<object> notifications)

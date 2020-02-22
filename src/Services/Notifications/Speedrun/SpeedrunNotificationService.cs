@@ -57,14 +57,14 @@ namespace NeKzBot.Services.Notifications.Speedrun
             if (_client is null)
                 throw new Exception("Service not initialized");
 
-            task_start:
+            await base.StartAsync();
+
+        task_start:
             try
             {
-                await base.StartAsync();
-
                 while (_isRunning)
                 {
-                    //await LogInfo("Checking...");
+                    _ = LogInfo("Checking...");
 
                     var watch = Stopwatch.StartNew();
 
@@ -75,7 +75,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
                     if (cache is null)
                     {
-                        await LogWarning("Task cache not found!");
+                        _ = LogWarning("Task cache not found!");
                         goto retry;
                     }
 
@@ -91,7 +91,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
                     if (!notifications.Any())
                     {
-                        await LogWarning("Fetch failed");
+                        _ = LogWarning("Fetch failed");
                         goto retry;
                     }
 
@@ -117,20 +117,17 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
                     //sending.AddRange(notifications.Take(5));
 
-                    //sending = notifications.Take(11).ToList();
-
                     if (sending.Count > 0)
                     {
-                        await LogInfo($"Found {sending.Count} new notifications to send");
+                        _ = LogInfo($"Found {sending.Count} new notifications to send");
 
                         if (sending.Count >= 11)
-                            await LogWarning("Webhook rate limit exceeded: " + sending.Count);
+                            _ = LogWarning("Webhook rate limit exceeded: " + sending.Count);
 
                         // Send oldest first
                         sending.Reverse();
 
                         await SendAsync(sending);
-                        //return;
 
                         UpdateCache();
                     }
@@ -138,20 +135,25 @@ namespace NeKzBot.Services.Notifications.Speedrun
                 retry:
                     var delay = (int)(_sleepTime - watch.ElapsedMilliseconds);
                     if (delay < 0)
-                        await LogWarning($"Task took too long: {delay}ms");
+                        _ = LogWarning($"Task took too long: {delay}ms");
 
                     await Task.Delay(delay, _cancellation!.Token);
                 }
             }
             catch (Exception ex)
             {
-                await LogException(ex);
-                await StopAsync();
-                await Task.Delay((int)_retryTime);
-                goto task_start;
+                _ = LogException(ex);
+
+                if (!(ex is TaskCanceledException))
+                {
+                    await StopAsync();
+                    await base.StartAsync();
+                    await Task.Delay((int)_retryTime);
+                    goto task_start;
+                }
             }
 
-            await LogWarning("Task ended");
+            _ = LogWarning("Task ended");
         }
 
         private async Task<Embed?> BuildEmbedAsync(object notification)
