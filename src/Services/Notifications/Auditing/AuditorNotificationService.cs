@@ -82,6 +82,9 @@ namespace NeKzBot.Services.Notifications.Auditor
 
                     foreach (var sub in subscribers)
                     {
+                        if (_client.ConnectionState != Discord.ConnectionState.Connected)
+                            throw new Exception("Bot is not connected to Discord at the moment");
+
                         var guild = _client.GetGuild(sub.GuildId);
                         if (guild is null)
                         {
@@ -95,7 +98,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                             return (user != null) ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator) : false;
                         });
 
-                        _ = LogInfo($"count: {audits.Count()} guild: {sub.GuildId}");
+                        _ = LogInfo($"count: {audits.Count()}, guild: {sub.GuildId}");
 
                         var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
                         if (auditor is null)
@@ -151,7 +154,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                         auditor.AuditIds = auditor.AuditIds.Concat(audits.Select(x => x.Id));
 
                         if (!auditDb.Update(auditor))
-                            throw new Exception("Failed to update cache!");
+                            _ = LogWarning("Failed to update cache");
                     }
 
                 retry:
