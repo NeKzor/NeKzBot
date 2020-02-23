@@ -3,51 +3,73 @@
 
 **NeKzBot** is a bot for [Discord](https://discordapp.com) which is focused on providing unique services.
 
-### Overview
+## Overview
 
 * [Services](#services)
 * [Permissions](#permissions)
 * [Data](#data)
 * [Modules](#modules)
+* [Installation](#installation)
 * [Credits](#credits)
 * [Libraries](#libraries)
 
-### Services
+## Services
 
-* Notifications
-  * ~~[board.iverb.me](https://board.iverb.me)~~
-  * [speedrun.com](https://speedrun.com)
-  * Audit Logs
-* Source Engine
-  * [Demo Parser](https://github.com/NeKzor/SourceDemoParser.Net)
-  * [Cvar Dictionary](https://github.com/NeKzor/SourceAutoRecord)
+### speedrun.com Notifications
 
-### Permissions
+![srcom.png](doc/srcom.png)
 
-#### Required
+Powered by [speedrun.com](https://speedrun.com)'s shitty API.
 
-* VIEW_CHANNEL
-* SEND_MESSAGES
-* ADD_REACTIONS
-* ATTACH_FILES
+### Audit Log Notifications
 
-#### Optional
+![auditor.png](doc/auditor.png)
 
-* MANAGE_WEBHOOKS
+Powered by Discord.Net and some of [my contributions](https://github.com/discord-net/Discord.Net/pull/1373).
 
-### Data
+### Source Engine Demo Parser
 
-NeKzBot does not log any potential sensitive user data. However, these informations will be saved in the bot's database:
+![demo.gif](doc/demo.gif)
+
+Powered by [SourceDemoParser.Net](https://github.com/NeKzor/SourceDemoParser.Net).
+
+### Source Engine Cvar Dictionary
+
+![cvars.gif](doc/cvars.gif)
+
+Powered by [SourceAutoRecord](https://github.com/NeKzor/SourceAutoRecord)'s dumping feature and [cvars API](https://github.com/NeKzor/cvars).
+
+### board.iverb.me Data
+
+![iverb.gif](doc/iverb.gif)
+
+Powered by [Portal2Boards.Net](https://github.com/NeKzor/Portal2Boards.Net).
+
+## Permissions
+
+### Required
+
+* View Channels
+* Send Messages
+* Embed Links
+* Attach Files
+* Read Message History
+
+### Optional
+
+* Manage Webhooks: service subscription
+* View Audit Log: only required for the auditor service
+
+## Data
+
+NeKzBot does not log any sensitive user data. However, this information will be saved in the bot's database:
 
 | Data | Module | Why |
 | --- | --- | --- |
-| .dem files of users | [SourceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/Services/SourceDemoService.cs#L97) | Allows users to analyze their latest uploaded Source Engine recording |
-| Webhook data of channels | [ServiceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/Services/Notifications/NotificationService.cs#L158) | Allows to send notification updates |
+| .dem files of users | [SourceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/Services/SourceDemoService.cs) | Allows users to analyze their latest uploaded Source Engine recording. |
+| Webhook data of channels | [ServiceModule](https://github.com/NeKzor/NeKzBot/blob/master/src/Services/Notifications/NotificationService.cs) | Allows to send notification updates. |
 
-Demo files usually have a life time of 21+ days. Webhook data will be deleted automatically if it doesn't
-exist anymore e.g.: somebody with valid permissions deleted it, channel or guild got deleted.
-
-### Modules
+## Modules
 
 | Command | Alias | Module |
 | --- | --- | --- |
@@ -110,12 +132,25 @@ exist anymore e.g.: somebody with valid permissions deleted it, channel or guild
 | `.created (ascending:Boolean=True)` | - | StatsModule |
 | `.score (ascending:Boolean=True)` | - | StatsModule |
 
-### Credits
+## Installation
+
+Requires dotnet SDK 3.0.103.
+
+* `git clone --recurse-submodules https://github.com/NeKzor/NeKzBot`
+* `cd NeKzBot`
+* `./install`
+* Configure `private/credentials.json`
+  * Discord app bot token
+  * speedrun.com API token
+* `./build`
+* `./run`
+
+## Credits
 
 * [Discord](https://discordapp.com/developers)
-* [Discord.Net](https://github.com/RogueException/Discord.Net)
+* [Discord.Net](https://github.com/discord-net/Discord.Net)
 
-### Libraries
+## Libraries
 
 * [Discord.Addons.Interactive](https://github.com/foxbot/Discord.Addons.Interactive)
 * [Discord.Addons.Preconditions](https://github.com/Joe4evr/Discord.Addons/tree/master/src/Discord.Addons.Preconditions)
