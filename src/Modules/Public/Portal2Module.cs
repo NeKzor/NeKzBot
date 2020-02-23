@@ -20,15 +20,13 @@ namespace NeKzBot.Modules.Public
         [Group("portal2boards"), Alias("p2b", "p2")]
         public class Portal2Boards : InteractiveBase<SocketCommandContext>
         {
-            private readonly IConfiguration _config;
             private readonly Portal2BoardsClient _client;
             private readonly Portal2CampaignService _portal2;
 
             public Portal2Boards(IConfiguration config, Portal2CampaignService portal2)
             {
-                _config = config;
                 _portal2 = portal2;
-                _client = new Portal2BoardsClient(_config["user_agent"]);
+                _client = new Portal2BoardsClient(config["user_agent"]);
             }
 
             [Ratelimit(6, 1, Measure.Minutes)]

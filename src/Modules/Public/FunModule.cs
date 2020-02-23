@@ -11,7 +11,7 @@ namespace NeKzBot.Modules.Public
 {
     public class FunModule : InteractiveBase<SocketCommandContext>
     {
-        private ImageService _imageService;
+        private readonly ImageService _imageService;
 
         public FunModule(ImageService ImageService)
         {

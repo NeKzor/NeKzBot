@@ -12,8 +12,8 @@ namespace NeKzBot.Modules.Public
     [Group("tasks"), Alias("bot")]
     public class OwnerModule : InteractiveBase<SocketCommandContext>
     {
-        private AuditorNotificationService _auditor;
-        private SpeedrunNotificationService _speedrun;
+        private readonly AuditorNotificationService _auditor;
+        private readonly SpeedrunNotificationService _speedrun;
 
         protected OwnerModule(AuditorNotificationService auditor, SpeedrunNotificationService speedrun)
         {

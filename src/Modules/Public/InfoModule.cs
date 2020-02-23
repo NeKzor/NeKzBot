@@ -12,7 +12,12 @@ namespace NeKzBot.Modules.Public
 {
     public class InfoModule : InteractiveBase<SocketCommandContext>
     {
-        public CommandService? Commands { get; set; }
+        private readonly CommandService _commands;
+
+        public InfoModule(CommandService commands)
+        {
+            _commands = commands;
+        }
 
         [Ratelimit(3, 1, Measure.Minutes)]
         [Command("info"), Alias("?")]
@@ -85,7 +90,7 @@ namespace NeKzBot.Modules.Public
         {
             var invite = "https://discordapp.com/oauth2/authorize?scope=bot" +
                 $"&client_id={Context.Client.CurrentUser.Id}" +
-                "&permissions=536906816";
+                "&permissions=536988864";
 
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
@@ -97,7 +102,7 @@ namespace NeKzBot.Modules.Public
         [Command("modules"), Alias("help")]
         public async Task Modules()
         {
-            var modules = Commands!.Modules
+            var modules = _commands.Modules
                 .Where(m => !m.IsSubmodule)
                 .OrderBy(m => m.Name);
 

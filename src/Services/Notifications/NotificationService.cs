@@ -54,10 +54,10 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual Task StopAsync()
         {
-            if (_isRunning)
+            if (_isRunning && _cancellation is {})
             {
                 _isRunning = false;
-                _cancellation!.Cancel();
+                _cancellation.Cancel();
                 _cancellation.Dispose();
             }
             return Task.CompletedTask;
