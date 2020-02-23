@@ -86,7 +86,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
                         cache.Notifications = notifications.Take(11);
 
                         if (!db.Update(cache))
-                            throw new Exception("Failed to update cache!");
+                            _ = LogWarning("Failed to update cache");
                     }
 
                     if (!notifications.Any())
