@@ -102,7 +102,9 @@ namespace NeKzBot.Services
             }
 
             db.Upsert(data);
-            return _cache.TryRemove(userId, out _) && _cache.TryAdd(userId, data);
+
+            _cache.TryRemove(userId, out _);
+            return _cache.TryAdd(userId, data);
         }
 
         // From cache
