@@ -31,7 +31,7 @@ namespace NeKzBot.Modules.Public
                 .AddField("Latency", $"{Context.Client.Latency} ms", true)
                 .AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
                 .AddField("Threads", $"{Process.GetCurrentProcess().Threads.Count}", true)
-                .AddField("Uptime", (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"hh\:mm\:ss"), true)
+                .AddField("Uptime", $"{(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalDays} days", true)
                 .AddField($"Local Time (UTC+{DateTimeOffset.Now.Offset.Hours})", DateTime.Now.ToString("HH:mm:ss"), true)
                 .AddField("Location", "Limburg, Germany", true)
                 .AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
