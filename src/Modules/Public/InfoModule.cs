@@ -23,6 +23,8 @@ namespace NeKzBot.Modules.Public
         [Command("info"), Alias("?")]
         public async Task Info()
         {
+            var uptime = (int)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalDays;
+
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
                 .WithTitle("NeKzBot Info")
@@ -31,7 +33,7 @@ namespace NeKzBot.Modules.Public
                 .AddField("Latency", $"{Context.Client.Latency} ms", true)
                 .AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
                 .AddField("Threads", $"{Process.GetCurrentProcess().Threads.Count}", true)
-                .AddField("Uptime", $"{(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalDays} days", true)
+                .AddField("Uptime", $"{uptime} day{(uptime == 1 ? string.Empty : "s")}", true)
                 .AddField($"Local Time (UTC+{DateTimeOffset.Now.Offset.Hours})", DateTime.Now.ToString("HH:mm:ss"), true)
                 .AddField("Location", "Limburg, Germany", true)
                 .AddField("Library", $"Discord.Net {DiscordConfig.Version}", true)
