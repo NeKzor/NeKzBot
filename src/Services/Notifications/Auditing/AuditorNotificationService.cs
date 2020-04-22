@@ -336,8 +336,15 @@ namespace NeKzBot.Services.Notifications.Auditor
                     AddPropChange(a, "Nickname");
                     break;
                 case MemberRoleAuditLogData a:
-                    changes.Add($"User: <@{a.Target.Id}>");
-                    changes.Add($"Roles: {string.Join(",", a.Roles.Where(x => x.Added).Select(x => x.Name))}");
+                    {
+                        changes.Add($"User: <@{a.Target.Id}>");
+                        var added = a.Roles.Where(x => x.Added);
+                        var removed = a.Roles.Where(x => !x.Added);
+                        if (added.Any())
+                            changes.Add($"Added: {string.Join(",", added.Select(x => x.Name))}");
+                        if (removed.Any())
+                            changes.Add($"Removed: {string.Join(",", removed.Select(x => x.Name))}");
+                    }
                     break;
                 case RoleCreateAuditLogData a:
                     changes.Add($"Name: {a.Properties.Name}");
