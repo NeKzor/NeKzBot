@@ -44,6 +44,7 @@ namespace NeKzBot
             var ims = services.GetRequiredService<ImageService>();
             var pcs = services.GetRequiredService<Portal2CampaignService>();
             var aus = services.GetRequiredService<AuditorNotificationService>();
+            var pnb = services.GetRequiredService<PinBoardService>();
 
             await log.Initialize();
             await chs.Initialize();
@@ -53,6 +54,7 @@ namespace NeKzBot
             await ims.Initialize();
             await pcs.Initialize();
             await aus.Initialize();
+            await pnb.Initialize();
 
 #if DB_CLEANUP
             await srs.CleanupAsync();
@@ -102,6 +104,7 @@ namespace NeKzBot
                 .AddSingleton<ImageService>()
                 .AddSingleton<Portal2CampaignService>()
                 .AddSingleton<AuditorNotificationService>()
+                .AddSingleton<PinBoardService>()
                 .BuildServiceProvider();
         }
     }

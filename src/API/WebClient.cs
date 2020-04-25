@@ -41,6 +41,13 @@ namespace NeKzBot.API
                 ? (true, await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false))
                 : (false, default);
         }
+        public async Task<(bool, System.IO.Stream?)> GetStreamAsync(string url)
+        {
+            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
+            return (response.IsSuccessStatusCode)
+                ? (true, await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                : (false, default);
+        }
         public async Task<(bool, System.Net.HttpStatusCode)> Ping(string url)
         {
             var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);

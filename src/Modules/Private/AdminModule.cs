@@ -6,11 +6,20 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
+using NeKzBot.Extensions;
+using NeKzBot.Services;
 
-namespace NeKzBot.Modules.Public
+namespace NeKzBot.Modules.Private
 {
     public class AdminModule : InteractiveBase<SocketCommandContext>
     {
+        private PinBoardService _pinBoard;
+
+        public AdminModule(PinBoardService pinBoard)
+        {
+            _pinBoard = pinBoard;
+        }
+
         [Ratelimit(3, 1, Measure.Minutes)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageGuild)]
@@ -100,6 +109,59 @@ namespace NeKzBot.Modules.Public
                 },
                 false
             );
+        }
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireBotPermission(GuildPermission.ManageWebhooks)]
+        [RequireContext(ContextType.Guild)]
+        [Command("pin", RunMode = RunMode.Async)]
+        public async Task<RuntimeResult> Pin(ulong messageId)
+        {
+            var message = await Context.Channel.GetMessageAsync(messageId);
+            if (message is null)
+            {
+                await ReplyAsync("Unable to find message.");
+                return Ok();
+            }
+
+            var board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null)
+            {
+                var reply = await ReplyAsync("A pin board for this server does not exist yet. Do you want me to create one?");
+
+                var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
+                if (response is {})
+                {
+                    switch (response.Content.Trim().ToLower())
+                    {
+                        case "y":
+                        case "ya":
+                        case "ye":
+                        case "yes":
+                        case "yea":
+                        case "yeah":
+                        case "yep":
+                            var channel = Context.Channel as ITextChannel;
+                            if (channel is {})
+                            {
+                                var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
+                                if (_pinBoard.Create(hook))
+                                    goto pin;
+                            }
+                            break;
+                        default:
+                            await reply.ModifyAsync(r => r.Content = "Interpreted answer as **NO**");
+                            break;
+                    }
+                }
+
+                return Ok();
+            }
+
+        pin:
+            board = _pinBoard.Get(Context.Guild.Id);
+            await _pinBoard.Send(message, board);
+
+            return Ok();
         }
     }
 }

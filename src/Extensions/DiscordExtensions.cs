@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
-namespace NeKzBot.Modules.Public
+namespace NeKzBot.Extensions
 {
     public static class DiscordExtensions
     {

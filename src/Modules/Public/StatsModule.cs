@@ -7,6 +7,7 @@ using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
+using NeKzBot.Extensions;
 
 namespace NeKzBot.Modules.Public
 {

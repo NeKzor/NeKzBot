@@ -2,11 +2,12 @@
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using NeKzBot.Extensions;
 using NeKzBot.Services.Notifications;
 using NeKzBot.Services.Notifications.Auditor;
 using NeKzBot.Services.Notifications.Speedrun;
 
-namespace NeKzBot.Modules.Public
+namespace NeKzBot.Modules.Private
 {
     [RequireOwner]
     [Group("tasks"), Alias("bot")]
