@@ -144,8 +144,8 @@ namespace NeKzBot.Modules.Private
                             if (channel is {})
                             {
                                 var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
-                                if (_pinBoard.Create(hook))
-                                    goto pin;
+                                _pinBoard.Create(hook);
+                                goto pin;
                             }
                             break;
                         default:
@@ -161,6 +161,76 @@ namespace NeKzBot.Modules.Private
             board = _pinBoard.Get(Context.Guild.Id);
             await _pinBoard.Send(message, board);
 
+            return Ok();
+        }
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [RequireBotPermission(GuildPermission.ManageWebhooks)]
+        [RequireContext(ContextType.Guild)]
+        [Command("pin.set", RunMode = RunMode.Async)]
+        public async Task<RuntimeResult> PinSet()
+        {
+            var board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null)
+            {
+                var createReply = await ReplyAsync("A pin board for this server does not exist yet. Do you want me to create one?");
+
+                var createResponse = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
+                if (createResponse is {})
+                {
+                    switch (createResponse.Content.Trim().ToLower())
+                    {
+                        case "y":
+                        case "ya":
+                        case "ye":
+                        case "yes":
+                        case "yea":
+                        case "yeah":
+                        case "yep":
+                            var channel = Context.Channel as ITextChannel;
+                            if (channel is {})
+                            {
+                                var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
+                                _pinBoard.Create(hook);
+                                goto setting;
+                            }
+                            break;
+                        default:
+                            await createReply.ModifyAsync(r => r.Content = "Interpreted answer as **NO**");
+                            break;
+                    }
+                }
+                return Ok();
+            }
+
+        setting:
+            board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null) return Ok();
+
+            var reply = await ReplyAsync("Please enter the number of minimum reactions that should be required:");
+            var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
+
+            if (response is {}
+                && uint.TryParse(response.Content.Trim(), out var minimumReactions)
+                && minimumReactions != 0)
+            {
+                reply = await ReplyAsync("Please enter the emote that should be used for pinning messages:");
+                response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
+
+                if (response is {} && response.Content.Trim() != string.Empty)
+                {
+                    board.MinimumReactions = minimumReactions;
+                    board.PinEmoji = response.Content.Trim();
+                    _pinBoard.Update(board);
+
+                    await ReplyAsync("Messages will now be automatically pinned if they reach"
+                        + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
+                        + $" with the {board.PinEmoji} emoji.");
+
+                    return Ok();
+                }
+            }
+
+            await reply.ModifyAsync(r => r.Content = "Failed to interpret answer.");
             return Ok();
         }
     }
