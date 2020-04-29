@@ -18,6 +18,7 @@ namespace NeKzBot.Services
         private readonly SpeedrunNotificationService _speedrun;
         private readonly SourceDemoService _demo;
         private readonly AuditorNotificationService _auditor;
+        private readonly PinBoardService _pinBoard;
         private readonly ILoggerFactory _loggerFactory;
 
         private ILogger? _discordLogger;
@@ -31,6 +32,7 @@ namespace NeKzBot.Services
             SpeedrunNotificationService speedrun,
             SourceDemoService demo,
             AuditorNotificationService auditor,
+            PinBoardService pinBoard,
             ILoggerFactory loggerFactory)
         {
             _client = client;
@@ -39,6 +41,7 @@ namespace NeKzBot.Services
             _speedrun = speedrun;
             _demo = demo;
             _auditor = auditor;
+            _pinBoard = pinBoard;
             _loggerFactory = loggerFactory.AddConsole();
         }
 
@@ -53,6 +56,7 @@ namespace NeKzBot.Services
             _speedrun.Log += LogInternal;
             _demo.Log += LogInternal;
             _auditor.Log += LogInternal;
+            _pinBoard.Log += LogInternal;
 
             return Task.CompletedTask;
         }
