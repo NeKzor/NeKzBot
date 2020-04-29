@@ -77,7 +77,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                         if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
                             _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
                         else
-                            _ = LogWarning($"{message} for {sub.GuildId}. Ended service");
+                            _ = LogWarning($"{message}. Ended subscription service for {sub.GuildId}.");
                     }
 
                     foreach (var sub in subscribers)
@@ -95,7 +95,9 @@ namespace NeKzBot.Services.Notifications.Auditor
                         var audits = (await (guild as IGuild).GetAuditLogsAsync(11)).Where(audit =>
                         {
                             var user = guild.GetUser(audit.User.Id);
-                            return (user != null) ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator) : false;
+                            return (user != null)
+                                ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator)
+                                : false;
                         });
 
                         _ = LogInfo($"count: {audits.Count()}, guild: {sub.GuildId}");
