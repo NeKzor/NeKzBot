@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -15,6 +16,9 @@ namespace NeKzBot.Services
     public class PinBoardService
     {
         public event Func<string, Exception?, Task>? Log;
+
+        public readonly string BoardCollection = nameof(PinBoardService);
+        public readonly string MessageCollection = nameof(PinBoardService) + "_messages";
 
         private WebClient? _client;
 
@@ -33,13 +37,16 @@ namespace NeKzBot.Services
         {
             _discord.ReactionAdded += ReactionAdded;
             _client = new WebClient(_config["user_agent"]);
+
+            //_dataBase.DropCollection(BoardCollection);
+            //_dataBase.DropCollection(MessageCollection);
             return Task.CompletedTask;
         }
 
         private async Task ReactionAdded(
             Cacheable<IUserMessage, ulong> cache,
             ISocketMessageChannel channel,
-            SocketReaction reaction)
+            SocketReaction _reaction)
         {
             var guildChannel = channel as SocketGuildChannel;
             if (guildChannel is null) return;
@@ -48,71 +55,83 @@ namespace NeKzBot.Services
             if (board is null || board.PinEmoji is null) return;
 
             var message = await cache.GetOrDownloadAsync();
+            if (message.CreatedAt < board.CreatedAt) return;
+
             var pin = GetMessage(message.Id);
             if (pin is {}) return;
 
-            var reactions = message.Reactions.FirstOrDefault(x => x.Key.Name == board.PinEmoji);
-            if (reactions.Value.ReactionCount >= board.MinimumReactions)
+            var reaction = message.Reactions.FirstOrDefault(x => x.Key.Name == board.PinEmoji);
+            if (reaction.Value.ReactionCount >= board.MinimumReactions)
             {
                 Pin(message, guildChannel);
                 await Send(message, board);
             }
         }
 
-        public PinBoardData Get(ulong guildId)
+        public PinBoardData? Get(ulong guildId)
         {
             return _dataBase
-                .GetCollection<PinBoardData>(nameof(PinBoardService))
-                .FindOne(data => data.GuildId == guildId);
+                .GetCollection<PinBoardData>(BoardCollection)
+                .FindOne(board => board.GuildId == guildId);
+        }
+
+        public bool Delete(ulong guildId)
+        {
+            return _dataBase
+                .GetCollection<PinBoardData>(BoardCollection)
+                .Delete(board => board.GuildId == guildId) == 1;
         }
 
         public PinMessageData GetMessage(ulong messageId)
         {
             return _dataBase
-                .GetCollection<PinMessageData>(nameof(PinBoardService))
-                .FindOne(data => data.Id == messageId);
+                .GetCollection<PinMessageData>(MessageCollection)
+                .FindOne(message =>  message.MessageId == messageId);
         }
 
-        public void Create(IWebhook hook)
+        public PinBoardData? Create(IWebhook hook)
         {
-            if (hook is null) return;
+            if (hook is null) return default;
 
-            var data = new PinBoardData()
+            var board = new PinBoardData()
             {
                 GuildId = hook.GuildId ?? 0ul,
                 WebhookId = hook.Id,
-                WebhookToken = hook.Token
+                WebhookToken = hook.Token,
+                CreatedAt = hook.CreatedAt
             };
 
             _dataBase
-                .GetCollection<PinBoardData>(nameof(PinBoardService))
-                .Upsert(data);
+                .GetCollection<PinBoardData>(BoardCollection)
+                .Insert(board);
+
+            return board;
         }
 
-        public void Update(PinBoardData data)
+        public void Update(PinBoardData board)
         {
             _dataBase
-                .GetCollection<PinBoardData>(nameof(PinBoardService))
-                .Upsert(data);
+                .GetCollection<PinBoardData>(BoardCollection)
+                .Upsert(board);
         }
 
         private void Pin(IMessage message, SocketGuildChannel source)
         {
             if (message is null) return;
 
-            var data = new PinMessageData()
+            var pin = new PinMessageData()
             {
-                Id = message.Id,
+                MessageId = message.Id,
                 ChannelId = source.Id,
                 GuildId = source.Guild.Id
             };
 
             _dataBase
-                .GetCollection<PinMessageData>(nameof(PinBoardService))
-                .Upsert(data);
+                .GetCollection<PinMessageData>(MessageCollection)
+                .Insert(pin);
         }
 
-        public async Task Send(IMessage message, PinBoardData board)
+        public async Task Send(IMessage message, PinBoardData? board)
         {
             if (_client is null)
                 throw new System.Exception("Service is not initialized");
@@ -121,49 +140,84 @@ namespace NeKzBot.Services
             if (author is null)
                 throw new System.Exception("Author is not a guild user");
 
-            var embed = new EmbedBuilder()
+            if (board is null)
+                throw new System.Exception("Board not found");
+
+            var jumpButton = new EmbedBuilder()
                     .WithColor(await message.Author.GetRoleColor())
                     .WithDescription($"[Jump]({message.GetJumpUrl()})");
 
-            using var wc = new DiscordWebhookClient(board.WebhookId, board.WebhookToken);
-
-            var attachment = message.Attachments.FirstOrDefault();
-            if (attachment is {})
+            try
             {
-                var (success, file) = await _client.GetStreamAsync(attachment.Url);
-                if (success)
+                using var wc = new DiscordWebhookClient(board.WebhookId, board.WebhookToken);
+
+                var embeds = message.Embeds.ToList();
+                if (embeds.Count < 10)
+                    embeds.Add(jumpButton.Build());
+
+                var pinId = 0ul;
+
+                var attachment = message.Attachments.FirstOrDefault();
+                if (attachment is {} && attachment.Size <= 8 * 1000 * 1000)
                 {
-                    await wc.SendFileAsync
+                    var (success, file) = await _client.GetStreamAsync(attachment.Url);
+                    if (success)
+                    {
+                        pinId = await wc.SendFileAsync
+                        (
+                            stream: file,
+                            filename: attachment.Filename,
+                            text: message.Content,
+                            embeds: embeds.Cast<Embed>(),
+                            username: author.Nickname ?? author.Username,
+                            avatarUrl: author.GetAvatarUrl()
+                        );
+                    }
+                }
+                else
+                {
+                    pinId = await wc.SendMessageAsync
                     (
-                        stream: file,
-                        filename: attachment.Filename,
                         text: message.Content,
-                        embeds: new[] { embed.Build() },
+                        embeds: embeds.Cast<Embed>(),
                         username: author.Nickname ?? author.Username,
                         avatarUrl: author.GetAvatarUrl()
                     );
                 }
+
+                // Pin pin in order to prevent pin pins, pin pin pins etc.
+                var pin = new PinMessageData()
+                {
+                    MessageId = pinId,
+                    GuildId = board.GuildId
+                };
+
+                _dataBase
+                    .GetCollection<PinMessageData>(MessageCollection)
+                    .Insert(pin);
             }
-            else
+            catch (InvalidOperationException ex)
+                when (ex.Message.StartsWith("Could not find a webhook"))
             {
-                await wc.SendMessageAsync
-                (
-                    text: message.Content,
-                    embeds: new[] { embed.Build() },
-                    username: author.Nickname ?? author.Username,
-                    avatarUrl: author.GetAvatarUrl()
-                );
+                if (Delete(board.GuildId))
+                    _ = LogWarning($"Webhook not found. Deleted board for {board.GuildId}");
+                else
+                    _ = LogWarning($"Webhook not found. Failed to delete board for {board.GuildId}");   
+            }
+            catch (Exception ex)
+            {
+                _ = LogException(ex);
             }
         }
 
         protected Task LogWarning(string message)
         {
-            _ = Log?.Invoke($"{nameof(SourceDemoData)}\t{message}!", null);
+            _ = Log?.Invoke($"{nameof(PinBoardService)}\t{message}!", null);
             return Task.CompletedTask;
         }
         protected Task LogException(Exception ex)
         {
-            _ = Log?.Invoke(nameof(SourceDemoData), ex);
+            _ = Log?.Invoke(nameof(PinBoardService), ex);
             return Task.CompletedTask;
         }
     }

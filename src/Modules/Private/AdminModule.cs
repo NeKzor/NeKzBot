@@ -107,7 +107,7 @@ namespace NeKzBot.Modules.Private
                         Timeout = TimeSpan.FromSeconds(5 * 60)
                     }
                 },
-                false
+                true
             );
         }
         [RequireUserPermission(GuildPermission.ManageGuild)]
@@ -126,7 +126,8 @@ namespace NeKzBot.Modules.Private
             var board = _pinBoard.Get(Context.Guild.Id);
             if (board is null)
             {
-                var reply = await ReplyAsync("A pin board for this server does not exist yet. Do you want me to create one?");
+                var reply = await ReplyAsync(
+                    "A pin board for this server does not exist yet. Do you want me to create one?");
 
                 var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
                 if (response is {})
@@ -144,7 +145,7 @@ namespace NeKzBot.Modules.Private
                             if (channel is {})
                             {
                                 var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
-                                _pinBoard.Create(hook);
+                                board = _pinBoard.Create(hook);
                                 goto pin;
                             }
                             break;
@@ -158,7 +159,6 @@ namespace NeKzBot.Modules.Private
             }
 
         pin:
-            board = _pinBoard.Get(Context.Guild.Id);
             await _pinBoard.Send(message, board);
 
             return Ok();
@@ -172,7 +172,8 @@ namespace NeKzBot.Modules.Private
             var board = _pinBoard.Get(Context.Guild.Id);
             if (board is null)
             {
-                var createReply = await ReplyAsync("A pin board for this server does not exist yet. Do you want me to create one?");
+                var createReply = await ReplyAsync(
+                    "A pin board for this server does not exist yet. Do you want me to create one?");
 
                 var createResponse = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
                 if (createResponse is {})
@@ -190,8 +191,9 @@ namespace NeKzBot.Modules.Private
                             if (channel is {})
                             {
                                 var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
-                                _pinBoard.Create(hook);
-                                goto setting;
+                                board = _pinBoard.Create(hook);
+                                if (board is {})
+                                    goto setting;
                             }
                             break;
                         default:
@@ -203,9 +205,6 @@ namespace NeKzBot.Modules.Private
             }
 
         setting:
-            board = _pinBoard.Get(Context.Guild.Id);
-            if (board is null) return Ok();
-
             var reply = await ReplyAsync("Please enter the number of minimum reactions that should be required:");
             var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
@@ -222,7 +221,7 @@ namespace NeKzBot.Modules.Private
                     board.PinEmoji = response.Content.Trim();
                     _pinBoard.Update(board);
 
-                    await ReplyAsync("Messages will now be automatically pinned if they reach"
+                    await ReplyAsync("New messages will now be automatically pinned if they reach"
                         + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
                         + $" with the {board.PinEmoji} emoji.");
 
