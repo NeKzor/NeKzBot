@@ -7,3 +7,7 @@
 [submodule "lib/Discord.Addons"]
 	path = lib/Discord.Addons
 	url = https://github.com/NeKzor/Discord.Addons
+[submodule "lib/Discord.Net"]
+    path = lib/Discord.Net
+    url = https://github.com/NeKzor/Discord.Net
+    branch = latest
