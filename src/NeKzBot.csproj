@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.2.0-dev-20191226.1" />
+    <!-- <PackageReference Include="Discord.Net" Version="2.3.0-dev-20200425.1" /> -->
     <PackageReference Include="Humanizer" Version="2.7.2" />
     <PackageReference Include="LiteDB" Version="4.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
@@ -21,6 +21,11 @@
     <ProjectReference Include="../lib/Portal2Boards.Net/src/Portal2Boards.Net/Portal2Boards.Net.csproj" />
     <ProjectReference Include="../lib/Discord.Addons.Interactive/Discord.Addons.Interactive/Discord.Addons.Interactive.csproj" />
     <ProjectReference Include="../lib/Discord.Addons/src/Discord.Addons.Preconditions/Discord.Addons.Preconditions.csproj" />
+    <ProjectReference Include="../lib/Discord.Net/src/Discord.Net.Commands/Discord.Net.Commands.csproj" />
+    <ProjectReference Include="../lib/Discord.Net/src/Discord.Net.Core/Discord.Net.Core.csproj" />
+    <ProjectReference Include="../lib/Discord.Net/src/Discord.Net.Rest/Discord.Net.Rest.csproj" />
+    <ProjectReference Include="../lib/Discord.Net/src/Discord.Net.Webhook/Discord.Net.Webhook.csproj" />
+    <ProjectReference Include="../lib/Discord.Net/src/Discord.Net.WebSocket/Discord.Net.WebSocket.csproj" />
   </ItemGroup>
 
   <ItemGroup>

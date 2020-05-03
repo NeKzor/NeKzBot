@@ -85,78 +85,86 @@ namespace NeKzBot.Services.Notifications.Auditor
                         if (_client.ConnectionState != Discord.ConnectionState.Connected)
                             throw new Exception("Bot is not connected to Discord at the moment");
 
-                        var guild = _client.GetGuild(sub.GuildId);
-                        if (guild is null)
+                        try
                         {
-                            DeleteSub(sub, "Unable to find guild");
-                            continue;
-                        }
-
-                        var audits = (await (guild as IGuild).GetAuditLogsAsync(11)).Where(audit =>
-                        {
-                            var user = guild.GetUser(audit.User.Id);
-                            return (user != null)
-                                ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator)
-                                : false;
-                        });
-
-                        _ = LogInfo($"count: {audits.Count()}, guild: {sub.GuildId}");
-
-                        var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
-                        if (auditor is null)
-                        {
-                            _ = LogInfo($"Inserting new audits for guild {sub.GuildId}!");
-
-                            auditDb.Insert(new AuditData()
+                            var guild = _client.GetGuild(sub.GuildId);
+                            if (guild is null)
                             {
-                                GuildId = sub.GuildId,
-                                AuditIds = audits.Select(x => x.Id),
+                                DeleteSub(sub, "Unable to find guild");
+                                continue;
+                            }
+
+                            var audits = (await (guild as IGuild).GetAuditLogsAsync(11)).Where(audit =>
+                            {
+                                var user = guild.GetUser(audit.User.Id);
+                                return (user != null)
+                                    ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator)
+                                    : false;
                             });
+
+                            _ = LogInfo($"count: {audits.Count()}, guild: {sub.GuildId}");
+
+                            var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
+                            if (auditor is null)
+                            {
+                                _ = LogInfo($"Inserting new audits for guild {sub.GuildId}!");
+
+                                auditDb.Insert(new AuditData()
+                                {
+                                    GuildId = sub.GuildId,
+                                    AuditIds = audits.Select(x => x.Id),
+                                });
+                                continue;
+                            }
+
+                            var sending = audits.Where(audit => !auditor.AuditIds.Contains(audit.Id)).ToList();
+
+                            _ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
+
+                            if (sending.Count > 0)
+                            {
+                                _ = LogInfo($"Found {sending.Count} new notifications to send");
+
+                                if (sending.Count > 25)
+                                    throw new Exception("Webhook rate limit exceeded!");
+
+                                sending.Reverse();
+
+                                var embeds = new List<Embed>();
+                                foreach (var toSend in sending)
+                                {
+                                    embeds.Add(await BuildEmbedAsync(toSend as RestAuditLogEntry, guild));
+                                }
+
+                                try
+                                {
+                                    using var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken);
+
+                                    await wc.SendMessageAsync
+                                    (
+                                        string.Empty,
+                                        embeds: embeds,
+                                        username: _userName,
+                                        avatarUrl: _userAvatar
+                                    );
+                                }
+                                catch (InvalidOperationException ex)
+                                    when (ex.Message.StartsWith("Could not find a webhook"))
+                                {
+                                    DeleteSub(sub, "Unable to send hook");
+                                }
+                            }
+
+                            auditor.AuditIds = auditor.AuditIds.Concat(audits.Select(x => x.Id));
+
+                            if (!auditDb.Update(auditor))
+                                _ = LogWarning("Failed to update cache");
+                        }
+                        catch (Exception ex)
+                        {
+                            _ = LogException(ex);
                             continue;
                         }
-
-                        var sending = audits.Where(audit => !auditor.AuditIds.Contains(audit.Id)).ToList();
-
-                        _ = LogInfo($"sending: {sending.Count} guild: {sub.GuildId}");
-
-                        if (sending.Count > 0)
-                        {
-                            _ = LogInfo($"Found {sending.Count} new notifications to send");
-
-                            if (sending.Count > 25)
-                                throw new Exception("Webhook rate limit exceeded!");
-
-                            sending.Reverse();
-
-                            var embeds = new List<Embed>();
-                            foreach (var toSend in sending)
-                            {
-                                embeds.Add(await BuildEmbedAsync(toSend as RestAuditLogEntry, guild));
-                            }
-
-                            try
-                            {
-                                using var wc = new DiscordWebhookClient(sub.WebhookId, sub.WebhookToken);
-
-                                await wc.SendMessageAsync
-                                (
-                                    string.Empty,
-                                    embeds: embeds,
-                                    username: _userName,
-                                    avatarUrl: _userAvatar
-                                );
-                            }
-                            catch (InvalidOperationException ex)
-                                when (ex.Message.StartsWith("Could not find a webhook"))
-                            {
-                                DeleteSub(sub, "Unable to send hook");
-                            }
-                        }
-
-                        auditor.AuditIds = auditor.AuditIds.Concat(audits.Select(x => x.Id));
-
-                        if (!auditDb.Update(auditor))
-                            _ = LogWarning("Failed to update cache");
                     }
 
                 retry:
@@ -228,16 +236,60 @@ namespace NeKzBot.Services.Notifications.Auditor
                 var role = guild.GetRole(id);
                 if (role != null) changes.Add($"Role: <@&{id}>");
             }
+            void AddMessage(ulong id, ulong channelId)
+            {
+                var channel = guild.GetChannel(channelId) as ITextChannel;
+                if (channel is null) return;
+
+                var message = channel.GetMessageAsync(id).GetAwaiter().GetResult();
+                if (message is null) return;
+
+                changes.Add($"Message: *{(!string.IsNullOrEmpty(message.Content) ? message.Content : "empty")}*");
+                foreach (var attachment in message.Attachments)
+                    changes.Add($"Attachment: *[{attachment.Filename}]({attachment.ProxyUrl})*");
+                foreach (var embed in message.Embeds)
+                    changes.Add($"Embed:\n*[{embed.Title}]({embed.Url})\n{embed.Description}*");
+            }
             void AddEmote(ulong id)
             {
                 var emote = guild.GetEmoteAsync(id).GetAwaiter().GetResult();
                 if (emote != null) changes.Add($"Emote: {emote.Name} <:{emote.Name}:{emote.Id}>");
             }
+            string ToAllowDenyListPerms(OverwritePermissions permissions)
+            {
+                var allow = permissions.ToAllowList();
+                var deny = permissions.ToDenyList();
+                return (allow.Any() ? "Allow -> " + string.Join(",", allow) : string.Empty)
+                    + (deny.Any() ? "; Deny -> " + string.Join(",", deny) : string.Empty);
+            }
             string ToAllowDenyList(IEnumerable<ChannelPermission> allow, IEnumerable<ChannelPermission> deny)
             {
-                return (allow.Any() ? "Allow: " + string.Join(",", allow) : string.Empty)
-                    + (deny.Any() ? "Deny: " + string.Join(",", deny) : string.Empty);
+                return (allow.Any() ? "Allow -> " + string.Join(",", allow) : string.Empty)
+                    + (deny.Any() ? "; Deny -> " + string.Join(",", deny) : string.Empty);
             }
+            Func<Overwrite, string> overwriteSelect = x =>
+            {
+                var result = string.Empty;
+                if (x.TargetType == PermissionTarget.Role)
+                {
+                    var role = guild.GetRole(x.TargetId);
+                    if (role != null) result += $"<@&{x.TargetId}>";
+                }
+                else if (x.TargetType == PermissionTarget.User)
+                {
+                    var user = guild.GetUser(x.TargetId);
+                    if (user != null) result += $"<@{x.TargetId}>";
+                }
+
+                if (result == string.Empty)
+                    result += x.TargetId.ToString();
+
+                var perms = ToAllowDenyListPerms(x.Permissions);
+                if (perms != string.Empty)
+                    result += ": " + perms;
+
+                return result;
+            };
 
             switch (audit.Data)
             {
@@ -273,8 +325,29 @@ namespace NeKzBot.Services.Notifications.Auditor
                     AddPropChange(a, "IsEmbeddable");
                     break;
                 case ChannelCreateAuditLogData a:
-                    AddChannel(a.ChannelId);
-                    changes.Add($"Type: {a.ChannelType}");
+                    if (a.ChannelType == ChannelType.Voice)
+                    {
+                        changes.Add($"Channel: {a.ChannelName}");
+                        changes.Add($"Type: {a.ChannelType}");
+                        changes.Add($"Bitrate: {a.Bitrate}");
+                        changes.Add($"SlowModeInterval: {a.SlowModeInterval}");
+                    }
+                    else if (a.ChannelType == ChannelType.Category)
+                    {
+                        changes.Add($"Channel: {a.ChannelName}");
+                        changes.Add($"Type: {a.ChannelType}");
+                    }
+                    else if (a.ChannelType == ChannelType.Text || a.ChannelType == ChannelType.News)
+                    {
+                        AddChannel(a.ChannelId);
+                        changes.Add($"Type: {a.ChannelType}");
+                        changes.Add($"IsNsfw: {a.IsNsfw}");
+                    }
+                    if (a.Overwrites.Any())
+                    {
+                        var overwrites = a.Overwrites.Select(overwriteSelect);
+                        changes.Add($"Overwrites: {string.Join("\n", overwrites)}");
+                    }
                     break;
                 case ChannelUpdateAuditLogData a:
                     AddChannel(a.ChannelId);
@@ -285,8 +358,29 @@ namespace NeKzBot.Services.Notifications.Auditor
                     AddPropChange(a, "IsNsfw");
                     break;
                 case ChannelDeleteAuditLogData a:
-                    changes.Add($"Channel: {a.ChannelName}");
-                    changes.Add($"Type: {a.ChannelType}");
+                    if (a.ChannelType == ChannelType.Voice)
+                    {
+                        changes.Add($"Channel: {a.ChannelName}");
+                        changes.Add($"Type: {a.ChannelType}");
+                        changes.Add($"Bitrate: {a.Bitrate}");
+                        changes.Add($"SlowModeInterval: {a.SlowModeInterval}");
+                    }
+                    else if (a.ChannelType == ChannelType.Category)
+                    {
+                        changes.Add($"Channel: {a.ChannelName}");
+                        changes.Add($"Type: {a.ChannelType}");
+                    }
+                    else if (a.ChannelType == ChannelType.Text || a.ChannelType == ChannelType.News)
+                    {
+                        AddChannel(a.ChannelId);
+                        changes.Add($"Type: {a.ChannelType}");
+                        changes.Add($"IsNsfw: {a.IsNsfw}");
+                    }
+                    if (a.Overwrites.Any())
+                    {
+                        var overwrites = a.Overwrites.Select(overwriteSelect);
+                        changes.Add($"Overwrites: {string.Join("\n", overwrites)}");
+                    }
                     break;
                 case OverwriteCreateAuditLogData a:
                     if (a.Overwrite.TargetType == PermissionTarget.Role)
@@ -294,21 +388,26 @@ namespace NeKzBot.Services.Notifications.Auditor
                     else if (a.Overwrite.TargetType == PermissionTarget.User)
                         AddUser(a.Overwrite.TargetId);
                     AddChannel(a.ChannelId);
-                    changes.Add($"Permissions: {ToAllowDenyList(a.Overwrite.Permissions.ToAllowList(), a.Overwrite.Permissions.ToDenyList())}");
+                    var perms = ToAllowDenyListPerms(a.Overwrite.Permissions);
+                    if (perms != string.Empty) changes.Add($"Permissions: {perms}");
                     break;
                 case OverwriteUpdateAuditLogData a:
-                    if (a.OverwriteType == PermissionTarget.Role)
-                        AddRole(a.OverwriteTargetId);
-                    else if (a.OverwriteType == PermissionTarget.User)
-                        AddUser(a.OverwriteTargetId);
-                    AddChannel(a.ChannelId);
-                    var allowOld = a.OldPermissions.ToAllowList();
-                    var denyOld = a.OldPermissions.ToDenyList();
-                    var allowNew = a.NewPermissions.ToAllowList();
-                    var denyNew = a.NewPermissions.ToDenyList();
-                    changes.Add($"Old Permissions: {ToAllowDenyList(allowOld.Where(x => !allowNew.Contains(x)), denyOld.Where(x => !denyNew.Contains(x)))}");
-                    changes.Add($"New Permissions:  {ToAllowDenyList(allowNew.Where(x => !allowOld.Contains(x)), denyNew.Where(x => !denyOld.Contains(x)))}");
-                    changes.Add($"Overwrite Type: {a.OverwriteType}");
+                    {
+                        if (a.OverwriteType == PermissionTarget.Role)
+                            AddRole(a.OverwriteTargetId);
+                        else if (a.OverwriteType == PermissionTarget.User)
+                            AddUser(a.OverwriteTargetId);
+                        AddChannel(a.ChannelId);
+                        var allowOld = a.OldPermissions.ToAllowList();
+                        var denyOld = a.OldPermissions.ToDenyList();
+                        var allowNew = a.NewPermissions.ToAllowList();
+                        var denyNew = a.NewPermissions.ToDenyList();
+                        var oldPerms = ToAllowDenyList(allowOld.Where(x => !allowNew.Contains(x)), denyOld.Where(x => !denyNew.Contains(x)));
+                        var newPerms = ToAllowDenyList(allowNew.Where(x => !allowOld.Contains(x)), denyNew.Where(x => !denyOld.Contains(x)));
+                        if (oldPerms != string.Empty) changes.Add($"Old Permissions: {oldPerms}");
+                        if (newPerms != string.Empty) changes.Add($"New Permissions: {newPerms}");
+                        changes.Add($"Overwrite Type: {a.OverwriteType}");
+                    }
                     break;
                 case OverwriteDeleteAuditLogData a:
                     if (a.Overwrite.TargetType == PermissionTarget.Role)
@@ -316,7 +415,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                     else if (a.Overwrite.TargetType == PermissionTarget.User)
                         AddUser(a.Overwrite.TargetId);
                     AddChannel(a.ChannelId);
-                    changes.Add($"Permissions: {ToAllowDenyList(a.Overwrite.Permissions.ToAllowList(), a.Overwrite.Permissions.ToDenyList())}");
+                    changes.Add($"Permissions: {ToAllowDenyListPerms(a.Overwrite.Permissions)}");
                     break;
                 case KickAuditLogData a:
                     changes.Add($"User: <@{a.Target.Id}>");
@@ -438,16 +537,40 @@ namespace NeKzBot.Services.Notifications.Auditor
                     changes.Add($"Name: {a.Name}");
                     break;
                 case MessageDeleteAuditLogData a:
-                    AddUser(a.AuthorId);
+                    AddUser(a.Target.Id);
                     AddChannel(a.ChannelId);
                     changes.Add($"Message Count: {a.MessageCount}");
+                    break;
+                case BotAddAuditLogData a:
+                    changes.Add($"Bot: <@{a.Target.Id}>");
+                    break;
+                case MemberMoveAuditLogData a:
+                    AddChannel(a.ChannelId);
+                    changes.Add($"Member Count: {a.MemberCount}");
+                    break;
+                case MemberDisconnectAuditLogData a:
+                    changes.Add($"Member Count: {a.MemberCount}");
+                    break;
+                case MessageBulkDeleteAuditLogData a:
+                    AddChannel(a.ChannelId);
+                    changes.Add($"Member Count: {a.MessageCount}");
+                    break;
+                case MessagePinAuditLogData a:
+                    AddChannel(a.ChannelId);
+                    AddUser(a.Target.Id);
+                    AddMessage(a.MessageId, a.ChannelId);
+                    break;
+                case MessageUnpinAuditLogData a:
+                    AddChannel(a.ChannelId);
+                    AddUser(a.Target.Id);
+                    AddMessage(a.MessageId, a.ChannelId);
                     break;
             }
 
             if (!string.IsNullOrEmpty(audit.Reason))
                 changes.Add($"Reason: {audit.Reason}");
 
-            var embed = new EmbedBuilder
+            var embed = new EmbedBuilder()
             {
                 Title = audit.Action.ToString().Humanize(LetterCasing.Title),
                 Description = string.Join("\n", changes),

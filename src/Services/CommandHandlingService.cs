@@ -40,7 +40,7 @@ namespace NeKzBot.Services
         {
             _client.MessageReceived += MessageReceived;
 
-            _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+            _ = _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
 #if DOCS
             GenerateDocs()
                 .GetAwaiter()
@@ -58,7 +58,7 @@ namespace NeKzBot.Services
 
             int argPos = 0;
             if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-                if (!message.HasStringPrefix(".", ref argPos)) return;
+                if (!message.HasStringPrefix("!", ref argPos)) return;
 
             var context = new SocketCommandContext(_client, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
