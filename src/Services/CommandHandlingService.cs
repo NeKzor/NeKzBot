@@ -16,6 +16,11 @@ namespace NeKzBot.Services
 {
     public class CommandHandlingService
     {
+#if DEBUG
+        public static readonly string CommandPrefix = "!";
+#else
+        public static readonly string CommandPrefix = ".";
+#endif
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IConfiguration _config;
@@ -58,7 +63,7 @@ namespace NeKzBot.Services
 
             int argPos = 0;
             if (!message.HasMentionPrefix(_client.CurrentUser, ref argPos))
-                if (!message.HasStringPrefix("!", ref argPos)) return;
+                if (!message.HasStringPrefix(CommandPrefix, ref argPos)) return;
 
             var context = new SocketCommandContext(_client, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
