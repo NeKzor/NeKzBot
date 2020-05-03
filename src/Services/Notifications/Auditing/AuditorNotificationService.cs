@@ -244,11 +244,9 @@ namespace NeKzBot.Services.Notifications.Auditor
                 var message = channel.GetMessageAsync(id).GetAwaiter().GetResult();
                 if (message is null) return;
 
-                changes.Add($"Message: *{(!string.IsNullOrEmpty(message.Content) ? message.Content : "empty")}*");
-                foreach (var attachment in message.Attachments)
-                    changes.Add($"Attachment: *[{attachment.Filename}]({attachment.ProxyUrl})*");
-                foreach (var embed in message.Embeds)
-                    changes.Add($"Embed:\n*[{embed.Title}]({embed.Url})\n{embed.Description}*");
+                if (!string.IsNullOrEmpty(message.Content))
+                    changes.Add($"Message: *{message.Content}]*");
+                changes.Add($"[Jump]({message.GetJumpUrl()})");
             }
             void AddEmote(ulong id)
             {
