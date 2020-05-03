@@ -245,7 +245,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                 if (message is null) return;
 
                 if (!string.IsNullOrEmpty(message.Content))
-                    changes.Add($"Message: *{message.Content}]*");
+                    changes.Add($"Message: *{message.Content}*");
                 changes.Add($"[Jump]({message.GetJumpUrl()})");
             }
             void AddEmote(ulong id)
