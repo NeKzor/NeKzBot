@@ -89,6 +89,13 @@ namespace NeKzBot.Services
                 .FindOne(message =>  message.MessageId == messageId);
         }
 
+        public IEnumerable<PinMessageData> GetMessages(ulong guildId)
+        {
+            return _dataBase
+                .GetCollection<PinMessageData>(MessageCollection)
+                .Find(message =>  message.GuildId == guildId);
+        }
+
         public PinBoardData? Create(IWebhook hook)
         {
             if (hook is null) return default;
@@ -152,13 +159,33 @@ namespace NeKzBot.Services
                 using var wc = new DiscordWebhookClient(board.WebhookId, board.WebhookToken);
 
                 var embeds = message.Embeds.ToList();
-                if (embeds.Count < 10)
-                    embeds.Add(jumpButton.Build());
-
                 var pinId = 0ul;
 
+                var embed = embeds.FirstOrDefault();
                 var attachment = message.Attachments.FirstOrDefault();
-                if (attachment is {} && attachment.Size <= 8 * 1000 * 1000)
+
+                if (embed is {}
+                    && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || embed.Type == EmbedType.Video))
+                {
+                    var url = embed.Type == EmbedType.Image
+                        ? embed.Image!.Value.ProxyUrl
+                        : embed.Video!.Value.Url;
+
+                    var (success, file) = await _client.GetStreamAsync(url);
+                    if (success && file is {} && file.Length <= 8 * 1000 * 1000)
+                    {
+                        pinId = await wc.SendFileAsync
+                        (
+                            stream: file,
+                            filename: url.Substring(url.LastIndexOf("/")),
+                            text: message.Content,
+                            embeds: new[] { jumpButton.Build() },
+                            username: author.Nickname ?? author.Username,
+                            avatarUrl: author.GetAvatarUrl()
+                        );
+                    }
+                }
+                else if (attachment is {} && attachment.Size <= 8 * 1000 * 1000)
                 {
                     var (success, file) = await _client.GetStreamAsync(attachment.Url);
                     if (success)
@@ -168,7 +195,7 @@ namespace NeKzBot.Services
                             stream: file,
                             filename: attachment.Filename,
                             text: message.Content,
-                            embeds: embeds.Cast<Embed>(),
+                            embeds: new[] { jumpButton.Build() },
                             username: author.Nickname ?? author.Username,
                             avatarUrl: author.GetAvatarUrl()
                         );
@@ -176,6 +203,9 @@ namespace NeKzBot.Services
                 }
                 else
                 {
+                    if (embeds.Count < 10)
+                        embeds.Add(jumpButton.Build());
+
                     pinId = await wc.SendMessageAsync
                     (
                         text: message.Content,
@@ -184,6 +214,9 @@ namespace NeKzBot.Services
                         avatarUrl: author.GetAvatarUrl()
                     );
                 }
+
+                if (pinId == 0ul)
+                    throw new System.Exception("Failed to send webhook");
 
                 // Pin pin in order to prevent pin pins, pin pin pins etc.
                 var pin = new PinMessageData()

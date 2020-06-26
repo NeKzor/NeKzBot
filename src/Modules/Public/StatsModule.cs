@@ -8,12 +8,20 @@ using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
 using NeKzBot.Extensions;
+using NeKzBot.Services;
 
 namespace NeKzBot.Modules.Public
 {
     // Really old code here...
     public class StatsModule : InteractiveBase<SocketCommandContext>
     {
+        private PinBoardService _pinBoard;
+
+        public StatsModule(PinBoardService pinBoard)
+        {
+            _pinBoard = pinBoard;
+        }
+
         [Ratelimit(1, 1, Measure.Minutes)]
         [RequireContext(ContextType.Guild)]
         [Command("guild"), Alias("server")]
@@ -409,6 +417,93 @@ namespace NeKzBot.Modules.Public
                     Color = await Context.User.GetRoleColor(Context.Guild),
                     Pages = pages,
                     Title = $"Top User Scores {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false
+            );
+        }
+        [RequireContext(ContextType.Guild)]
+        [Ratelimit(1, 5, Measure.Minutes)]
+        [Command("pins")]
+        public async Task Pins(bool ascending = true)
+        {
+            var pinData = _pinBoard.Get(Context.Guild.Id);
+            if (pinData is null || pinData.PinEmoji is null) return;
+
+            var pins = _pinBoard.GetMessages(Context.Guild.Id);
+            if (pins.Count() == 0) return;
+
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var channels = await guild.GetChannelsAsync();
+            var messages = new List<(IMessage Data, int Reactions)>();
+
+            foreach (var pin in pins)
+            {
+                var channel = channels.FirstOrDefault(channel => channel.Id == pin.ChannelId);
+                if (channel is null) continue;
+
+                var messageChannel = channel as ISocketMessageChannel;
+                if (messageChannel is null) continue;
+
+                var message = await messageChannel.GetMessageAsync(pin.MessageId);
+                if (message is null) continue;
+
+                var reactions = message.Reactions.FirstOrDefault(reaction => reaction.Key.Name == pinData.PinEmoji);
+                if (reactions.Equals(default)) continue;
+
+                messages.Add((Data: message, Reactions: reactions.Value.ReactionCount));
+            }
+
+            var order = string.Empty;
+            if (ascending)
+            {
+                order = "(asc.)";
+                messages = messages.OrderBy(message => message.Reactions).ToList();
+            }
+            else
+            {
+                order = "(desc.)";
+                messages = messages.OrderByDescending(message => message.Reactions).ToList();
+            }
+
+            var reaction = pinData.PinEmoji.Length == 1 ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
+            var page = string.Empty;
+            var pages = new List<string>();
+            var count = 0;
+
+            foreach (var (message, reactions) in messages)
+            {
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
+
+                var contentLength = message.Content.Length >= 10 ? 10 : message.Content.Length;
+                var shortened = message.Content.Length > 10;
+                var content = message.Content.Substring(0, contentLength) + (shortened ? "..." : string.Empty);
+                content = message.Content.Length == 0 ? "*jump*" : content;
+
+                page += $"\n{pinData.PinEmoji} **x{reactions}** - [{content}]({message.GetJumpUrl()}) "
+                    + $"{message.Author.Mention}";
+
+                ++count;
+            }
+            pages.Add(page);
+
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top Pins {order}",
                     Options = new PaginatedAppearanceOptions
                     {
                         DisplayInformationIcon = false,
