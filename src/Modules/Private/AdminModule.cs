@@ -66,8 +66,8 @@ namespace NeKzBot.Modules.Private
             );
         }
         [Ratelimit(3, 1, Measure.Minutes)]
-        [RequireUserPermission(GuildPermission.ManageGuild)]
-        [RequireBotPermission(GuildPermission.ManageGuild)]
+        [RequireUserPermission(GuildPermission.ViewAuditLog)]
+        [RequireBotPermission(GuildPermission.ViewAuditLog)]
         [Command("audits")]
         public async Task Audits(int auditCount = 10)
         {
