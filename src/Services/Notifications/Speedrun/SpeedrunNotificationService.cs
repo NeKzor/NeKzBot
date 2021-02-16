@@ -91,7 +91,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
                     if (!notifications.Any())
                     {
-                        _ = LogWarning("Fetch failed");
+                        //_ = LogWarning("Fetch failed");
                         goto retry;
                     }
 
