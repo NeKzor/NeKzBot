@@ -164,8 +164,13 @@ namespace NeKzBot.Services
                 var embed = embeds.FirstOrDefault();
                 var attachment = message.Attachments.FirstOrDefault();
 
+                bool IsVideoFormat(string url)
+                {
+                    return url.EndsWith(".mp4") || url.EndsWith(".mov") || url.EndsWith(".webm");
+                }
+
                 if (embed is {}
-                    && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || embed.Type == EmbedType.Video))
+                    && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || (embed.Type == EmbedType.Video && IsVideoFormat(embed.Video!.Value.Url))))
                 {
                     var url = embed.Type == EmbedType.Image
                         ? embed.Image!.Value.ProxyUrl
