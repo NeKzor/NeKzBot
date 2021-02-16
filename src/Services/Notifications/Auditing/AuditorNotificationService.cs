@@ -87,6 +87,7 @@ namespace NeKzBot.Services.Notifications.Auditor
 
                         try
                         {
+                            //_ = LogInfo($"{sub.GuildId} guild");
                             var guild = _client.GetGuild(sub.GuildId);
                             if (guild is null)
                             {
@@ -96,6 +97,7 @@ namespace NeKzBot.Services.Notifications.Auditor
 
                             var audits = (await (guild as IGuild).GetAuditLogsAsync(11)).Where(audit =>
                             {
+                                //_ = LogInfo($"{audit.User.Id} user");
                                 var user = guild.GetUser(audit.User.Id);
                                 return (user != null)
                                     ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator)
@@ -241,8 +243,14 @@ namespace NeKzBot.Services.Notifications.Auditor
                 var channel = guild.GetChannel(channelId) as ITextChannel;
                 if (channel is null) return;
 
-                var message = channel.GetMessageAsync(id).GetAwaiter().GetResult();
-                if (message is null) return;
+                var message = default(IMessage);
+                try {
+                    message = channel.GetMessageAsync(id).GetAwaiter().GetResult();
+                    if (message is null) return;
+                } catch {
+                    changes.Add("Unable to get original message :(");
+                    return;
+                }
 
                 if (!string.IsNullOrEmpty(message.Content))
                     changes.Add($"Message: *{message.Content}*");
