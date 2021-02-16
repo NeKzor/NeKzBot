@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using NeKzBot.Extensions;
 using NeKzBot.Services;
 using Portal2Boards;
+using Portal2Boards_LogMessage = Portal2Boards.LogMessage;
 using Portal2Boards.Extensions;
 
 namespace NeKzBot.Modules.Public
@@ -27,6 +28,13 @@ namespace NeKzBot.Modules.Public
             {
                 _portal2 = portal2;
                 _client = new Portal2BoardsClient(config["user_agent"]);
+                _client.Log += LogPortal2Boards;
+            }
+
+            private Task LogPortal2Boards(object _, Portal2Boards_LogMessage message)
+            {
+                System.Console.WriteLine(message.ToString());
+                return Task.CompletedTask;
             }
 
             [Ratelimit(6, 1, Measure.Minutes)]
@@ -212,106 +220,91 @@ namespace NeKzBot.Modules.Public
             [Command("profile", RunMode = RunMode.Async), Alias("pro", "user")]
             public async Task Profile([Remainder] string? userNameOrSteamId64 = null)
             {
-                var profile = default(IProfile);
-                if (string.IsNullOrEmpty(userNameOrSteamId64))
+                var user = await GetProfileAsync(userNameOrSteamId64) as Profile;
+                if (user is null)
                 {
-                    // Get user's linked SteamId64 when the DAPI supports this
-                    // This will never happen right :(?
-                    var nick = (Context.User as SocketGuildUser)?.Nickname;
-                    var name = Context.User.Username;
-                    if (nick != null)
-                        profile = await _client.GetProfileAsync(nick);
-                    if (profile is null)
-                        profile = await _client.GetProfileAsync(name);
-                }
-                else
-                {
-                    profile = await _client.GetProfileAsync(userNameOrSteamId64);
-                }
-
-                if (profile != null)
-                {
-                    // Local funcion
-                    string GetMap(IDataScore score)
-                    {
-                        var map = Portal2Map.Search((score as DataScore)!.Id);
-                        return (map != null) ? map.Alias : "several chambers";
-                    }
-                    var user = profile as Profile;
-                    var pages = new List<string>
-                    {
-                        $"\nSP WRs | {user!.Times.SinglePlayerChapters.WorldRecords}" +
-                            $"\nMP WRs | {user.Times.CooperativeChapters.WorldRecords}" +
-                            $"\nTotal | {user.WorldRecords}",
-                        $"\nSP Points | {user.Points.SinglePlayer.Score.FormatPointsToString()}" +
-                            $"\nMP Points | {user.Points.Cooperative.Score.FormatPointsToString()}" +
-                            $"\nTotal | {user.Points.Global.Score.FormatPointsToString()}",
-                        $"\nSP Rank | {user.Points.SinglePlayer.PlayerRank.FormatRankToString()}" +
-                            $"\nMP Rank | {user.Points.Cooperative.PlayerRank.FormatRankToString()}" +
-                            $"\nOverall | {user.Points.Global.PlayerRank.FormatRankToString()}",
-                        $"\nSP Avg Rank | {user.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
-                            $"\nMP Avg Rank | {user.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
-                            $"\nOverall | {user.GlobalAveragePlace.FormatAveragePlaceToString()}",
-                        $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore)}" +
-                            $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore)}",
-                        $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore)}" +
-                            $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore)}",
-                        $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore)}" +
-                            $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore)}"
-                    };
-
-                    var page = string.Empty;
-                    var count = 0;
-
-                    foreach (var map in Portal2.CampaignMaps)
-                    {
-                        var chamber = (user.Times as DataTimes)!.GetMapData(map);
-                        if (chamber is null) continue;
-
-                        if ((count % 5 == 0) && (count != 0))
-                        {
-                            pages.Add(page);
-                            page = string.Empty;
-                        }
-
-                        page += $"\n[{map.Alias}]({map.Url}) | " +
-                            $"{chamber.PlayerRank.FormatRankToString("WR")} | " +
-                            $"{chamber.Score.AsTimeToString()}";
-
-                        count++;
-                    }
-                    pages.Add(page);
-
-                    var lastpage = $"{user.Title}\n[Steam]({user.SteamUrl})";
-                    if (!string.IsNullOrEmpty(user.YouTubeUrl))
-                        lastpage += $"\n[YouTube](https://youtube.com{user.YouTubeUrl})";
-                    if (!string.IsNullOrEmpty(user.TwitchName))
-                        lastpage += $"\n[Twitch](https://twitch.tv/{user.TwitchName})";
-                    pages.Add(lastpage);
-
-                    await PagedReplyAsync
-                    (
-                        new PaginatedMessage()
-                        {
-                            Color = Color.Blue,
-                            Pages = pages,
-                            Author = new EmbedAuthorBuilder()
-                            {
-                                Name = user.DisplayName,
-                                IconUrl = user.SteamAvatarUrl,
-                                Url = user.Url
-                            },
-                            Options = new PaginatedAppearanceOptions()
-                            {
-                                DisplayInformationIcon = false,
-                                Timeout = TimeSpan.FromSeconds(5 * 60)
-                            }
-                        },
-                        false
-                    );
-                }
-                else
                     await ReplyAndDeleteAsync("Invalid user name or id.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
+
+                // Local function
+                string GetMap(IDataScore score)
+                {
+                    var map = Portal2Map.Search((score as DataScore)!.Id);
+                    return (map != null) ? map.Alias : "several chambers";
+                }
+
+                var pages = new List<string>
+                {
+                    $"\nSP WRs | {user!.Times.SinglePlayerChapters.WorldRecords}" +
+                        $"\nMP WRs | {user.Times.CooperativeChapters.WorldRecords}" +
+                        $"\nTotal | {user.WorldRecords}",
+                    $"\nSP Points | {user.Points.SinglePlayer.Score.FormatPointsToString()}" +
+                        $"\nMP Points | {user.Points.Cooperative.Score.FormatPointsToString()}" +
+                        $"\nTotal | {user.Points.Global.Score.FormatPointsToString()}",
+                    $"\nSP Rank | {user.Points.SinglePlayer.PlayerRank.FormatRankToString()}" +
+                        $"\nMP Rank | {user.Points.Cooperative.PlayerRank.FormatRankToString()}" +
+                        $"\nOverall | {user.Points.Global.PlayerRank.FormatRankToString()}",
+                    $"\nSP Avg Rank | {user.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
+                        $"\nMP Avg Rank | {user.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
+                        $"\nOverall | {user.GlobalAveragePlace.FormatAveragePlaceToString()}",
+                    $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore)}" +
+                        $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore)}",
+                    $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore)}" +
+                        $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore)}",
+                    $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore)}" +
+                        $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore)}"
+                };
+
+                var page = string.Empty;
+                var count = 0;
+
+                foreach (var map in Portal2.CampaignMaps)
+                {
+                    var chamber = (user.Times as DataTimes)!.GetMapData(map);
+                    if (chamber is null) continue;
+
+                    if ((count % 5 == 0) && (count != 0))
+                    {
+                        pages.Add(page);
+                        page = string.Empty;
+                    }
+
+                    page += $"\n[{map.Alias}]({map.Url}) | " +
+                        $"{chamber.PlayerRank.FormatRankToString("WR")} | " +
+                        $"{chamber.Score.AsTimeToString()}";
+
+                    count++;
+                }
+                pages.Add(page);
+
+                var lastpage = $"{user.Title}\n[Steam]({user.SteamUrl})";
+                if (!string.IsNullOrEmpty(user.YouTubeUrl))
+                    lastpage += $"\n[YouTube](https://youtube.com{user.YouTubeUrl})";
+                if (!string.IsNullOrEmpty(user.TwitchName))
+                    lastpage += $"\n[Twitch](https://twitch.tv/{user.TwitchName})";
+                pages.Add(lastpage);
+
+                await PagedReplyAsync
+                (
+                    new PaginatedMessage()
+                    {
+                        Color = Color.Blue,
+                        Pages = pages,
+                        Author = new EmbedAuthorBuilder()
+                        {
+                            Name = user.DisplayName,
+                            IconUrl = user.SteamAvatarUrl,
+                            Url = user.Url
+                        },
+                        Options = new PaginatedAppearanceOptions()
+                        {
+                            DisplayInformationIcon = false,
+                            Timeout = TimeSpan.FromSeconds(5 * 60)
+                        }
+                    },
+                    false
+                );
             }
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("aggregated", RunMode = RunMode.Async), Alias("agg")]
@@ -352,6 +345,129 @@ namespace NeKzBot.Modules.Public
                     },
                     false
                 );
+            }
+            [Ratelimit(3, 1, Measure.Minutes)]
+            [Command("compare", RunMode = RunMode.Async), Alias("vs")]
+            public async Task Aggregated(string userNameOrSteamId, string? userNameOrSteamId2)
+            {
+                var profile1 = await GetProfileAsync(userNameOrSteamId, false) as Profile;
+                if (profile1 is null)
+                {
+                    await ReplyAndDeleteAsync("Invalid user name or id for first argument.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
+
+                var profile2 = await GetProfileAsync(userNameOrSteamId2) as Profile;
+                if (profile2 is null)
+                {
+                    await ReplyAndDeleteAsync("Invalid user name or id for second argument.", timeout: TimeSpan.FromSeconds(10));
+                    return;
+                }
+
+                // Local function
+                string GetMap(IDataScore score)
+                {
+                    var map = Portal2Map.Search((score as DataScore)!.Id);
+                    return (map != null) ? map.Alias : "several chambers";
+                }
+
+                var pages = new List<string>
+                {
+                    $"\nSP WRs | {profile1!.Times.SinglePlayerChapters.WorldRecords} | {profile2!.Times.SinglePlayerChapters.WorldRecords}" +
+                        $"\nMP WRs | {profile1.Times.CooperativeChapters.WorldRecords} | {profile2.Times.CooperativeChapters.WorldRecords}" +
+                        $"\nTotal | {profile1.WorldRecords} | {profile2.WorldRecords}",
+                    $"\nSP Points | {profile1.Points.SinglePlayer.Score.FormatPointsToString()} | {profile2.Points.SinglePlayer.Score.FormatPointsToString()}" +
+                        $"\nMP Points | {profile1.Points.Cooperative.Score.FormatPointsToString()} | {profile2.Points.Cooperative.Score.FormatPointsToString()}" +
+                        $"\nTotal | {profile1.Points.Global.Score.FormatPointsToString()} | {profile2.Points.Global.Score.FormatPointsToString()}",
+                    $"\nSP Rank | {profile1.Points.SinglePlayer.PlayerRank.FormatRankToString()} | {profile2.Points.SinglePlayer.PlayerRank.FormatRankToString()}" +
+                        $"\nMP Rank | {profile1.Points.Cooperative.PlayerRank.FormatRankToString()} | {profile2.Points.Cooperative.PlayerRank.FormatRankToString()}" +
+                        $"\nOverall | {profile1.Points.Global.PlayerRank.FormatRankToString()} | {profile2.Points.Global.PlayerRank.FormatRankToString()}",
+                    $"\nSP Avg Rank | {profile1.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()} | {profile2.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
+                        $"\nMP Avg Rank | {profile1.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()} | {profile2.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
+                        $"\nOverall | {profile1.GlobalAveragePlace.FormatAveragePlaceToString()} | {profile2.GlobalAveragePlace.FormatAveragePlaceToString()}",
+                    $"\nSP Best Rank | {profile1.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(profile1.Times.SinglePlayerChapters.BestScore)} | {profile2.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(profile2.Times.SinglePlayerChapters.BestScore)}" +
+                        $"\nMP Best Rank | {profile1.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(profile1.Times.CooperativeChapters.BestScore)} | {profile2.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(profile2.Times.CooperativeChapters.BestScore)}",
+                    $"\nSP Oldest Score | {profile1.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(profile1.Times.SinglePlayerChapters.OldestScore)} | {profile2.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(profile2.Times.SinglePlayerChapters.OldestScore)}" +
+                        $"\nMP Oldest Score | {profile1.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(profile1.Times.CooperativeChapters.OldestScore)} | {profile2.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(profile2.Times.CooperativeChapters.OldestScore)}",
+                    $"\nSP Newest Score | {profile1.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(profile1.Times.SinglePlayerChapters.NewestScore)} | {profile2.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(profile2.Times.SinglePlayerChapters.NewestScore)}" +
+                        $"\nMP Newest Score | {profile1.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(profile1.Times.CooperativeChapters.NewestScore)} | {profile2.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(profile2.Times.CooperativeChapters.NewestScore)}"
+                };
+
+                var page = string.Empty;
+                var count = 0;
+
+                foreach (var map in Portal2.CampaignMaps)
+                {
+                    var chamber1 = (profile1.Times as DataTimes)!.GetMapData(map);
+                    if (chamber1 is null) continue;
+
+                    var chamber2 = (profile1.Times as DataTimes)!.GetMapData(map);
+                    if (chamber2 is null) continue;
+
+                    if ((count % 5 == 0) && (count != 0))
+                    {
+                        pages.Add(page);
+                        page = string.Empty;
+                    }
+
+                    page += $"\n[{map.Alias}]({map.Url}) | " +
+                        $"{chamber1.PlayerRank.FormatRankToString("WR")} | " +
+                        $"{chamber1.Score.AsTimeToString()}" +
+                        $"{chamber2.PlayerRank.FormatRankToString("WR")} | " +
+                        $"{chamber2.Score.AsTimeToString()}";
+
+                    count++;
+                }
+                pages.Add(page);
+
+                var author = default(EmbedAuthorBuilder);
+                if (string.IsNullOrEmpty(userNameOrSteamId2))
+                {
+                    author = new EmbedAuthorBuilder()
+                    {
+                        Name = profile2.DisplayName,
+                        IconUrl = profile2.SteamAvatarUrl,
+                        Url = profile2.Url
+                    };
+                }
+
+                await PagedReplyAsync
+                (
+                    new PaginatedMessage()
+                    {
+                        Color = Color.Blue,
+                        Pages = pages,
+                        Author = author,
+                        Options = new PaginatedAppearanceOptions()
+                        {
+                            DisplayInformationIcon = false,
+                            Timeout = TimeSpan.FromSeconds(5 * 60)
+                        }
+                    },
+                    false
+                );
+            }
+
+            private async Task<IProfile?> GetProfileAsync(string? userNameOrSteamId64, bool checkSelf = true)
+            {
+                if (string.IsNullOrEmpty(userNameOrSteamId64) && checkSelf)
+                {
+                    // Get user's linked SteamId64 when the DAPI supports this
+                    // This will never happen right :(?
+                    var nick = (Context.User as SocketGuildUser)?.Nickname;
+                    if (nick != null)
+                    {
+                        var profile = await _client.GetProfileAsync(nick);
+                        if (profile is {})
+                            return profile;
+                    }
+
+                    return await _client.GetProfileAsync(Context.User.Username);
+                }
+                else
+                {
+                    return await _client.GetProfileAsync(userNameOrSteamId64);
+                }
             }
         }
     }
