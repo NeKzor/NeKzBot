@@ -182,7 +182,7 @@ namespace NeKzBot.Services
                         pinId = await wc.SendFileAsync
                         (
                             stream: file,
-                            filename: url.Substring(url.LastIndexOf("/")),
+                            filename: (new Uri(url)).Segments.Last(),
                             text: message.Content,
                             embeds: new[] { jumpButton.Build() },
                             username: author.Nickname ?? author.Username,
