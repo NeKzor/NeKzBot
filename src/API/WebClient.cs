@@ -27,7 +27,7 @@ namespace NeKzBot.API
         }
 
         // GET
-        public async Task<(bool, T)> GetJsonObjectAsync<T>(string url)
+        public async Task<(bool, T?)> GetJsonObjectAsync<T>(string url)
         {
             var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
             return (response.IsSuccessStatusCode)
