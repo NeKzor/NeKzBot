@@ -18,7 +18,7 @@ namespace NeKzBot.Modules.Public
 {
     public class Portal2Module : ModuleBase<SocketCommandContext>
     {
-        [Group("portal2boards"), Alias("p2b", "p2")]
+        [Group("portal2"), Alias("p2")]
         public class Portal2Boards : InteractiveBase<SocketCommandContext>
         {
             private readonly Portal2BoardsClient _client;
@@ -348,7 +348,7 @@ namespace NeKzBot.Modules.Public
             }
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("compare", RunMode = RunMode.Async), Alias("vs")]
-            public async Task Aggregated(string userNameOrSteamId, string? userNameOrSteamId2)
+            public async Task Aggregated(string userNameOrSteamId, string? userNameOrSteamId2 = null)
             {
                 var profile1 = await GetProfileAsync(userNameOrSteamId, false) as Profile;
                 if (profile1 is null)
@@ -401,7 +401,7 @@ namespace NeKzBot.Modules.Public
                     var chamber1 = (profile1.Times as DataTimes)!.GetMapData(map);
                     if (chamber1 is null) continue;
 
-                    var chamber2 = (profile1.Times as DataTimes)!.GetMapData(map);
+                    var chamber2 = (profile2.Times as DataTimes)!.GetMapData(map);
                     if (chamber2 is null) continue;
 
                     if ((count % 5 == 0) && (count != 0))
@@ -411,9 +411,9 @@ namespace NeKzBot.Modules.Public
                     }
 
                     page += $"\n[{map.Alias}]({map.Url}) | " +
-                        $"{chamber1.PlayerRank.FormatRankToString("WR")} | " +
-                        $"{chamber1.Score.AsTimeToString()}" +
-                        $"{chamber2.PlayerRank.FormatRankToString("WR")} | " +
+                        $"{chamber1.PlayerRank.FormatRankToString("WR")} " +
+                        $"{chamber1.Score.AsTimeToString()} | " +
+                        $"{chamber2.PlayerRank.FormatRankToString("WR")} " +
                         $"{chamber2.Score.AsTimeToString()}";
 
                     count++;
@@ -435,6 +435,7 @@ namespace NeKzBot.Modules.Public
                 (
                     new PaginatedMessage()
                     {
+                        Title = $"{profile1.DisplayName ?? profile1.SteamName} vs {profile2.DisplayName ?? profile2.SteamName}",
                         Color = Color.Blue,
                         Pages = pages,
                         Author = author,
