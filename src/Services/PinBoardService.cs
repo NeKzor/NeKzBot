@@ -186,7 +186,8 @@ namespace NeKzBot.Services
                             text: message.Content,
                             embeds: new[] { jumpButton.Build() },
                             username: author.Nickname ?? author.Username,
-                            avatarUrl: author.GetAvatarUrl()
+                            avatarUrl: author.GetAvatarUrl(),
+                            allowedMentions: AllowedMentions.None
                         );
                     }
                 }
@@ -202,7 +203,8 @@ namespace NeKzBot.Services
                             text: message.Content,
                             embeds: new[] { jumpButton.Build() },
                             username: author.Nickname ?? author.Username,
-                            avatarUrl: author.GetAvatarUrl()
+                            avatarUrl: author.GetAvatarUrl(),
+                            allowedMentions: AllowedMentions.None
                         );
                     }
                 }
@@ -216,7 +218,8 @@ namespace NeKzBot.Services
                         text: message.Content,
                         embeds: embeds.Cast<Embed>(),
                         username: author.Nickname ?? author.Username,
-                        avatarUrl: author.GetAvatarUrl()
+                        avatarUrl: author.GetAvatarUrl(),
+                        allowedMentions: AllowedMentions.None
                     );
                 }
 

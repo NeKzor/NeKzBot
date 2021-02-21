@@ -147,7 +147,8 @@ namespace NeKzBot.Services.Notifications.Auditor
                                         string.Empty,
                                         embeds: embeds,
                                         username: _userName,
-                                        avatarUrl: _userAvatar
+                                        avatarUrl: _userAvatar,
+                                        allowedMentions: AllowedMentions.None
                                     );
                                 }
                                 catch (InvalidOperationException ex)

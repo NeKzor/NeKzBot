@@ -95,7 +95,8 @@ namespace NeKzBot.Services.Notifications
                             string.Empty,
                             embeds: new Embed[] { embed },
                             username: _userName,
-                            avatarUrl: _userAvatar
+                            avatarUrl: _userAvatar,
+                            allowedMentions: AllowedMentions.None
                         );
                     }
                     // Make sure to catch only on this special exception
@@ -136,7 +137,8 @@ namespace NeKzBot.Services.Notifications
                     (
                         helloWorldMessage,
                         username: _userName,
-                        avatarUrl: _userAvatar
+                        avatarUrl: _userAvatar,
+                        allowedMentions: AllowedMentions.None
                     );
                 }
 
