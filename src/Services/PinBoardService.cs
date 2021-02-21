@@ -55,7 +55,7 @@ namespace NeKzBot.Services
             if (board is null || board.PinEmoji is null) return;
 
             var message = await cache.GetOrDownloadAsync();
-            if (message.CreatedAt < board.CreatedAt) return;
+            if (message.Author is not IGuildUser || message.CreatedAt < board.CreatedAt) return;
 
             var pin = GetMessage(message.Id);
             if (pin is {}) return;
