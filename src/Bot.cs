@@ -45,6 +45,7 @@ namespace NeKzBot
             var pcs = services.GetRequiredService<Portal2CampaignService>();
             var aus = services.GetRequiredService<AuditorNotificationService>();
             var pnb = services.GetRequiredService<PinBoardService>();
+            var pst = services.GetRequiredService<PistonService>();
 
             await log.Initialize();
             await chs.Initialize();
@@ -55,6 +56,7 @@ namespace NeKzBot
             await pcs.Initialize();
             await aus.Initialize();
             await pnb.Initialize();
+            await pst.Initialize();
 
 #if DB_CLEANUP
             await srs.CleanupAsync();
@@ -105,6 +107,7 @@ namespace NeKzBot
                 .AddSingleton<Portal2CampaignService>()
                 .AddSingleton<AuditorNotificationService>()
                 .AddSingleton<PinBoardService>()
+                .AddSingleton<PistonService>()
                 .BuildServiceProvider();
         }
     }

@@ -54,6 +54,17 @@ namespace NeKzBot.API
             return (response.IsSuccessStatusCode, response.StatusCode);
         }
 
+        // POST
+        public async Task<(bool, T?)> PostJsonObjectAsync<T, U>(string url, U data)
+        {
+            var body = new StringContent(JsonConvert.SerializeObject(data), System.Text.Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = body };
+            var response = await _client.SendAsync(request, HttpCompletionOption.ResponseContentRead).ConfigureAwait(false);
+            return (response.IsSuccessStatusCode)
+                ? (true, JsonConvert.DeserializeObject<T>(await response.Content.ReadAsStringAsync().ConfigureAwait(false)))
+                : (false, default);
+        }
+
         public void Dispose()
         {
             _client.Dispose();
