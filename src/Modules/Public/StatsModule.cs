@@ -7,6 +7,7 @@ using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
 using Discord.WebSocket;
+using NeKzBot.Data;
 using NeKzBot.Extensions;
 using NeKzBot.Services;
 
@@ -427,52 +428,43 @@ namespace NeKzBot.Modules.Public
             );
         }
         [RequireContext(ContextType.Guild)]
-        [Ratelimit(1, 5, Measure.Minutes)]
+        [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("pins")]
-        public async Task Pins(bool ascending = true)
+        public async Task Pins(bool descending = true)
         {
-            var pinData = _pinBoard.Get(Context.Guild.Id);
-            if (pinData is null || pinData.PinEmoji is null) return;
-
-            var pins = _pinBoard.GetMessages(Context.Guild.Id);
-            if (pins.Count() == 0) return;
-
             var guild = (Context.Guild as IGuild);
             if (guild is null) return;
 
-            var channels = await guild.GetChannelsAsync();
-            var messages = new List<(IMessage Data, int Reactions)>();
+            var pinData = _pinBoard.Get(Context.Guild.Id);
+            if (pinData is null || pinData.PinEmoji is null) return;
 
-            foreach (var pin in pins)
+            var pins = _pinBoard
+                .GetMessages(Context.Guild.Id)
+                .OrderByDescending(pin => pin.MessageId)
+                .Take(5);
+
+            if (pins.Count() == 0) return;
+
+            var messages = await BuildPinCache(pinData, guild, pins);
+
+            if (descending)
             {
-                var channel = channels.FirstOrDefault(channel => channel.Id == pin.ChannelId);
-                if (channel is null) continue;
-
-                var messageChannel = channel as ISocketMessageChannel;
-                if (messageChannel is null) continue;
-
-                var message = await messageChannel.GetMessageAsync(pin.MessageId);
-                if (message is null) continue;
-
-                var reactions = message.Reactions.FirstOrDefault(reaction => reaction.Key.Name == pinData.PinEmoji);
-                if (reactions.Equals(default)) continue;
-
-                messages.Add((Data: message, Reactions: reactions.Value.ReactionCount));
-            }
-
-            var order = string.Empty;
-            if (ascending)
-            {
-                order = "(asc.)";
-                messages = messages.OrderBy(message => message.Reactions).ToList();
+                messages = messages.OrderByDescending(message => message.Reactions).ToList();
             }
             else
             {
-                order = "(desc.)";
-                messages = messages.OrderByDescending(message => message.Reactions).ToList();
+                messages = messages.OrderBy(message => message.Reactions).ToList();
             }
 
             var reaction = pinData.PinEmoji.Length == 1 ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
+
+            var emotes = await guild.GetEmotesAsync();
+            var emote = emotes.FirstOrDefault(emote => emote.Name == pinData.PinEmoji);
+            if (emote is not null)
+            {
+                reaction = $"<:{emote.Name}:{emote.Id}>";
+            }
+
             var page = string.Empty;
             var pages = new List<string>();
             var count = 0;
@@ -490,28 +482,73 @@ namespace NeKzBot.Modules.Public
                 var content = message.Content.Substring(0, contentLength) + (shortened ? "..." : string.Empty);
                 content = message.Content.Length == 0 ? "*jump*" : content;
 
-                page += $"\n{pinData.PinEmoji} **x{reactions}** - [{content}]({message.GetJumpUrl()}) "
+                page += $"\n{reaction} **x{reactions}** - [{content}]({message.GetJumpUrl()}) "
                     + $"{message.Author.Mention}";
 
                 ++count;
             }
             pages.Add(page);
 
-            await PagedReplyAsync
-            (
-                new PaginatedMessage()
+            var embed = new EmbedBuilder()
+                .WithColor(await Context.User.GetRoleColor(Context.Guild))
+                .WithTitle("Top 5 Latest Pins")
+                .WithDescription(string.Join("\n", pages));
+
+            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+        }
+
+        private static Dictionary<ulong, (DateTime, List<(IMessage Data, int Reactions)>)> _pinCache = new();
+
+        private async Task<IEnumerable<(IMessage Data, int Reactions)>> BuildPinCache(
+            PinBoardData pinData,
+            IGuild guild,
+            IEnumerable<PinMessageData> pins)
+        {
+            var cache = default((DateTime, List<(IMessage Data, int Reactions)>));
+
+            if (!_pinCache.TryGetValue(guild.Id, out cache)) {
+                cache = (DateTime.Now.AddMinutes(-6), new());
+            }
+
+            var (lastCheckedTime, cacheData) = cache;
+
+            if ((DateTime.Now - lastCheckedTime).TotalMinutes < 5) {
+                return cacheData;
+            }
+
+            cacheData.Clear();
+            lastCheckedTime = DateTime.Now;
+
+            var channels = await guild.GetChannelsAsync();
+
+            foreach (var pin in pins)
+            {
+                var channel = channels.FirstOrDefault(channel => channel.Id == pin.ChannelId);
+                if (channel is null) continue;
+
+                var messageChannel = channel as ISocketMessageChannel;
+                if (messageChannel is null) continue;
+
+                var message = default(IMessage);
+                try
                 {
-                    Color = await Context.User.GetRoleColor(Context.Guild),
-                    Pages = pages,
-                    Title = $"Top Pins {order}",
-                    Options = new PaginatedAppearanceOptions
-                    {
-                        DisplayInformationIcon = false,
-                        Timeout = TimeSpan.FromSeconds(5 * 60)
-                    }
-                },
-                false
-            );
+                    message = await messageChannel.GetMessageAsync(pin.MessageId);
+                    if (message is null) continue;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                var reactions = message.Reactions.FirstOrDefault(reaction => reaction.Key.Name == pinData.PinEmoji);
+                if (reactions.Equals(default)) continue;
+
+                cacheData.Add((Data: message, Reactions: reactions.Value.ReactionCount));
+            }
+
+            _pinCache[guild.Id] = (lastCheckedTime, cacheData);
+
+            return cacheData;
         }
     }
 }
