@@ -33,18 +33,11 @@ namespace NeKzBot.Services.Notifications.Auditor
             _sleepTime = 1 * 60 * 1000;
             _retryTime = 1 * 60 * 1000;
 
-            var db = GetTaskCache<AuditData>()
-                .GetAwaiter()
-                .GetResult();
+            //_ = _dataBase.DropCollection("AuditNotificationService");
+            //_ = _dataBase.DropCollection("AuditNotificationService_cache");
 
-            var cache = db
-                .FindAll();
+            //_ = DropTaskCache().GetAwaiter().GetResult();
 
-            if (cache is null)
-            {
-                _ = LogWarning("Creating new cache");
-                db.Insert(new AuditData());
-            }
             return Task.CompletedTask;
         }
 
@@ -95,16 +88,32 @@ namespace NeKzBot.Services.Notifications.Auditor
                                 continue;
                             }
 
-                            var audits = (await (guild as IGuild).GetAuditLogsAsync(11)).Where(audit =>
-                            {
-                                //_ = LogInfo($"{audit.User.Id} user");
-                                var user = guild.GetUser(audit.User.Id);
-                                return (user != null)
-                                    ? !user.IsBot && user.GuildPermissions.Has(GuildPermission.Administrator)
-                                    : false;
-                            });
+                            var logs = await (guild as IGuild).GetAuditLogsAsync(11);
+                            var audits = new List<IAuditLogEntry>();
 
-                            _ = LogInfo($"count: {audits.Count()}, guild: {sub.GuildId}");
+                            foreach (var log in logs)
+                            {
+                                var user = guild.GetUser(log.User.Id) as IGuildUser;
+
+                                if (user is null)
+                                {
+                                    //_ = LogWarning($"Unable to find user {log.User.Id}");
+                                    continue;
+                                }
+
+                                var hasPerms = user.GuildPermissions.Has(GuildPermission.Administrator);
+                                //_ = LogInfo($"user {user.Id} (bot: {user.IsBot}, admin: {hasPerms})");
+
+                                if (user.IsBot == false && hasPerms == true)
+                                {
+                                    audits.Add(log);
+                                }
+                            }
+
+                            _ = LogInfo($"count: {audits.Count}, guild: {sub.GuildId}");
+
+                            if (audits.Count == 0)
+                                continue;
 
                             var auditor = auditors.FirstOrDefault(x => x.GuildId == sub.GuildId);
                             if (auditor is null)
@@ -114,7 +123,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                                 auditDb.Insert(new AuditData()
                                 {
                                     GuildId = sub.GuildId,
-                                    AuditIds = audits.Select(x => x.Id),
+                                    AuditIds = audits.Select(audit => audit.Id),
                                 });
                                 continue;
                             }
@@ -158,7 +167,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                                 }
                             }
 
-                            auditor.AuditIds = auditor.AuditIds.Concat(audits.Select(x => x.Id));
+                            auditor.AuditIds = audits.Select(audit => audit.Id);
 
                             if (!auditDb.Update(auditor))
                                 _ = LogWarning("Failed to update cache");
@@ -363,6 +372,7 @@ namespace NeKzBot.Services.Notifications.Auditor
                     AddPropChange(a, "Topic");
                     AddPropChange(a, "SlowModeInterval");
                     AddPropChange(a, "IsNsfw");
+                    AddPropChange(a, "ChannelType");
                     break;
                 case ChannelDeleteAuditLogData a:
                     if (a.ChannelType == ChannelType.Voice)
