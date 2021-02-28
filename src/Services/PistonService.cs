@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -12,7 +13,7 @@ using NeKzBot.Data;
 namespace NeKzBot.Services
 {
     public class PistonService
-    {        
+    {
         public readonly string PistonCollection = nameof(PistonService);
 
         private IReadOnlyCollection<PistonVersion>? _supportedVersions;
@@ -36,7 +37,7 @@ namespace NeKzBot.Services
 
             //_dataBase.DropCollection(BoardCollection);
 
-           await UpdateVersions();
+            await UpdateVersions();
         }
 
         private async Task MessageUpdated(
@@ -44,12 +45,9 @@ namespace NeKzBot.Services
             SocketMessage message,
             ISocketMessageChannel channel)
         {
-            if (channel is not SocketGuildChannel) return;
-            if (message.Author is not IGuildUser || message.Author.IsBot) return;
+            if (message.Author.IsBot) return;
 
-            var tracker = _dataBase
-                .GetCollection<CodeTrackerData>(PistonCollection)
-                .FindOne(tracker => tracker.MessageId == message.Id);
+            var tracker = await Find(tracker => tracker.MessageId == message.Id);
 
             if (tracker is null) return;
 
@@ -72,7 +70,13 @@ namespace NeKzBot.Services
                 var result = await Run(version, source, stdIn, args);
                 if (result is null) return;
 
-                await reply.ModifyAsync(reply => reply.Content = GetOutput(result));
+                var (output, build, attempt) = GetOutput(result, tracker);
+
+                await reply.ModifyAsync(reply => reply.Content = output);
+
+                tracker.Attempt = attempt;
+                tracker.Build = attempt;
+                await Update(tracker);
             }
         }
 
@@ -87,18 +91,27 @@ namespace NeKzBot.Services
             return null;
         }
 
-        public Task TrackResult(ulong messageId, ulong userId, ulong guildId, ulong channelId, ulong replyId)
+        public Task<CodeTrackerData> Find(Expression<Func<CodeTrackerData, bool>> predicate)
+        {
+            var tracker = _dataBase
+                .GetCollection<CodeTrackerData>(PistonCollection)
+                .FindOne(predicate);
+            return Task.FromResult(tracker);
+        }
+
+        public Task TrackResult(CodeTrackerData tracker)
+        {
+             _dataBase
+                .GetCollection<CodeTrackerData>(PistonCollection)
+                .Upsert(tracker);
+            return Task.CompletedTask;
+        }
+
+        public Task Update(CodeTrackerData data)
         {
             _dataBase
                 .GetCollection<CodeTrackerData>(PistonCollection)
-                .Upsert(new CodeTrackerData()
-                {
-                    UserId = userId,
-                    MessageId = messageId,
-                    ReplyId = replyId,
-                    GuildId = guildId,
-                    ChannelId = channelId,
-                });
+                .Update(data);
 
             return Task.CompletedTask;
         }
@@ -110,7 +123,7 @@ namespace NeKzBot.Services
 
             var versions = await _client.GetVersions();
             if (versions is null)
-               throw new System.Exception("Unable to get supported Piston languages");
+                throw new System.Exception("Unable to get supported Piston languages");
 
             _supportedVersions = versions;
         }
@@ -152,11 +165,18 @@ namespace NeKzBot.Services
             });
         }
 
-        public string GetOutput(PistonResult result)
+        public (string, uint, uint) GetOutput(PistonResult result, CodeTrackerData? tracker = null)
         {
-            return $@"```
+            var errored = result.Message is not null || result.Ran is not true;
+            var build = (tracker is not null ? tracker.Build : 0u) + (errored ? 0u : 1u);
+            var attempt = (tracker is not null ? tracker.Attempt : 0u) + 1u;
+
+            var output = $@"```
 {result.Message ?? result.Output?.Substring(0, Math.Min(1024, result.Output?.Length ?? 0)) ?? "No output."}
-```";
+```
+Build: {build}";
+
+            return (output, attempt, build);
         }
     }
 }

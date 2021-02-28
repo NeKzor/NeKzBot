@@ -3,6 +3,7 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using NeKzBot.Extensions;
+using NeKzBot.Services;
 using NeKzBot.Services.Notifications;
 using NeKzBot.Services.Notifications.Auditor;
 using NeKzBot.Services.Notifications.Speedrun;
@@ -15,11 +16,13 @@ namespace NeKzBot.Modules.Private
     {
         private readonly AuditorNotificationService _auditor;
         private readonly SpeedrunNotificationService _speedrun;
+        private readonly PistonService _piston;
 
-        protected OwnerModule(AuditorNotificationService auditor, SpeedrunNotificationService speedrun)
+        protected OwnerModule(AuditorNotificationService auditor, SpeedrunNotificationService speedrun, PistonService piston)
         {
             _auditor = auditor;
             _speedrun = speedrun;
+            _piston = piston;
         }
 
         private NotificationService? FindTask(string task) => task.ToLower() switch
@@ -117,6 +120,13 @@ namespace NeKzBot.Modules.Private
                 .WithDescription("Restarted");
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
+        }
+
+        [Command("piston.update")]
+        public async Task PistonUpdate()
+        {
+            await _piston.UpdateVersions();
+            await ReplyAndDeleteAsync("Updated list of supported languages.");
         }
     }
 }

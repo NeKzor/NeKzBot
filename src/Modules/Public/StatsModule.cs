@@ -13,7 +13,7 @@ using NeKzBot.Services;
 
 namespace NeKzBot.Modules.Public
 {
-    // Really old code here...
+    [RequireContext(ContextType.Guild)]
     public class StatsModule : InteractiveBase<SocketCommandContext>
     {
         private PinBoardService _pinBoard;
@@ -23,8 +23,7 @@ namespace NeKzBot.Modules.Public
             _pinBoard = pinBoard;
         }
 
-        [Ratelimit(1, 1, Measure.Minutes)]
-        [RequireContext(ContextType.Guild)]
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("guild"), Alias("server")]
         public async Task Guild()
         {
@@ -46,7 +45,6 @@ namespace NeKzBot.Modules.Public
 
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                // Fields
                 .AddField("Owner", owner, true)
                 .AddField("Created At", Context.Guild.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), true)
                 .AddField("ID", $"{Context.Guild.Id}", true)
@@ -78,8 +76,8 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
-        [Ratelimit(1, 1, Measure.Minutes)]
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("hierarchy")]
         public async Task Hierarchy()
         {
@@ -111,8 +109,8 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
-        [Ratelimit(1, 1, Measure.Minutes)]
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("channel")]
         public async Task Channel()
         {
@@ -128,7 +126,6 @@ namespace NeKzBot.Modules.Public
 
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                // Fields
                 .AddField("Name", Context.Channel.Name, true)
                 .AddField("Created At", Context.Channel.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), true)
                 .AddField("ID", $"{Context.Channel.Id}", true)
@@ -142,8 +139,8 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
-        [Ratelimit(1, 1, Measure.Minutes)]
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("id")]
         public async Task Id(bool ascending = true)
         {
@@ -154,15 +151,13 @@ namespace NeKzBot.Modules.Public
             {
                 order = "(asc.)";
                 users = Context.Guild.Users
-                    .OrderBy(u => u.Id)
-                    ;//.Take(10);
+                    .OrderBy(u => u.Id);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
-                    .OrderByDescending(u => u.Id)
-                    ;//.Take(10);
+                    .OrderByDescending(u => u.Id);
             }
 
             var page = string.Empty;
@@ -199,8 +194,8 @@ namespace NeKzBot.Modules.Public
                 false
             );
         }
-        [Ratelimit(1, 1, Measure.Minutes)]
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("disc"), Alias("discriminator")]
         public async Task Disc(bool ascending = true)
         {
@@ -211,15 +206,13 @@ namespace NeKzBot.Modules.Public
             {
                 order = "(asc.)";
                 users = Context.Guild.Users
-                    .OrderBy(u => u.DiscriminatorValue)
-                    ;//.Take(10);
+                    .OrderBy(u => u.DiscriminatorValue);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
-                    .OrderByDescending(u => u.DiscriminatorValue)
-                    ;//.Take(10);
+                    .OrderByDescending(u => u.DiscriminatorValue);
             }
 
             var page = string.Empty;
@@ -256,7 +249,8 @@ namespace NeKzBot.Modules.Public
                 false
             );
         }
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("joined")]
         public async Task Joined(bool ascending = true)
         {
@@ -267,15 +261,13 @@ namespace NeKzBot.Modules.Public
             {
                 order = "(asc.)";
                 users = Context.Guild.Users
-                    .OrderBy(u => u.JoinedAt)
-                    ;//.Take(10);
+                    .OrderBy(u => u.JoinedAt);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
-                    .OrderByDescending(u => u.JoinedAt)
-                    ;//.Take(10);
+                    .OrderByDescending(u => u.JoinedAt);
             }
 
             var page = string.Empty;
@@ -312,7 +304,8 @@ namespace NeKzBot.Modules.Public
                 false
             );
         }
-        [RequireContext(ContextType.Guild)]
+
+        [Ratelimit(6, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("created")]
         public async Task Created(bool ascending = true)
         {
@@ -323,15 +316,13 @@ namespace NeKzBot.Modules.Public
             {
                 order = "(asc.)";
                 users = Context.Guild.Users
-                    .OrderBy(u => u.CreatedAt)
-                    ;//.Take(10);
+                    .OrderBy(u => u.CreatedAt);
             }
             else
             {
                 order = "(desc.)";
                 users = Context.Guild.Users
-                    .OrderByDescending(u => u.CreatedAt)
-                    ;//.Take(10);
+                    .OrderByDescending(u => u.CreatedAt);
             }
 
             var page = string.Empty;
@@ -368,67 +359,8 @@ namespace NeKzBot.Modules.Public
                 false
             );
         }
-        // Not sure if this algorithm is fair:
-        // Appending user discriminator with user id
-        [RequireContext(ContextType.Guild)]
-        [Command("score")]
-        public async Task Score(bool ascending = true)
-        {
-            var order = string.Empty;
-            var users = default(IEnumerable<SocketGuildUser>);
 
-            if (ascending)
-            {
-                order = "(asc.)";
-                users = Context.Guild.Users
-                    .OrderBy(u => double.Parse($"{u.DiscriminatorValue}{u.Id}"))
-                    ;//.Take(10);
-            }
-            else
-            {
-                order = "(desc.)";
-                users = Context.Guild.Users
-                    .OrderByDescending(u => double.Parse($"{u.DiscriminatorValue}{u.Id}"))
-                    ;//.Take(10);
-            }
-
-            var page = string.Empty;
-            var pages = new List<string>();
-            var count = 0;
-
-            foreach (var user in users)
-            {
-                if ((count % 5 == 0) && (count != 0))
-                {
-                    pages.Add(page);
-                    page = string.Empty;
-                }
-
-                var score = Math.Round(Math.Log(double.Parse($"{user.DiscriminatorValue}{user.Id}")), 3);
-                page += $"\n{score.ToString("N3")} = {user.Username}";
-
-                count++;
-            }
-            pages.Add(page);
-
-            await PagedReplyAsync
-            (
-                new PaginatedMessage()
-                {
-                    Color = await Context.User.GetRoleColor(Context.Guild),
-                    Pages = pages,
-                    Title = $"Top User Scores {order}",
-                    Options = new PaginatedAppearanceOptions
-                    {
-                        DisplayInformationIcon = false,
-                        Timeout = TimeSpan.FromSeconds(5 * 60)
-                    }
-                },
-                false
-            );
-        }
-        [RequireContext(ContextType.Guild)]
-        [Ratelimit(1, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
+        [Ratelimit(3, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("pins")]
         public async Task Pins(bool descending = true)
         {
@@ -456,13 +388,17 @@ namespace NeKzBot.Modules.Public
                 messages = messages.OrderBy(message => message.Reactions).ToList();
             }
 
-            var reaction = pinData.PinEmoji.Length == 1 ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
+            var isStandardEmoji = (new System.Globalization.StringInfo(pinData.PinEmoji)).LengthInTextElements == 1;
+            var reaction = isStandardEmoji ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
 
-            var emotes = await guild.GetEmotesAsync();
-            var emote = emotes.FirstOrDefault(emote => emote.Name == pinData.PinEmoji);
-            if (emote is not null)
+            if (!isStandardEmoji)
             {
-                reaction = $"<:{emote.Name}:{emote.Id}>";
+                var emotes = await guild.GetEmotesAsync();
+                var emote = emotes.FirstOrDefault(emote => emote.Name == pinData.PinEmoji);
+                if (emote is not null)
+                {
+                    reaction = $"<:{emote.Name}:{emote.Id}>";
+                }
             }
 
             var page = string.Empty;
@@ -506,15 +442,13 @@ namespace NeKzBot.Modules.Public
         {
             var cache = default((DateTime, List<(IMessage Data, int Reactions)>));
 
-            if (!_pinCache.TryGetValue(guild.Id, out cache)) {
+            if (!_pinCache.TryGetValue(guild.Id, out cache))
                 cache = (DateTime.Now.AddMinutes(-6), new());
-            }
 
             var (lastCheckedTime, cacheData) = cache;
 
-            if ((DateTime.Now - lastCheckedTime).TotalMinutes < 5) {
+            if ((DateTime.Now - lastCheckedTime).TotalMinutes < 5)
                 return cacheData;
-            }
 
             cacheData.Clear();
             lastCheckedTime = DateTime.Now;

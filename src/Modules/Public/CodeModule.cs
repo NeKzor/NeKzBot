@@ -4,6 +4,7 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
+using NeKzBot.Data;
 using NeKzBot.Services;
 
 namespace NeKzBot.Modules.Public
@@ -55,24 +56,19 @@ namespace NeKzBot.Modules.Public
                     return;
                 }
 
-                var reply = await ReplyAsync(_piston.GetOutput(result));
+                var (output, build, attempt) = _piston.GetOutput(result);
+                var reply = await ReplyAsync(output);
 
-                await _piston.TrackResult
-                (
-                    Context.Message.Id,
-                    Context.User.Id,
-                    Context.Guild.Id,
-                    Context.Channel.Id,
-                    reply.Id
-                );
-            }
-
-            [RequireOwner]
-            [Command("update")]
-            public async Task update()
-            {
-                await _piston.UpdateVersions();
-                await ReplyAndDeleteAsync("Updated list of supported languages.");
+                await _piston.TrackResult(new CodeTrackerData()
+                {
+                    UserId = Context.User.Id,
+                    MessageId = Context.Message.Id,
+                    ReplyId = reply.Id,
+                    GuildId = Context.Guild?.Id,
+                    ChannelId = Context.Channel.Id,
+                    Attempt = build,
+                    Build = attempt,
+                });
             }
         }
     }

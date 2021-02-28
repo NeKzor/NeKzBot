@@ -38,6 +38,9 @@ namespace NeKzBot.Services
             SourceExtensions.DiscoverAsync();
             _cache = new ConcurrentDictionary<ulong, SourceDemoData>();
 
+            //_ = _dataBase.DropCollection(nameof(SourceDemoService));
+            DeleteExpiredDemos();
+
             // Load existing demos into cache
             foreach (var data in _dataBase
                 .GetCollection<SourceDemoData>(nameof(SourceDemoService))
@@ -134,9 +137,9 @@ namespace NeKzBot.Services
             {
                 if ((DateTime.Now - demo.CreatedAt).Days > 21)
                 {
-                    _ = LogWarning($"Deleting expired demo from user {demo.UserId}");
-                    if (!db.Delete(demo.Id))
-                        _ = LogWarning("Database failed to delete data");
+                    _ = LogWarning($"Deleting expired demo of user {demo.UserId}");
+                    if (!db.Delete(demo.UserId))
+                        _ = LogWarning($"Database failed to delete demo of user {demo.UserId}");
                 }
             }
             return Task.CompletedTask;

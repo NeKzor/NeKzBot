@@ -29,7 +29,7 @@ namespace NeKzBot.Modules.Public
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
                 .WithTitle("NeKzBot Info")
-                .WithUrl("https://nekzor.github.io/NeKzBot")
+                .WithUrl("https://nekz.me/NeKzBot")
                 // Fields
                 .AddField("Latency", $"{Context.Client.Latency} ms", true)
                 .AddField("Heap Size", $"{Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2)} MB", true)
@@ -43,6 +43,7 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
+
         [Ratelimit(3, 1, Measure.Minutes)]
         [Command("stats")]
         public async Task Stats()
@@ -67,7 +68,7 @@ namespace NeKzBot.Modules.Public
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
                 .WithTitle("NeKzBot Stats")
-                .WithUrl("https://nekzor.github.io/NeKzBot")
+                .WithUrl("https://nekz.me/NeKzBot")
                 // Fields
                 .AddField("Guilds",
                     $"Watching • {watching - hosting}\n" +
@@ -87,20 +88,7 @@ namespace NeKzBot.Modules.Public
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
         }
-        [Ratelimit(3, 1, Measure.Minutes)]
-        [Command("invite")]
-        public async Task Invite()
-        {
-            var invite = "https://discordapp.com/oauth2/authorize?scope=bot" +
-                $"&client_id={Context.Client.CurrentUser.Id}" +
-                "&permissions=536988864";
 
-            var embed = new EmbedBuilder()
-                .WithColor(await Context.User.GetRoleColor(Context.Guild))
-                .WithDescription($"[Click here to add NeKzBot to your server!]({invite})");
-
-            await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
-        }
         [Ratelimit(3, 1, Measure.Minutes)]
         [Command("modules"), Alias("help")]
         public async Task Modules()
@@ -125,9 +113,9 @@ namespace NeKzBot.Modules.Public
             var embed = new EmbedBuilder()
                 .WithColor(await Context.User.GetRoleColor(Context.Guild))
                 .WithTitle("NeKzBot Modules")
-                .WithUrl("https://nekzor.github.io/NeKzBot#modules")
+                .WithUrl("https://nekz.me/NeKzBot#modules")
                 .WithDescription((list != string.Empty)
-                    ? list + "\nVisit [nekzor.github.io/NeKzBot](https://nekzor.github.io/NeKzBot#modules) for available commands."
+                    ? list + "\nVisit [nekz.me/NeKzBot](https://nekz.me/NeKzBot/modules.html) for available commands."
                     : "Modules are not loaded.");
 
             await ReplyAndDeleteAsync(string.Empty, embed: embed.Build());

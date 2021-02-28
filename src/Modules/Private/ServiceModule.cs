@@ -8,6 +8,7 @@ using NeKzBot.Services.Notifications.Speedrun;
 
 namespace NeKzBot.Modules.Private
 {
+    [RequireContext(ContextType.Guild)]
     public class ServiceModule : ModuleBase<SocketCommandContext>
     {
         [Group("services"), Alias("service")]
@@ -28,7 +29,6 @@ namespace NeKzBot.Modules.Private
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
 
-            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.ManageWebhooks)]
             [RequireBotPermission(GuildPermission.ManageWebhooks)]
             [Group("speedruncom"), Alias("srcom")]
@@ -85,7 +85,6 @@ namespace NeKzBot.Modules.Private
                 }
             }
 
-            [RequireContext(ContextType.Guild)]
             [RequireUserPermission(GuildPermission.ManageWebhooks)]
             [RequireBotPermission(GuildPermission.ManageWebhooks)]
             [Group("auditor"), Alias("audits")]
