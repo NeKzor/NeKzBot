@@ -169,6 +169,9 @@ namespace NeKzBot.Modules.Private
         [Command("pin.set", RunMode = RunMode.Async)]
         public async Task<RuntimeResult> PinSet()
         {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return Ok();
+
             var board = _pinBoard.Get(Context.Guild.Id);
             if (board is null)
             {
@@ -176,7 +179,7 @@ namespace NeKzBot.Modules.Private
                     "A pin board for this server does not exist yet. Do you want me to create one?");
 
                 var createResponse = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
-                if (createResponse is {})
+                if (createResponse is not null)
                 {
                     switch (createResponse.Content.Trim().ToLower())
                     {
@@ -188,11 +191,11 @@ namespace NeKzBot.Modules.Private
                         case "yeah":
                         case "yep":
                             var channel = Context.Channel as ITextChannel;
-                            if (channel is {})
+                            if (channel is not null)
                             {
                                 var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
                                 board = _pinBoard.Create(hook);
-                                if (board is {})
+                                if (board is not null)
                                     goto setting;
                             }
                             break;
@@ -205,25 +208,43 @@ namespace NeKzBot.Modules.Private
             }
 
         setting:
-            var reply = await ReplyAsync("Please enter the number of minimum reactions that should be required:");
+            var reply = await ReplyAsync("How many pins should be required?");
             var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
-            if (response is {}
+            if (response is not null
                 && uint.TryParse(response.Content.Trim(), out var minimumReactions)
                 && minimumReactions != 0)
             {
-                reply = await ReplyAsync("Please enter the emote that should be used for pinning messages:");
+                reply = await ReplyAsync("Which emoji should be used for pinning messages?");
                 response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
-                if (response is {} && response.Content.Trim() != string.Empty)
+                var emoji = response?.Content?.Trim();
+                var (emojiName, isStandardEmoji) = ParseEmojiName(emoji);
+                if (emojiName is not null)
                 {
+                    if (!isStandardEmoji)
+                    {
+                        var emotes = await guild.GetEmotesAsync();
+                        var emote = emotes.FirstOrDefault(emote => emote.Name == emojiName);
+                        if (emote is null)
+                        {
+                            await reply.ModifyAsync(r => r.Content = "Could not find this server emoji :(");
+                            return Ok();
+                        }
+
+                        board.PinEmoji = emote.Name;
+                    }
+                    else
+                    {
+                        board.PinEmoji = emojiName;
+                    }
+
                     board.MinimumReactions = minimumReactions;
-                    board.PinEmoji = response.Content.Trim();
                     _pinBoard.Update(board);
 
-                    await ReplyAsync("New messages will now be automatically pinned if they reach"
+                    await ReplyAsync("Messages will now be pinned if they reach"
                         + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
-                        + $" with the {board.PinEmoji} emoji.");
+                        + $" with the {emoji} emoji.");
 
                     return Ok();
                 }
@@ -231,6 +252,19 @@ namespace NeKzBot.Modules.Private
 
             await reply.ModifyAsync(r => r.Content = "Failed to interpret answer.");
             return Ok();
+        }
+
+        private (string?, bool) ParseEmojiName(string? emoji)
+        {
+            if (string.IsNullOrEmpty(emoji)) return (null, false);
+
+            var isStandardEmoji = (new System.Globalization.StringInfo(emoji)).LengthInTextElements == 1;
+            if (isStandardEmoji) return (emoji, true);
+
+            var segments = emoji.Split(":");
+            if (segments.Length != 3) return (null, false);
+
+            return (segments[1], false);
         }
     }
 }
