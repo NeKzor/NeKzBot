@@ -4,13 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Interactive;
-using Discord.Addons.Preconditions;
 using Discord.Commands;
 using NeKzBot.Extensions;
 using NeKzBot.Services;
 
 namespace NeKzBot.Modules.Private
 {
+    [RequireContext(ContextType.Guild)]
     public class AdminModule : InteractiveBase<SocketCommandContext>
     {
         private PinBoardService _pinBoard;
@@ -20,7 +20,6 @@ namespace NeKzBot.Modules.Private
             _pinBoard = pinBoard;
         }
 
-        [Ratelimit(3, 1, Measure.Minutes)]
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageGuild)]
         [Command("invites")]
@@ -65,13 +64,13 @@ namespace NeKzBot.Modules.Private
                 false
             );
         }
-        [Ratelimit(3, 1, Measure.Minutes)]
+
         [RequireUserPermission(GuildPermission.ViewAuditLog)]
         [RequireBotPermission(GuildPermission.ViewAuditLog)]
         [Command("audits")]
         public async Task Audits(int auditCount = 10)
         {
-            var audits = await (Context.Guild as IGuild).GetAuditLogsAsync(auditCount);
+            var audits = await (Context.Guild as IGuild).GetAuditLogsAsync(Math.Max(5, Math.Min(50, auditCount)));
 
             var page = string.Empty;
             var pages = new List<string>();
@@ -110,9 +109,9 @@ namespace NeKzBot.Modules.Private
                 true
             );
         }
+
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageWebhooks)]
-        [RequireContext(ContextType.Guild)]
         [Command("pin", RunMode = RunMode.Async)]
         public async Task<RuntimeResult> Pin(ulong messageId)
         {
@@ -163,9 +162,9 @@ namespace NeKzBot.Modules.Private
 
             return Ok();
         }
+
         [RequireUserPermission(GuildPermission.ManageGuild)]
         [RequireBotPermission(GuildPermission.ManageWebhooks)]
-        [RequireContext(ContextType.Guild)]
         [Command("pin.set", RunMode = RunMode.Async)]
         public async Task<RuntimeResult> PinSet()
         {

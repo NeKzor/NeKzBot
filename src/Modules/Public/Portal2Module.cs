@@ -68,6 +68,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(6, 1, Measure.Minutes)]
             [Command("discovery"), Alias("exploit", "glitch")]
             public async Task Discovery([Remainder] string? discoveryName = null)
@@ -92,15 +93,17 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Unknown name.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("?"), Alias("info", "help")]
             public Task QuestionMark()
             {
                 var embed = new EmbedBuilder()
                     .WithColor(Color.Blue)
-                    .WithDescription("[Powered by Portal2Boards.Net (v2.2)](https://nekzor.github.io/Portal2Boards.Net)");
+                    .WithDescription("[Powered by Portal2Boards.Net (v2.2)](https://nekz.me/Portal2Boards.Net)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("leaderboard", RunMode = RunMode.Async), Alias("lb")]
             public async Task Leaderboard([Remainder] string? mapName = null)
@@ -159,6 +162,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Invalid map name.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("changelog", RunMode = RunMode.Async), Alias("cl", "clog")]
             public async Task Changelog([Remainder] string mapName)
@@ -216,6 +220,7 @@ namespace NeKzBot.Modules.Public
                     false
                 );
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("profile", RunMode = RunMode.Async), Alias("pro", "user")]
             public async Task Profile([Remainder] string? userNameOrSteamId64 = null)
@@ -306,6 +311,7 @@ namespace NeKzBot.Modules.Public
                     false
                 );
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("aggregated", RunMode = RunMode.Async), Alias("agg")]
             public async Task Aggregated()
@@ -346,6 +352,7 @@ namespace NeKzBot.Modules.Public
                     false
                 );
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("compare", RunMode = RunMode.Async), Alias("vs")]
             public async Task Aggregated(string userNameOrSteamId, string? userNameOrSteamId2 = null)

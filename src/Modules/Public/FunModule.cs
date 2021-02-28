@@ -5,19 +5,11 @@ using Discord.Addons.Interactive;
 using Discord.Addons.Preconditions;
 using Discord.Commands;
 using NeKzBot.Extensions;
-using NeKzBot.Services;
 
 namespace NeKzBot.Modules.Public
 {
     public class FunModule : InteractiveBase<SocketCommandContext>
     {
-        private readonly ImageService _imageService;
-
-        public FunModule(ImageService ImageService)
-        {
-            _imageService = ImageService;
-        }
-
         [Ratelimit(6, 1, Measure.Minutes)]
         [Command("ris")]
         public async Task RegionalIndicatorSymbol([Remainder] string text)
@@ -57,24 +49,6 @@ namespace NeKzBot.Modules.Public
             }
             if (!string.IsNullOrEmpty(message))
                 await ReplyAsync(message);
-        }
-        [Ratelimit(6, 1, Measure.Minutes)]
-        [Command("meme")]
-        public async Task Meme(string? imageName = null)
-        {
-            var image = (!string.IsNullOrEmpty(imageName))
-                ? _imageService.GetImage(imageName)
-                : _imageService.GetRandomImage();
-
-            if (image != null && Context.User.Id == 84272932246810624)
-            {
-                var message = await Context.Channel.SendFileAsync(image).ConfigureAwait(false);
-                _ = Task.Delay(TimeSpan.FromSeconds(5 * 60))
-                        .ContinueWith(_ => message.DeleteAsync().ConfigureAwait(false))
-                        .ConfigureAwait(false);
-            }
-            else
-                await ReplyAndDeleteAsync("404. Meme not found.", timeout: TimeSpan.FromSeconds(10));
         }
     }
 }

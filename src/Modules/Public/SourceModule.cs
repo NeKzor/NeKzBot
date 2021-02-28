@@ -32,7 +32,7 @@ namespace NeKzBot.Modules.Public
                     .WithDescription("**Cvar Database**\n" +
                         "Usage: .cvars.<game> <name>\n" +
                         "Available games: halflife2, portal, portal2\n" +
-                        "Made with [SourceAutoRecord](https://nekzor.github.io/SourceAutoRecord)");
+                        "Made with [SourceAutoRecord](https://nekz.me/SourceAutoRecord)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
@@ -46,6 +46,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Unknown Half-Life 2 cvar.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("portal"), Alias("p", "p1")]
             public async Task Portal(string cvar)
             {
@@ -55,6 +56,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Unknown Portal cvar.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("portal2"), Alias("p2")]
             public async Task Portal2(string cvar)
             {
@@ -64,6 +66,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Unknown Portal 2 cvar.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("sourceautorecord"), Alias("sar")]
             public async Task SourceAutoRecord(string cvar)
             {
@@ -135,10 +138,11 @@ namespace NeKzBot.Modules.Public
                     .WithColor(Color.Green)
                     .WithDescription("**Source Engine Demo Parser**\n" +
                         "Attach the file and use **.demo.parse**\n" +
-                        "[Powered by SourceDemoParser.Net (v1.0-alpha)](https://nekzor.github.io/SourceDemoParser.Net)");
+                        "[Powered by SourceDemoParser.Net (v1.0-alpha)](https://nekz.me/SourceDemoParser.Net)");
 
                 return ReplyAndDeleteAsync(string.Empty, embed: embed.Build());
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("parse", RunMode = RunMode.Async)]
             public async Task<RuntimeResult> Parse()
@@ -212,6 +216,7 @@ namespace NeKzBot.Modules.Public
 
                 return Ok();
             }
+
             [Ratelimit(3, 1, Measure.Minutes)]
             [Command("get")]
             public async Task Get()
@@ -236,6 +241,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("Demo not found!\nTry **.demo.parse**", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("filestamp"), Alias("magic")]
             public async Task FileStamp()
             {
@@ -245,6 +251,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("protocol"), Alias("protoc")]
             public async Task Protocol()
             {
@@ -254,6 +261,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("servername"), Alias("server")]
             public async Task ServerName()
             {
@@ -263,6 +271,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("clientname"), Alias("client")]
             public async Task ClientName()
             {
@@ -272,6 +281,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("mapname"), Alias("map")]
             public async Task MapName()
             {
@@ -281,6 +291,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("gamedirectory"), Alias("dir")]
             public async Task GameDirectory()
             {
@@ -290,6 +301,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("playbacktime"), Alias("time")]
             public async Task PlaybackTime()
             {
@@ -299,6 +311,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("playbackticks"), Alias("ticks")]
             public async Task PlaybackTicks()
             {
@@ -308,6 +321,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("playbackframes"), Alias("frames")]
             public async Task PlaybackFrames()
             {
@@ -317,6 +331,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("signonlength"), Alias("signon")]
             public async Task SignOnLength()
             {
@@ -326,6 +341,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(1, 1, Measure.Minutes)]
             [Command("messages", RunMode = RunMode.Async), Alias("msg")]
             public async Task Messages()
@@ -364,6 +380,7 @@ namespace NeKzBot.Modules.Public
                     );
                 }
             }
+
             [Ratelimit(6, 1, Measure.Minutes)]
             [Command("messages", RunMode = RunMode.Async), Alias("msg")]
             public async Task Messages(int index)
@@ -386,6 +403,7 @@ namespace NeKzBot.Modules.Public
                     );
                 }
             }
+ 
             [Command("gettickrate"), Alias("tickrate")]
             public async Task GetTickrate()
             {
@@ -395,6 +413,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Command("gettickspersecond")]
             [Alias("tickspersecond", "tps", "intervalpertick", "ipt")]
             public async Task GetTicksPerSecond()
@@ -405,6 +424,7 @@ namespace NeKzBot.Modules.Public
                 else
                     await ReplyAndDeleteAsync("You didn't upload a demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(1, 1, Measure.Minutes)]
             [Command("adjustexact", RunMode = RunMode.Async), Alias("adj")]
             public async Task AdjustExact(bool overwrite = false)
@@ -425,6 +445,7 @@ namespace NeKzBot.Modules.Public
                 if ((overwrite) && !(await _service.SaveDemoAsync(Context.User.Id, demo)))
                     await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(1, 1, Measure.Minutes)]
             [Command("adjustflag", RunMode = RunMode.Async), Alias("adjf")]
             public async Task AdjustFlag(bool overwrite = false)
@@ -445,6 +466,7 @@ namespace NeKzBot.Modules.Public
                 if ((overwrite) && !(await _service.SaveDemoAsync(Context.User.Id, demo)))
                     await ReplyAndDeleteAsync("Failed to overwrite demo.", timeout: TimeSpan.FromSeconds(10));
             }
+
             [Ratelimit(1, 1, Measure.Minutes)]
             [Command("adjust", RunMode = RunMode.Async), Alias("adj2")]
             public async Task Adjust(bool overwrite = false)
