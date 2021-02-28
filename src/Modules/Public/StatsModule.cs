@@ -456,13 +456,17 @@ namespace NeKzBot.Modules.Public
                 messages = messages.OrderBy(message => message.Reactions).ToList();
             }
 
-            var reaction = pinData.PinEmoji.Length == 1 ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
+            var isStandardEmoji = (new System.Globalization.StringInfo(pinData.PinEmoji)).LengthInTextElements == 1;
+            var reaction = isStandardEmoji ? pinData.PinEmoji : $":{pinData.PinEmoji}:";
 
-            var emotes = await guild.GetEmotesAsync();
-            var emote = emotes.FirstOrDefault(emote => emote.Name == pinData.PinEmoji);
-            if (emote is not null)
+            if (!isStandardEmoji)
             {
-                reaction = $"<:{emote.Name}:{emote.Id}>";
+                var emotes = await guild.GetEmotesAsync();
+                var emote = emotes.FirstOrDefault(emote => emote.Name == pinData.PinEmoji);
+                if (emote is not null)
+                {
+                    reaction = $"<:{emote.Name}:{emote.Id}>";
+                }
             }
 
             var page = string.Empty;
@@ -506,15 +510,13 @@ namespace NeKzBot.Modules.Public
         {
             var cache = default((DateTime, List<(IMessage Data, int Reactions)>));
 
-            if (!_pinCache.TryGetValue(guild.Id, out cache)) {
+            if (!_pinCache.TryGetValue(guild.Id, out cache))
                 cache = (DateTime.Now.AddMinutes(-6), new());
-            }
 
             var (lastCheckedTime, cacheData) = cache;
 
-            if ((DateTime.Now - lastCheckedTime).TotalMinutes < 5) {
+            if ((DateTime.Now - lastCheckedTime).TotalMinutes < 5)
                 return cacheData;
-            }
 
             cacheData.Clear();
             lastCheckedTime = DateTime.Now;
