@@ -14,7 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install Dependencies
-      run: cargo install mdbook --no-default-features --features output --vers "^0.4.7"
+      run: cargo install mdbook --no-default-features --features search --vers "^0.4.7"
     - name: Build
       run: |
         pushd doc
