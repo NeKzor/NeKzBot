@@ -140,13 +140,15 @@
                         </a>
                         
                         
+                        
+
                     </div>
                 </div>
 
                 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -168,7 +170,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="nekzbot"><a class="header" href="#nekzbot">NeKzBot</a></h1>
-<p>Current Version: 2.0.0 | Last Update: Feb 2021</p>
+<p>Current Version: 2.0.0 | Last Update: May 2021</p>
 <h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
 <p><a href="https://github.com/NeKzor/NeKzBot">NeKzBot</a> is a chat bot for <a href="https://discord.com">Discord</a> which finds its application in our Portal 2 speedrunning community server.</p>
 <h2 id="features"><a class="header" href="#features">Features</a></h2>
@@ -216,7 +218,7 @@
 <li><a href="https://github.com/NeKzor/Portal2Boards.Net">Portal2Boards.Net</a></li>
 <li><a href="https://github.com/NeKzor/SourceDemoParser.Net">SourceDemoParser.Net</a></li>
 </ul>
-<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <p>Requires <a href="https://dotnet.microsoft.com/download">.NET 5.0</a> or higher.</p>
 <ul>
 <li><code>git clone --recurse-submodules https://github.com/NeKzor/NeKzBot</code></li>
@@ -231,7 +233,7 @@
 <li><code>./build</code></li>
 <li><code>./run</code></li>
 </ul>
-<h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
 <p>Non-public modules are marked as <code>*</code> which require to be admin or owner</p>
 <ul>
 <li>Commands are denoted as <code>.command</code> or <code>.command.subcommand</code></li>
@@ -240,7 +242,7 @@
 <li>Optional arguments are denoted as <code>&lt;argument = 10&gt;</code> or <code>&lt;argument = optional&gt;</code></li>
 <li>Optional text arguments are denoted as <code>&lt;argument... = optional&gt;</code></li>
 </ul>
-<h1 id="admin"><a class="header" href="#admin">Admin</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="admin"><a class="header" href="#admin">Admin</a></h1>
 <p>Note: Requires to have special permissions.</p>
 <h2 id="invites"><a class="header" href="#invites">.invites</a></h2>
 <p>Lists all invites of the server.</p>
@@ -267,14 +269,33 @@
 <tr><td>Interactive</td><td></td></tr>
 </tbody></table>
 <h2 id="pinset"><a class="header" href="#pinset">.pin.set</a></h2>
-<p>Configures pin board settings. Asks for the number of pins required, then for the emoji to use for pinning messages.</p>
+<p>Configures pin board settings. Asks for the number of pins required, the emoji to use for pinning messages and then the
+amount of days until a message should be ignore for pinning.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
 <tr><td>User Permissions</td><td>Manage Guild</td></tr>
 <tr><td>Bot Permissions</td><td>Manage Webhooks</td></tr>
 <tr><td>Lifetime</td><td>20 Seconds</td></tr>
 <tr><td>Interactive</td><td></td></tr>
 </tbody></table>
-<h1 id="code"><a class="header" href="#code">Code</a></h1>
+<h2 id="pinsetreactions"><a class="header" href="#pinsetreactions">.pin.set.reactions</a></h2>
+<p>Configures pin board setting for number of minimum reactions required for pinning messages.</p>
+<table><thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><td>User Permissions</td><td>Manage Guild</td></tr>
+<tr><td>Lifetime</td><td>20 Seconds</td></tr>
+</tbody></table>
+<h2 id="pinsetemoji"><a class="header" href="#pinsetemoji">.pin.set.emoji</a></h2>
+<p>Configures pin board setting for the emoji to use for pinning messages.</p>
+<table><thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><td>User Permissions</td><td>Manage Guild</td></tr>
+<tr><td>Lifetime</td><td>20 Seconds</td></tr>
+</tbody></table>
+<h2 id="pinsetdays"><a class="header" href="#pinsetdays">.pin.set.days</a></h2>
+<p>Configures pin board setting for the amount of days until a message should be ignore for pinning.</p>
+<table><thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><td>User Permissions</td><td>Manage Guild</td></tr>
+<tr><td>Lifetime</td><td>20 Seconds</td></tr>
+</tbody></table>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="code"><a class="header" href="#code">Code</a></h1>
 <h2 id="code-1"><a class="header" href="#code-1">.code.?</a></h2>
 <p>Prints information about this module.</p>
 <h2 id="coderun-language-code"><a class="header" href="#coderun-language-code">.code.run &lt;language&gt; &lt;code...&gt;</a></h2>
@@ -289,13 +310,13 @@ cat /etc/passwd
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
 <tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 </tbody></table>
-<h1 id="fun"><a class="header" href="#fun">Fun</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="fun"><a class="header" href="#fun">Fun</a></h1>
 <h2 id="ris-text"><a class="header" href="#ris-text">.ris &lt;text...&gt;</a></h2>
 <p>Converts given text to regional indicator symbols.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
 <tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 </tbody></table>
-<h1 id="info"><a class="header" href="#info">Info</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="info"><a class="header" href="#info">Info</a></h1>
 <h2 id="info-1"><a class="header" href="#info-1">.info</a></h2>
 <p>Prints information about the bot.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
@@ -314,7 +335,7 @@ cat /etc/passwd
 <tr><td>Rate Limit</td><td>3 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 </tbody></table>
-<h1 id="owner"><a class="header" href="#owner">Owner</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="owner"><a class="header" href="#owner">Owner</a></h1>
 <p>Note: Requires to be bot owner.</p>
 <h2 id="tasks"><a class="header" href="#tasks">.tasks</a></h2>
 <p>Used when automated tasks have to be controlled manually.</p>
@@ -328,7 +349,7 @@ cat /etc/passwd
 <p>Restarts a given task.</p>
 <h2 id="pistonupdate"><a class="header" href="#pistonupdate">.piston.update</a></h2>
 <p>Updates the list of supported programming languages.</p>
-<h1 id="portal-2"><a class="header" href="#portal-2">Portal 2</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="portal-2"><a class="header" href="#portal-2">Portal 2</a></h1>
 <h2 id="portal2"><a class="header" href="#portal2">.portal2.?</a></h2>
 <p>Prints information about this module.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
@@ -381,7 +402,7 @@ cat /etc/passwd
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
-<h1 id="service"><a class="header" href="#service">Service</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="service"><a class="header" href="#service">Service</a></h1>
 <p>Note: Requires to have special permission.</p>
 <h3 id="services"><a class="header" href="#services">services.?</a></h3>
 <p>Prints help and information of all available webhook services.</p>
@@ -409,7 +430,7 @@ cat /etc/passwd
 <tr><td>User Permissions</td><td>Manage Webhooks</td></tr>
 <tr><td>Bot Permissions</td><td>Manage Webhooks</td></tr>
 </tbody></table>
-<h1 id="source"><a class="header" href="#source">Source</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="source"><a class="header" href="#source">Source</a></h1>
 <h2 id="cvars"><a class="header" href="#cvars">.cvars.?</a></h2>
 <p>Prints information about the SourceEngine console command module.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
@@ -544,57 +565,64 @@ cat /etc/passwd
 <tr><td>Rate Limit</td><td>1 Time in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 </tbody></table>
-<h1 id="stats-1"><a class="header" href="#stats-1">Stats</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="stats-1"><a class="header" href="#stats-1">Stats</a></h1>
 <h2 id="guild"><a class="header" href="#guild">.guild</a></h2>
 <p>Prints statistics about the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 </tbody></table>
 <h2 id="hierarchy"><a class="header" href="#hierarchy">.hierarchy</a></h2>
 <p>Prints the role hierarchy of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 </tbody></table>
 <h2 id="channel"><a class="header" href="#channel">.channel</a></h2>
 <p>Prints information about the current channel.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 </tbody></table>
 <h2 id="id-ascending--true"><a class="header" href="#id-ascending--true">.id &lt;ascending = true&gt;</a></h2>
 <p>Lists top user IDs of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
 <h2 id="disc-ascending--true"><a class="header" href="#disc-ascending--true">.disc &lt;ascending = true&gt;</a></h2>
 <p>Lists top user discriminators of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
 <h2 id="joined-ascending--true"><a class="header" href="#joined-ascending--true">.joined &lt;ascending = true&gt;</a></h2>
 <p>Lists top user joined dates of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
 <h2 id="created-ascending--true"><a class="header" href="#created-ascending--true">.created &lt;ascending = true&gt;</a></h2>
 <p>Lists top user created dates of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>6 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>6 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
-<h2 id="pins-ascending--true"><a class="header" href="#pins-ascending--true">.pins &lt;ascending = true&gt;</a></h2>
-<p>Lists top five latest pins from the pin board of the current server.</p>
+<h2 id="pinchampions-descending--true"><a class="header" href="#pinchampions-descending--true">.pin.champions &lt;descending = true&gt;</a></h2>
+<p>Lists top pin champions from the pin board of the current server.</p>
 <table><thead><tr><th></th><th></th></tr></thead><tbody>
-<tr><td>Rate Limit</td><td>3 Time in 1 Minute</td></tr>
+<tr><td>Rate Limit</td><td>3 Times in 1 Minute</td></tr>
+<tr><td>Lifetime</td><td>5 Minutes</td></tr>
+<tr><td>Paginated</td><td></td></tr>
+</tbody></table>
+<h2 id="pinpinners-descending--true"><a class="header" href="#pinpinners-descending--true">.pin.pinners &lt;descending = true&gt;</a></h2>
+<p>Lists top pin pinners from the pin board of the current server.</p>
+<table><thead><tr><th></th><th></th></tr></thead><tbody>
+<tr><td>Rate Limit</td><td>3 Times in 1 Minute</td></tr>
 <tr><td>Lifetime</td><td>5 Minutes</td></tr>
 <tr><td>Paginated</td><td></td></tr>
 </tbody></table>
