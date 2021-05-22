@@ -214,6 +214,8 @@ namespace NeKzBot.Modules.Private
                 && uint.TryParse(response.Content.Trim(), out var minimumReactions)
                 && minimumReactions != 0)
             {
+                board.MinimumReactions = minimumReactions;
+
                 reply = await ReplyAsync("Which emoji should be used for pinning messages?");
                 response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
@@ -238,15 +240,14 @@ namespace NeKzBot.Modules.Private
                         board.PinEmoji = emojiName;
                     }
 
-                    board.MinimumReactions = minimumReactions;
-
                     reply = await ReplyAsync("After how many days should a message be ignored for pinning?");
                     response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
                     var days = response?.Content?.Trim().Split(' ').FirstOrDefault();
                     if (days is not null
                         && uint.TryParse(days, out var daysUntilMessageExpires)
-                        && daysUntilMessageExpires >= 1) {
+                        && daysUntilMessageExpires >= 1)
+                    {
                         board.DaysUntilMessageExpires = daysUntilMessageExpires;
 
                         _pinBoard.Update(board);
@@ -264,6 +265,125 @@ namespace NeKzBot.Modules.Private
 
             await reply.ModifyAsync(r => r.Content = "Failed to interpret answer.");
             return Ok();
+        }
+
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [Command("pin.set.reactions", RunMode = RunMode.Async)]
+        public async Task PinSetReactions(uint minimumReactions)
+        {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null)
+            {
+                await ReplyAndDeleteAsync(
+                    "A pin board for this server does not exist yet. Use .pin.set to create one."
+                );
+                return;
+            }
+
+            if (minimumReactions >= 1)
+            {
+                board.MinimumReactions = minimumReactions;
+
+                _pinBoard.Update(board);
+
+                await ReplyAsync($"Messages which are not older than {board.DaysUntilMessageExpires}"
+                    + $" day{(board.DaysUntilMessageExpires == 1 ? string.Empty : "s")}"
+                    + " will now be pinned if they **reach"
+                    + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}**"
+                    + $" with the {board.PinEmoji} emoji.");
+
+                return;
+            }
+
+            await ReplyAndDeleteAsync("Amount of minimum reactions should be greater or equal to 1.");
+        }
+
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [Command("pin.set.emoji", RunMode = RunMode.Async)]
+        public async Task PinSetEmoji(string emoji)
+        {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null)
+            {
+                await ReplyAndDeleteAsync(
+                    "A pin board for this server does not exist yet. Use .pin.set to create one."
+                );
+                return;
+            }
+
+            emoji = emoji.Trim();
+            var (emojiName, isStandardEmoji) = ParseEmojiName(emoji);
+            if (emojiName is not null)
+            {
+                if (!isStandardEmoji)
+                {
+                    var emotes = await guild.GetEmotesAsync();
+                    var emote = emotes.FirstOrDefault(emote => emote.Name == emojiName);
+                    if (emote is null)
+                    {
+                        await ReplyAndDeleteAsync("Could not find this server emoji :(");
+                        return;
+                    }
+
+                    board.PinEmoji = emote.Name;
+                }
+                else
+                {
+                    board.PinEmoji = emojiName;
+                }
+
+                _pinBoard.Update(board);
+
+                await ReplyAsync($"Messages which are not older than {board.DaysUntilMessageExpires}"
+                    + $" day{(board.DaysUntilMessageExpires == 1 ? string.Empty : "s")}"
+                    + " will now be pinned if they reach"
+                    + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
+                    + $" with **the {emoji} emoji**.");
+
+                return;
+            }
+
+            await ReplyAndDeleteAsync("Did not recognize this as an emoji.");
+        }
+
+        [RequireUserPermission(GuildPermission.ManageGuild)]
+        [Command("pin.set.days", RunMode = RunMode.Async)]
+        public async Task PinSetDays(uint daysUntilMessageExpires)
+        {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var board = _pinBoard.Get(Context.Guild.Id);
+            if (board is null)
+            {
+                await ReplyAndDeleteAsync(
+                    "A pin board for this server does not exist yet. Use .pin.set to create one."
+                );
+                return;
+            }
+
+            if (daysUntilMessageExpires >= 1)
+            {
+                board.DaysUntilMessageExpires = daysUntilMessageExpires;
+
+                _pinBoard.Update(board);
+
+                await ReplyAsync($"Messages which are **not older than {board.DaysUntilMessageExpires}"
+                    + $" day{(board.DaysUntilMessageExpires == 1 ? string.Empty : "s")}**"
+                    + " will now be pinned if they reach"
+                    + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
+                    + $" with the {board.PinEmoji} emoji.");
+
+                return;
+            }
+
+            await ReplyAndDeleteAsync("Amount of days should be greater or equal to 1.");
         }
 
         private (string?, bool) ParseEmojiName(string? emoji)
