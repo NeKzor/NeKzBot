@@ -361,6 +361,141 @@ namespace NeKzBot.Modules.Public
         }
 
         [Ratelimit(3, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
+        [Command("pin.champions")]
+        public async Task PinChampions(bool descending = true)
+        {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var pinData = _pinBoard.Get(Context.Guild.Id);
+            if (pinData is null || pinData.PinEmoji is null) return;
+
+            var champions = _pinBoard
+                .GetMessages(Context.Guild.Id)
+                .Where(p => p.Champion is not null)
+                .GroupBy(p => p.Champion!.UserId)
+                .Select(g => new { Champion = g.First().Champion!, Count = g.Count() });
+
+            var order = string.Empty;
+
+            if (descending)
+            {
+                order = "(desc.)";
+                champions = champions.OrderByDescending(p => p.Count);
+            }
+            else
+            {
+                order = "(asc.)";
+                champions = champions.OrderBy(p => p.Count);
+            }
+
+            var page = string.Empty;
+            var pages = new List<string>();
+            var count = 0;
+
+            foreach (var champion in champions)
+            {
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
+
+                var championName = champion.Champion.Nickname
+                    ?? champion.Champion.Name
+                    ?? champion.Champion.UserId.ToString();
+
+                page += $"\n{championName} | {champion.Count}";
+
+                count++;
+            }
+            pages.Add(page);
+
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top Pin Champions {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false
+            );
+        }
+
+        [Ratelimit(3, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
+        [Command("pin.pinners")]
+        public async Task PinPinners(bool descending = true)
+        {
+            var guild = (Context.Guild as IGuild);
+            if (guild is null) return;
+
+            var pinData = _pinBoard.Get(Context.Guild.Id);
+            if (pinData is null || pinData.PinEmoji is null) return;
+
+            var pinners = _pinBoard
+                .GetMessages(Context.Guild.Id)
+                .Where(p => p.Pinners is not null)
+                .SelectMany(p => p.Pinners)
+                .GroupBy(p => p.UserId)
+                .Select(g => new { Pinner = g.First(), Count = g.Count() });
+
+            var order = string.Empty;
+
+            if (descending)
+            {
+                order = "(desc.)";
+                pinners = pinners.OrderByDescending(p => p.Count);
+            }
+            else
+            {
+                order = "(asc.)";
+                pinners = pinners.OrderBy(p => p.Count);
+            }
+
+            var page = string.Empty;
+            var pages = new List<string>();
+            var count = 0;
+
+            foreach (var pinner in pinners)
+            {
+                if ((count % 5 == 0) && (count != 0))
+                {
+                    pages.Add(page);
+                    page = string.Empty;
+                }
+
+                var pinnerName = pinner.Pinner.Nickname ?? pinner.Pinner.Name ?? pinner.Pinner.UserId.ToString();
+
+                page += $"\n{pinnerName} | {pinner.Count}";
+
+                count++;
+            }
+            pages.Add(page);
+
+            await PagedReplyAsync
+            (
+                new PaginatedMessage()
+                {
+                    Color = await Context.User.GetRoleColor(Context.Guild),
+                    Pages = pages,
+                    Title = $"Top Pin Pinners {order}",
+                    Options = new PaginatedAppearanceOptions
+                    {
+                        DisplayInformationIcon = false,
+                        Timeout = TimeSpan.FromSeconds(5 * 60)
+                    }
+                },
+                false
+            );
+        }
+
+        [Ratelimit(3, 1, Measure.Minutes, RatelimitFlags.NoLimitForAdmins | RatelimitFlags.ApplyPerGuild)]
         [Command("pins")]
         public async Task Pins(bool descending = true)
         {
