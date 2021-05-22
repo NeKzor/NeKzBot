@@ -1,6 +1,6 @@
 # NeKzBot
 
-Current Version: 2.0.0 | Last Update: Feb 2021
+Current Version: 2.0.0 | Last Update: May 2021
 
 ## Introduction
 
