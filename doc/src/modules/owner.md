@@ -10,15 +10,15 @@ Used when automated tasks have to be controlled manually.
 
 Replies with current status of all tasks.
 
-### .tasks.stop <task_name>
+### .tasks.stop \<task_name\>
 
 Stops a given task.
 
-### .tasks.start <task_name>
+### .tasks.start \<task_name\>
 
 Starts a given task.
 
-### .tasks.restart <task_name>
+### .tasks.restart \<task_name\>
 
 Restarts a given task.
 

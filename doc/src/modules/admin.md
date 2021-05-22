@@ -13,7 +13,7 @@ Lists all invites of the server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .audits <count = 10>
+## .audits \<count = 10\>
 
 Lists audit logs of the server.
 
@@ -24,7 +24,7 @@ Lists audit logs of the server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .pin <message_id>
+## .pin \<message_id\>
 
 Manually pins a given message. Will ask to create a new pin board for the server if it does not exist.
 
@@ -47,7 +47,7 @@ amount of days until a message should be ignored for pinning.
 |Lifetime|20 Seconds|
 |Interactive||
 
-## .pin.set.reactions <minimum_reactions>
+## .pin.set.reactions \<minimum_reactions\>
 
 Configures pin board setting for number of minimum reactions required for pinning messages.
 
@@ -56,7 +56,7 @@ Configures pin board setting for number of minimum reactions required for pinnin
 |User Permissions|Manage Guild|
 |Lifetime|20 Seconds|
 
-## .pin.set.emoji <emoji>
+## .pin.set.emoji \<emoji\>
 
 Configures pin board setting for the emoji to use for pinning messages.
 
@@ -65,7 +65,7 @@ Configures pin board setting for the emoji to use for pinning messages.
 |User Permissions|Manage Guild|
 |Lifetime|20 Seconds|
 
-## .pin.set.days <days_until_message_expires>
+## .pin.set.days \<days_until_message_expires\>
 
 Configures pin board setting for the amount of days until a message should be ignored for pinning.
 

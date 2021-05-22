@@ -27,7 +27,7 @@ Prints information about the current channel.
 |Rate Limit|6 Times in 1 Minute|
 |Lifetime|5 Minutes|
 
-## .id <ascending = true>
+## .id \<ascending = true\>
 
 Lists top user IDs of the current server.
 
@@ -37,7 +37,7 @@ Lists top user IDs of the current server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .disc <ascending = true>
+## .disc \<ascending = true\>
 
 Lists top user discriminators of the current server.
 
@@ -47,7 +47,7 @@ Lists top user discriminators of the current server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .joined <ascending = true>
+## .joined \<ascending = true\>
 
 Lists top user joined dates of the current server.
 
@@ -57,7 +57,7 @@ Lists top user joined dates of the current server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .created <ascending = true>
+## .created \<ascending = true\>
 
 Lists top user created dates of the current server.
 
@@ -67,7 +67,7 @@ Lists top user created dates of the current server.
 |Lifetime|5 Minutes|
 |Paginated||
 
-## .pin.champions <descending = true>
+## .pin.champions \<descending = true\>
 
 Lists top pin champions from the pin board of the current server.
 
@@ -78,7 +78,7 @@ Lists top pin champions from the pin board of the current server.
 |Paginated||
 
 
-## .pin.pinners <descending = true>
+## .pin.pinners \<descending = true\>
 
 Lists top pin pinners from the pin board of the current server.
 

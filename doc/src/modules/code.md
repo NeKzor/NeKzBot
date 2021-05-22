@@ -4,7 +4,7 @@
 
 Prints information about this module.
 
-## .code.run \<language\> <code...>
+## .code.run \<language\> \<code...\>
 
 Executes code of a give programming language. New code can be run again by editing the previous message.
 

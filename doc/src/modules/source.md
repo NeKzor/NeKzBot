@@ -8,7 +8,7 @@ Prints information about the SourceEngine console command module.
 |---|---|
 |Lifetime|5 Minutes|
 
-## .cvars.halflife2 <cvar>
+## .cvars.halflife2 \<cvar\>
 
 Looks up a given console command for Half-Life 2.
 
@@ -16,7 +16,7 @@ Looks up a given console command for Half-Life 2.
 |---|---|
 |Lifetime|5 Minutes|
 
-## .cvars.portal <cvar>
+## .cvars.portal \<cvar\>
 
 Looks up a given console command for Portal.
 
@@ -24,7 +24,7 @@ Looks up a given console command for Portal.
 |---|---|
 |Lifetime|5 Minutes|
 
-## .cvars.portal2 <cvar>
+## .cvars.portal2 \<cvar\>
 
 Looks up a given console command for Portal 2.
 
@@ -32,7 +32,7 @@ Looks up a given console command for Portal 2.
 |---|---|
 |Lifetime|5 Minutes|
 
-## .cvars.sourceautorecord <cvar>
+## .cvars.sourceautorecord \<cvar\>
 
 Looks up a given console command for [SourceAutoRecord](https://github.com/NeKzor/SourceAutoRecord).
 
@@ -158,7 +158,7 @@ Prints demo information.
 |Rate Limit|6 Times in 1 Minute|
 |Lifetime|5 Minutes|
 
-## .demo.messages <index>
+## .demo.messages \<index\>
 
 Prints demo information.
 

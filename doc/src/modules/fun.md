@@ -1,6 +1,6 @@
 # Fun
 
-## .ris <text...>
+## .ris \<text...\>
 
 Converts given text to regional indicator symbols.
 
