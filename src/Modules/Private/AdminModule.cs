@@ -239,13 +239,26 @@ namespace NeKzBot.Modules.Private
                     }
 
                     board.MinimumReactions = minimumReactions;
-                    _pinBoard.Update(board);
 
-                    await ReplyAsync("Messages will now be pinned if they reach"
-                        + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
-                        + $" with the {emoji} emoji.");
+                    reply = await ReplyAsync("After how many days should a message be ignored for pinning?");
+                    response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
 
-                    return Ok();
+                    var days = response?.Content?.Trim().Split(' ').FirstOrDefault();
+                    if (days is not null
+                        && uint.TryParse(days, out var daysUntilMessageExpires)
+                        && daysUntilMessageExpires >= 1) {
+                        board.DaysUntilMessageExpires = daysUntilMessageExpires;
+
+                        _pinBoard.Update(board);
+
+                        await ReplyAsync($"Messages which are not older than {board.DaysUntilMessageExpires}"
+                            + $" day{(board.DaysUntilMessageExpires == 1 ? string.Empty : "s")}"
+                            + " will now be pinned if they reach"
+                            + $" {board.MinimumReactions} reaction{(board.MinimumReactions == 1 ? string.Empty : "s")}"
+                            + $" with the {emoji} emoji.");
+
+                        return Ok();
+                    }
                 }
             }
 

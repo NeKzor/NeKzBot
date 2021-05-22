@@ -55,15 +55,19 @@ namespace NeKzBot.Services
             if (board is null || board.PinEmoji is null) return;
 
             var message = await cache.GetOrDownloadAsync();
-            if (message is null || message.Author is not IGuildUser || message.CreatedAt < board.CreatedAt) return;
+            if (message is null || message.Author is not IGuildUser) return;
+
+            if (board.DaysUntilMessageExpires is not 0
+                && message.CreatedAt.AddDays(board.DaysUntilMessageExpires) < DateTime.Now) return;
 
             var pin = GetMessage(message.Id);
-            if (pin is {}) return;
+            if (pin is not null) return;
 
             var reaction = message.Reactions.FirstOrDefault(x => x.Key.Name == board.PinEmoji);
             if (reaction.Value.ReactionCount >= board.MinimumReactions)
             {
-                Pin(message, guildChannel);
+                var pinners = (await message.GetReactionUsersAsync(reaction.Key, 100).ToArrayAsync()).SelectMany(user => user);
+                Pin(message, guildChannel, pinners);
                 await Send(message, board);
             }
         }
@@ -122,7 +126,7 @@ namespace NeKzBot.Services
                 .Upsert(board);
         }
 
-        private void Pin(IMessage message, SocketGuildChannel source)
+        private void Pin(IMessage message, SocketGuildChannel source, IEnumerable<IUser> pinners)
         {
             if (message is null) return;
 
@@ -130,7 +134,9 @@ namespace NeKzBot.Services
             {
                 MessageId = message.Id,
                 ChannelId = source.Id,
-                GuildId = source.Guild.Id
+                GuildId = source.Guild.Id,
+                Champion = PinUser.Create(message.Author),
+                Pinners = pinners.Select(pinner => PinUser.Create(pinner)).ToList(),
             };
 
             _dataBase
