@@ -65,14 +65,6 @@ namespace NeKzBot.Services.Notifications.Auditor
 
                     if (subscribers.Count == 0) goto retry;
 
-                    void DeleteSub(SubscriptionData sub, string message)
-                    {
-                        if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
-                            _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
-                        else
-                            _ = LogWarning($"{message}. Ended subscription service for {sub.GuildId}.");
-                    }
-
                     foreach (var sub in subscribers)
                     {
                         if (_client.ConnectionState != Discord.ConnectionState.Connected)
@@ -84,9 +76,26 @@ namespace NeKzBot.Services.Notifications.Auditor
                             var guild = _client.GetGuild(sub.GuildId);
                             if (guild is null)
                             {
-                                DeleteSub(sub, "Unable to find guild");
+                                sub.GuildErrors += 1;
+
+                                if (sub.GuildErrors < 60)
+                                {
+                                    subDb.Update(sub);
+                                    _ = LogWarning($"Unable to find guild. GuildErrors = {sub.GuildErrors}");
+                                }
+                                else
+                                {
+                                    if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
+                                        _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
+                                    else
+                                        _ = LogWarning($"Unable to find guild. Ended subscription service for {sub.GuildId}.");
+                                }
+
                                 continue;
                             }
+
+                            sub.GuildErrors = 0;
+                            subDb.Update(sub);
 
                             var logs = await (guild as IGuild).GetAuditLogsAsync(11);
                             var audits = new List<IAuditLogEntry>();
@@ -159,11 +168,25 @@ namespace NeKzBot.Services.Notifications.Auditor
                                         avatarUrl: _userAvatar,
                                         allowedMentions: AllowedMentions.None
                                     );
+
+                                    sub.WebhookErrors = 0;
+                                    subDb.Update(sub);
                                 }
                                 catch (InvalidOperationException ex)
                                     when (ex.Message.StartsWith("Could not find a webhook"))
                                 {
-                                    DeleteSub(sub, "Unable to send hook");
+                                    if (sub.WebhookErrors < 60)
+                                    {
+                                        subDb.Update(sub);
+                                        _ = LogWarning($"Unable to send hook. WebhookErrors = {sub.WebhookErrors}");
+                                    }
+                                    else
+                                    {
+                                        if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
+                                            _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
+                                        else
+                                            _ = LogWarning($"Unable to send hook. Ended subscription service for {sub.GuildId}.");
+                                    }
                                 }
                             }
 

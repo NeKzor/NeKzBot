@@ -54,7 +54,7 @@ namespace NeKzBot.Services.Notifications
         }
         public virtual Task StopAsync()
         {
-            if (_isRunning && _cancellation is {})
+            if (_isRunning && _cancellation is not null)
             {
                 _isRunning = false;
                 _cancellation.Cancel();
@@ -98,6 +98,9 @@ namespace NeKzBot.Services.Notifications
                             avatarUrl: _userAvatar,
                             allowedMentions: AllowedMentions.None
                         );
+
+                        sub.WebhookErrors = 0;
+                        db.Update(sub);
                     }
                     // Make sure to catch only on this special exception
                     // which tells us that this webhook doesn't exist
@@ -113,6 +116,14 @@ namespace NeKzBot.Services.Notifications
             // Delete failed subscribers
             foreach (var sub in failed)
             {
+                sub.WebhookErrors += 1;
+
+                if (sub.WebhookErrors < 60)
+                {
+                    db.Update(sub);
+                    continue;
+                }
+
                 if (db.Delete(d => d.WebhookId == sub.WebhookId) != 1)
                     await LogWarning($"Database failed to delete sub ID = {sub.Id}");
                 else
