@@ -138,7 +138,7 @@ namespace NeKzBot.Services
                 if ((DateTime.Now - demo.CreatedAt).Days > 21)
                 {
                     _ = LogWarning($"Deleting expired demo of user {demo.UserId}");
-                    if (!db.Delete(demo.UserId))
+                    if (db.Delete(d => d.UserId == demo.UserId) != -1)
                         _ = LogWarning($"Database failed to delete demo of user {demo.UserId}");
                 }
             }
