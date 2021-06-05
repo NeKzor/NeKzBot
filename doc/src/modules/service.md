@@ -2,11 +2,11 @@
 
 Note: Requires to have special permission.
 
-### services.?
+### .services.?
 
 Prints help and information of all available webhook services.
 
-### services.speedruncom.subscribe
+### .services.speedruncom.subscribe
 
 Subscribes to the speedrun.com service.
 
@@ -15,7 +15,7 @@ Subscribes to the speedrun.com service.
 |User Permissions|Manage Webhooks|
 |Bot Permissions|Manage Webhooks|
 
-### services.speedruncom.unsubscribe
+### .services.speedruncom.unsubscribe
 
 Unsubscribes to the speedrun.com service.
 
@@ -24,7 +24,7 @@ Unsubscribes to the speedrun.com service.
 |User Permissions|Manage Webhooks|
 |Bot Permissions|Manage Webhooks|
 
-### services.auditor.subscribe
+### .services.auditor.subscribe
 
 Subscribes to the auditor service.
 
@@ -33,7 +33,7 @@ Subscribes to the auditor service.
 |User Permissions|Manage Webhooks|
 |Bot Permissions|Manage Webhooks|
 
-### services.auditor.unsubscribe
+### .services.auditor.unsubscribe
 
 Unsubscribes to the auditor service.
 
