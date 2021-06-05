@@ -10,3 +10,9 @@ Requires [.NET 5.0](https://dotnet.microsoft.com/download) or higher.
   * speedrun.com API token
 * `./build`
 * `./run`
+
+## Debugging
+
+* `./build DEBUG`
+* `./run DEBUG`
+* Command prefix starts with `!` e.g. `!services.?`
