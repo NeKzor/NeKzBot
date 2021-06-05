@@ -100,7 +100,7 @@ namespace NeKzBot.Services
             _serviceLogger!.Log
             (
                 // :^)
-                (ex is {})
+                (ex is not null)
                     ? LogLevel.Error
                     : (message.EndsWith("!"))
                         ? LogLevel.Warning
@@ -108,7 +108,7 @@ namespace NeKzBot.Services
                 0,
                 message,
                 ex,
-                (_, __) => $"{DateTime.Now.ToString("HH:mm:ss")} {message}"
+                (_, __) => $"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} {message}"
             );
             return Task.CompletedTask;
         }
