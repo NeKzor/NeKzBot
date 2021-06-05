@@ -129,7 +129,7 @@ namespace NeKzBot.Modules.Private
                     "A pin board for this server does not exist yet. Do you want me to create one?");
 
                 var response = await NextMessageAsync(timeout: TimeSpan.FromSeconds(20));
-                if (response is {})
+                if (response is not null)
                 {
                     switch (response.Content.Trim().ToLower())
                     {
@@ -141,7 +141,7 @@ namespace NeKzBot.Modules.Private
                         case "yeah":
                         case "yep":
                             var channel = Context.Channel as ITextChannel;
-                            if (channel is {})
+                            if (channel is not null)
                             {
                                 var hook = await channel.CreateWebhookAsync("NeKzBot_PinBoardHook");
                                 board = _pinBoard.Create(hook);

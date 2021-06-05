@@ -175,7 +175,7 @@ namespace NeKzBot.Services
                     return url.EndsWith(".mp4") || url.EndsWith(".mov") || url.EndsWith(".webm");
                 }
 
-                if (embed is {}
+                if (embed is not null
                     && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || (embed.Type == EmbedType.Video && IsVideoFormat(embed.Video!.Value.Url))))
                 {
                     var url = embed.Type == EmbedType.Image
@@ -183,7 +183,7 @@ namespace NeKzBot.Services
                         : embed.Video!.Value.Url;
 
                     var (success, file) = await _client.GetStreamAsync(url);
-                    if (success && file is {} && file.Length <= 8 * 1000 * 1000)
+                    if (success && file is not null && file.Length <= 8 * 1000 * 1000)
                     {
                         pinId = await wc.SendFileAsync
                         (
@@ -197,7 +197,7 @@ namespace NeKzBot.Services
                         );
                     }
                 }
-                else if (attachment is {} && attachment.Size <= 8 * 1000 * 1000)
+                else if (attachment is not null && attachment.Size <= 8 * 1000 * 1000)
                 {
                     var (success, file) = await _client.GetStreamAsync(attachment.Url);
                     if (success)

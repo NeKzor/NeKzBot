@@ -61,7 +61,7 @@ namespace NeKzBot.Modules.Public
             public async Task Portal2(string cvar)
             {
                 var result = await _service.LookUpCvar(cvar, CvarGameType.Portal2);
-                if (result is {})
+                if (result is not null)
                     await PrintResult(result);
                 else
                     await ReplyAndDeleteAsync("Unknown Portal 2 cvar.", timeout: TimeSpan.FromSeconds(10));
@@ -71,7 +71,7 @@ namespace NeKzBot.Modules.Public
             public async Task SourceAutoRecord(string cvar)
             {
                 var result = await _service.LookUpCvar(cvar, CvarGameType.SAR);
-                if (result is {})
+                if (result is not null)
                     await PrintResult(result);
                 else
                     await ReplyAndDeleteAsync("Unknown SAR cvar.", timeout: TimeSpan.FromSeconds(10));

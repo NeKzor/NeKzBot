@@ -466,7 +466,7 @@ namespace NeKzBot.Modules.Public
                     if (nick != null)
                     {
                         var profile = await _client.GetProfileAsync(nick);
-                        if (profile is {})
+                        if (profile is not null)
                             return profile;
                     }
 

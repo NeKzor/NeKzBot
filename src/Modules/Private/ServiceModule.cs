@@ -56,7 +56,7 @@ namespace NeKzBot.Modules.Private
                     if (sub is null)
                     {
                         var webhook = await channel.CreateWebhookAsync("NeKzBot_SpeedrunComHook");
-                        if (webhook is {})
+                        if (webhook is not null)
                         {
                             if (!await _service.SubscribeAsync(webhook, "Subscribed!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
@@ -72,7 +72,7 @@ namespace NeKzBot.Modules.Private
                 {
                     var hooks = await Context.Guild.GetWebhooksAsync();
                     var (hook, sub) = await _service.FindSubscriptionAsync(hooks);
-                    if (hook is {} && sub is {})
+                    if (hook is not null && sub is not null)
                     {
                         await hook.DeleteAsync();
                         if (await _service.UnsubscribeAsync(sub))
@@ -112,7 +112,7 @@ namespace NeKzBot.Modules.Private
                     if (sub is null)
                     {
                         var webhook = await channel.CreateWebhookAsync("NeKzBot_AuditorHook");
-                        if (webhook is {})
+                        if (webhook is not null)
                         {
                             if (!await _service.SubscribeAsync(webhook, "Subscribed!"))
                                 await ReplyAndDeleteAsync("Failed to subscribe.", timeout: TimeSpan.FromSeconds(10));
@@ -128,7 +128,7 @@ namespace NeKzBot.Modules.Private
                 {
                     var hooks = await Context.Guild.GetWebhooksAsync();
                     var (hook, sub) = await _service.FindSubscriptionAsync(hooks);
-                    if (hook is {} && sub is {})
+                    if (hook is not null && sub is not null)
                     {
                         await hook.DeleteAsync();
                         if (await _service.UnsubscribeAsync(sub))
