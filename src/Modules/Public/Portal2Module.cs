@@ -233,10 +233,15 @@ namespace NeKzBot.Modules.Public
                 }
 
                 // Local function
-                string GetMap(IDataScore score)
+                string GetMap(IDataScore? score)
                 {
-                    var map = Portal2Map.Search((score as DataScore)!.Id);
-                    return (map != null) ? map.Alias : "several chambers";
+                    if (score is DataScore ds)
+                    {
+                        var map = Portal2Map.Search(ds.Id);
+                        return (map != null) ? map.Alias : "several chambers";
+                    }
+
+                    return "n/a";
                 }
 
                 var pages = new List<string>
@@ -253,12 +258,12 @@ namespace NeKzBot.Modules.Public
                     $"\nSP Avg Rank | {user.Times.SinglePlayerChapters.AveragePlace.FormatAveragePlaceToString()}" +
                         $"\nMP Avg Rank | {user.Times.CooperativeChapters.AveragePlace.FormatAveragePlaceToString()}" +
                         $"\nOverall | {user.GlobalAveragePlace.FormatAveragePlaceToString()}",
-                    $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore)}" +
-                        $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore)}",
-                    $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore)}" +
-                        $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore)}",
-                    $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore)}" +
-                        $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore)}"
+                    $"\nSP Best Rank | {user.Times.SinglePlayerChapters.BestScore?.PlayerRank.FormatRankToString()} on {GetMap(user.Times.SinglePlayerChapters.BestScore)}" +
+                        $"\nMP Best Rank | {user.Times.CooperativeChapters.BestScore?.PlayerRank.FormatRankToString()} on {GetMap(user.Times.CooperativeChapters.BestScore)}",
+                    $"\nSP Oldest Score | {user.Times.SinglePlayerChapters.OldestScore?.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.OldestScore)}" +
+                        $"\nMP Oldest Score | {user.Times.CooperativeChapters.OldestScore?.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.OldestScore)}",
+                    $"\nSP Newest Score | {user.Times.SinglePlayerChapters.NewestScore?.Score.AsTimeToString()} on {GetMap(user.Times.SinglePlayerChapters.NewestScore)}" +
+                        $"\nMP Newest Score | {user.Times.CooperativeChapters.NewestScore?.Score.AsTimeToString()} on {GetMap(user.Times.CooperativeChapters.NewestScore)}"
                 };
 
                 var page = string.Empty;
