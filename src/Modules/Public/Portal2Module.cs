@@ -336,7 +336,7 @@ namespace NeKzBot.Modules.Public
                     }
 
                     page += $"\n{entry.Score}" +
-                        $"\t[{entry.Player.Name}](https://board.iverb.me/profile/{(entry.Player as SteamUser)!.Id})";
+                        $"\t[{entry.Player.Name}](https://board.portal2.sr/profile/{(entry.Player as SteamUser)!.Id})";
 
                     count++;
                 }
