@@ -85,10 +85,12 @@ namespace NeKzBot.Services.Notifications.Auditor
                                 }
                                 else
                                 {
-                                    if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
+                                    _ = LogWarning($"Trying to delete subscription for {sub.GuildId} but prevented (DEBUGGING) (GuildErrors)");
+
+                                    /* if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
                                         _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
                                     else
-                                        _ = LogWarning($"Unable to find guild. Ended subscription service for {sub.GuildId}.");
+                                        _ = LogWarning($"Unable to find guild. Ended subscription service for {sub.GuildId}."); */
                                 }
 
                                 continue;
@@ -182,10 +184,12 @@ namespace NeKzBot.Services.Notifications.Auditor
                                     }
                                     else
                                     {
-                                        if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
+                                        _ = LogWarning($"Trying to delete subscription for {sub.GuildId} but prevented (DEBUGGING) (WebhookErrors)");
+
+                                        /* if (subDb.Delete(d => d.WebhookId == sub.WebhookId) != 1)
                                             _ = LogWarning($"Tried to delete subscription for {sub.GuildId} but failed");
                                         else
-                                            _ = LogWarning($"Unable to send hook. Ended subscription service for {sub.GuildId}.");
+                                            _ = LogWarning($"Unable to send hook. Ended subscription service for {sub.GuildId}."); */
                                     }
                                 }
                             }
@@ -231,7 +235,7 @@ namespace NeKzBot.Services.Notifications.Auditor
             throw new InvalidOperationException("No.");
         }
 
-        private Task<Embed> BuildEmbedAsync(RestAuditLogEntry? audit, SocketGuild guild)
+        public Task<Embed> BuildEmbedAsync(RestAuditLogEntry? audit, SocketGuild guild)
         {
             if (audit is null)
                 throw new NullReferenceException("Audit object was null");
@@ -343,6 +347,8 @@ namespace NeKzBot.Services.Notifications.Auditor
                     AddPropChange(a, "ExplicitContentFilter");
                     AddPropChange(a, "DefaultMessageNotifications");
                     AddPropChange(a, "IconHash");
+                    AddPropChange(a, "SplashHash");
+                    AddPropChange(a, "BannerHash");
                     AddPropChange(a, "MfaLevel");
                     AddPropChange(a, "Name");
                     AddPropChange(a, "Owner");
