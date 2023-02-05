@@ -66,7 +66,8 @@ namespace NeKzBot.Services
             var reaction = message.Reactions.FirstOrDefault(x => x.Key.Name == board.PinEmoji);
             if (reaction.Value.ReactionCount >= board.MinimumReactions)
             {
-                var pinners = (await message.GetReactionUsersAsync(reaction.Key, 100).ToArrayAsync()).SelectMany(user => user);
+                var pinners = (await message.GetReactionUsersAsync(reaction.Key, 100).ToArrayAsync())
+                    .SelectMany(user => user);
                 Pin(message, guildChannel, pinners);
                 await Send(message, board);
             }
@@ -157,8 +158,8 @@ namespace NeKzBot.Services
                 throw new System.Exception("Board not found");
 
             var jumpButton = new EmbedBuilder()
-                    .WithColor(await message.Author.GetRoleColor())
-                    .WithDescription($"[Jump]({message.GetJumpUrl()})");
+                .WithColor(await message.Author.GetRoleColor())
+                .WithDescription($"[Jump]({message.GetJumpUrl()})");
 
             try
             {
@@ -176,14 +177,15 @@ namespace NeKzBot.Services
                 }
 
                 if (embed is not null
-                    && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || (embed.Type == EmbedType.Video && IsVideoFormat(embed.Video!.Value.Url))))
+                    && (embed.Type == EmbedType.Gifv || embed.Type == EmbedType.Image || (embed.Type == EmbedType.Video
+                        && IsVideoFormat(embed.Video!.Value.Url))))
                 {
                     var url = embed.Type == EmbedType.Image
                         ? embed.Image!.Value.ProxyUrl
                         : embed.Video!.Value.Url;
 
                     var (success, file) = await _client.GetStreamAsync(url);
-                    if (success && file is not null && file.Length <= 8 * 1000 * 1000)
+                    if (success && file is not null)
                     {
                         pinId = await wc.SendFileAsync
                         (
@@ -197,7 +199,7 @@ namespace NeKzBot.Services
                         );
                     }
                 }
-                else if (attachment is not null && attachment.Size <= 8 * 1000 * 1000)
+                else if (attachment is not null)
                 {
                     var (success, file) = await _client.GetStreamAsync(attachment.Url);
                     if (success)
