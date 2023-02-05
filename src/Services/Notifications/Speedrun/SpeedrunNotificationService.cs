@@ -166,10 +166,12 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
             static SpeedrunNotificationType ResolveNotificationType(string? type) => type switch
             {
-                "thread"    => new ThreadNotification(),
-                "post"      => new PostNotification(),
-                "guide"     => new GuideNotification(notifyUpdated: false),
-                "resource"  => new ResourceNotification(),
+                // Bot account only receives runs and moderator notifications now so supporting any other types are
+                // not needed. They need to be manually fixed anyway :>
+                //"thread"    => new ThreadNotification(),
+                //"post"      => new PostNotification(),
+                //"guide"     => new GuideNotification(notifyUpdated: false),
+                //"resource"  => new ResourceNotification(),
                 "run"       => new RunNotification(),
                 "moderator" => new ModeratorNotification(),
                 _           => throw new Exception("Unknown rel notification type: " + type)
@@ -219,11 +221,13 @@ namespace NeKzBot.Services.Notifications.Speedrun
                     Url = $"https://www.speedrun.com/{author}",
                 });
 
-                using var wc = new WebClient(_config["user_agent"]);
-                var avatar = $"https://www.speedrun.com/themes/user/{author}/image.png";
-                var (success, _) = await wc.Ping(avatar);
-                if (success)
-                    embed.Author.WithIconUrl(avatar);
+                // Getting user avatar by name does not work anymore :(
+
+                // using var wc = new WebClient(_config["user_agent"]);
+                // var avatar = $"https://www.speedrun.com/themes/user/{author}/image.png";
+                // var (success, _) = await wc.Ping(avatar);
+                // if (success)
+                //     embed.Author.WithIconUrl(avatar);
             }
 
             return embed.Build();

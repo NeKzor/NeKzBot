@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NeKzBot.API;
 
 namespace NeKzBot.Services.Notifications.Speedrun
@@ -16,6 +17,7 @@ namespace NeKzBot.Services.Notifications.Speedrun
         public string Category => string.Join('-', GameAndCategory?.Split('-')?.Skip(1) ?? Enumerable.Empty<string>());
 
         protected string[]? _fields;
+        protected string? _splitPattern;
 
         protected List<(int User, int Game, int Data, string Keyword, int Key, bool MultiUsers)> _metaData
             = new List<(int User, int Game, int Data, string Keyword, int Key, bool MultiUsers)>();
@@ -39,7 +41,11 @@ namespace NeKzBot.Services.Notifications.Speedrun
         {
             if (nf?.Text is null) return default;
 
-            _fields = nf.Text.Split(new string[] { "<span class=\"bolder\">", "</span>" }, StringSplitOptions.RemoveEmptyEntries);
+            var pattern = new Regex(_splitPattern);
+
+            _fields = pattern.Split(nf.Text)
+                .Select((x) => x.Trim())
+                .Where((x) => x != string.Empty);
 
             void FindMeta()
             {
