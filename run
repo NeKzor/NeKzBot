@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" = "DEBUG" ]; then
-    dotnet run -p src -c Debug --no-build
+    dotnet run -p src -c Debug
 else
-    dotnet run -p src -c Release --no-build
+    dotnet run -p src -c Release
 fi
