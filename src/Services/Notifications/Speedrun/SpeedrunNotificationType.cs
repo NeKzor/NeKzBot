@@ -45,7 +45,8 @@ namespace NeKzBot.Services.Notifications.Speedrun
 
             _fields = pattern.Split(nf.Text)
                 .Select((x) => x.Trim())
-                .Where((x) => x != string.Empty);
+                .Where((x) => x != string.Empty)
+                .ToArray();
 
             void FindMeta()
             {
